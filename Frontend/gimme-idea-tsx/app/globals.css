@@ -85,7 +85,6 @@
   /* Added Wallpoet and Oxanium fonts */
   --font-sans: "Oxanium", "Geist", "Geist Fallback";
   --font-logo: "Wallpoet", sans-serif;
-  --font-mono: "Geist Mono", "Geist Mono Fallback";
 
   --color-primary: var(--primary);
   --color-card: var(--card);

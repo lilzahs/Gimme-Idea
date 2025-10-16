@@ -3,11 +3,22 @@ import type { Metadata } from "next"
 import { Analytics } from "@vercel/analytics/next"
 import { Toaster } from "sonner"
 import "./globals.css"
+import { Wallpoet, Oxanium } from 'next/font/google'
+const wallpoet = Wallpoet({ 
+  weight: '400',
+  subsets: ['latin'],
+  variable: '--font-logo'
+})
+
+const oxanium = Oxanium({ 
+  subsets: ['latin'],
+  variable: '--font-sans'
+})
 
 export const metadata: Metadata = {
   title: "Gimme Idea! - Your Creative Platform",
   description: "Connect, create, and share your ideas with the world",
-  generator: "v0.app",
+  generator: "Next.js",
 }
 
 export default function RootLayout({

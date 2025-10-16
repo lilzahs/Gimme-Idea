@@ -9,7 +9,7 @@ export default function HomePage() {
 
       {/* Main Logo */}
       <div className="absolute z-[1000] text-center top-[32%]">
-        <h1 className="font-logo text-[8em] text-white uppercase-none shadow-glow tracking-[0.1em] mb-[60px] transition-transform duration-300 hover:animate-bounce">
+        <h1 className="font-logo text-[8em] text-white uppercase-none shadow-glow tracking-[0.1em] mb-[60px] transition-transform duration-300">
           Gimme Idea !
         </h1>
       </div>
