@@ -1,0 +1,177 @@
+"use client"
+
+import { useState, type FormEvent } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import MatrixBackground from "@/components/matrix-background"
+import SmallLogo from "@/components/small-logo"
+import { Eye, EyeOff } from "lucide-react"
+import { useAuthStore } from "@/lib/stores/auth-store"
+import { toast } from "sonner"
+
+export default function RegisterPage() {
+  const router = useRouter()
+  const { register, isLoading } = useAuthStore()
+  const [username, setUsername] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+
+    // Validation: Check password match
+    if (password !== confirmPassword) {
+      toast.error("❌ Mật khẩu không khớp!")
+      return
+    }
+
+    // Validation: Check password strength
+    if (password.length < 6) {
+      toast.error("❌ Mật khẩu phải có ít nhất 6 ký tự!")
+      return
+    }
+
+    console.log("[v0] 📝 Đang đăng ký...")
+    console.log("[v0] Username:", username)
+    console.log("[v0] Email:", email)
+
+    try {
+      await register(email, password, username)
+      toast.success("✅ Đăng ký thành công!")
+      router.push("/dashboard")
+    } catch (error: any) {
+      toast.error(error.message || "❌ Đăng ký thất bại!")
+    }
+  }
+
+  return (
+    <>
+      <MatrixBackground />
+      <SmallLogo />
+
+      {/* Register Form */}
+      <div className="absolute w-[400px] bg-card z-[1000] flex justify-center items-center p-10 rounded shadow-[0_15px_35px_rgba(0,0,0,0.9)]">
+        <div className="relative w-full flex justify-center items-center flex-col gap-10">
+          <h2 className="text-[2em] text-primary uppercase">Sign Up</h2>
+
+          <form className="w-full flex flex-col gap-[25px]" onSubmit={handleSubmit}>
+            {/* Username */}
+            <div className="relative w-full">
+              <input
+                type="text"
+                id="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                required
+                minLength={3}
+                disabled={isLoading}
+                className="relative w-full bg-input border-none outline-none p-[25px_10px_7.5px] rounded text-white font-medium text-[1em] transition-all duration-300 focus:bg-[#3a3a3a] disabled:opacity-50"
+              />
+              <i
+                className={`absolute left-0 px-[10px] py-[15px] not-italic text-gray pointer-events-none transition-all duration-500 ${username ? "translate-y-[-7.5px] text-[0.8em] text-white" : ""}`}
+              >
+                Username
+              </i>
+            </div>
+
+            {/* Email */}
+            <div className="relative w-full">
+              <input
+                type="email"
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={isLoading}
+                className="relative w-full bg-input border-none outline-none p-[25px_10px_7.5px] rounded text-white font-medium text-[1em] transition-all duration-300 focus:bg-[#3a3a3a] disabled:opacity-50"
+              />
+              <i
+                className={`absolute left-0 px-[10px] py-[15px] not-italic text-gray pointer-events-none transition-all duration-500 ${email ? "translate-y-[-7.5px] text-[0.8em] text-white" : ""}`}
+              >
+                Email
+              </i>
+            </div>
+
+            {/* Password */}
+            <div className="relative w-full">
+              <input
+                type={showPassword ? "text" : "password"}
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                disabled={isLoading}
+                className="relative w-full bg-input border-none outline-none p-[25px_45px_7.5px_10px] rounded text-white font-medium text-[1em] transition-all duration-300 focus:bg-[#3a3a3a] disabled:opacity-50"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                disabled={isLoading}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray cursor-pointer transition-all duration-300 hover:text-primary z-[100] disabled:opacity-50"
+              >
+                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+              <i
+                className={`absolute left-0 px-[10px] py-[15px] not-italic text-gray pointer-events-none transition-all duration-500 ${password ? "translate-y-[-7.5px] text-[0.8em] text-white" : ""}`}
+              >
+                Password
+              </i>
+            </div>
+
+            {/* Confirm Password */}
+            <div className="relative w-full">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                id="confirmPassword"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                minLength={6}
+                disabled={isLoading}
+                className="relative w-full bg-input border-none outline-none p-[25px_45px_7.5px_10px] rounded text-white font-medium text-[1em] transition-all duration-300 focus:bg-[#3a3a3a] disabled:opacity-50"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                disabled={isLoading}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray cursor-pointer transition-all duration-300 hover:text-primary z-[100] disabled:opacity-50"
+              >
+                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+              <i
+                className={`absolute left-0 px-[10px] py-[15px] not-italic text-gray pointer-events-none transition-all duration-500 ${confirmPassword ? "translate-y-[-7.5px] text-[0.8em] text-white" : ""}`}
+              >
+                Confirm Password
+              </i>
+            </div>
+
+            {/* Links */}
+            <div className="relative w-full flex justify-between">
+              <span></span>
+              <Link
+                href="/login"
+                className="text-primary font-semibold no-underline transition-all duration-300 hover:text-primary"
+              >
+                Already have account?
+              </Link>
+            </div>
+
+            {/* Submit Button */}
+            <div className="relative w-full">
+              <input
+                type="submit"
+                value={isLoading ? "Registering..." : "Register"}
+                disabled={isLoading}
+                className="w-full p-[10px] bg-primary text-black font-semibold text-[1.35em] tracking-[0.05em] cursor-pointer transition-all duration-300 rounded hover:translate-y-[-2px] hover:shadow-[0_5px_15px_rgba(0,255,0,0.5)] active:opacity-80 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+            </div>
+          </form>
+        </div>
+      </div>
+    </>
+  )
+}
