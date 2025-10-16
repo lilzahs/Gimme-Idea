@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Gimme Idea!</title>
+  
+  <!-- CSS -->
+  <link rel="stylesheet" href="style.css">
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.2/css/all.min.css"></head>
+<body>
+  
+  <!-- Matrix Background Effect -->
+  <section>
+    <!-- Spans sẽ được generate bằng JS -->
+  </section>
+
+  <!-- Logo nhỏ góc trái (click để về home) -->
+  <a href="index.html" class="small-logo">
+    <h2>Gimme Idea!</h2>
+  </a>
+
+  <!-- Form Login -->
+  <div class="signin">
+    <div class="content">
+      <h2>Sign In</h2>
+      
+      <form class="form" id="loginForm">
+        <!-- Username -->
+        <div class="inputBox">
+          <input type="text" id="username" required />
+          <i>Username</i>
+        </div>
+        
+        <!-- Password -->
+        <div class="inputBox">
+          <input type="password" id="password" required minlength="6" />
+          <i class="fa-solid fa-eye toggle-password" onclick="togglePassword()"></i>
+          <i>Password</i>
+        </div>
+        
+        <!-- Links: Forgot Password & Signup -->
+        <div class="links">
+          <a href="forgot-password.html">Forgot Password</a>
+          <a href="register.html">Signup</a>
+        </div>
+        
+        <!-- Submit Button -->
+        <div class="inputBox">
+          <input type="submit" value="Login" />
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script src="background.js"></script>
+  <script src="wallet.js"></script>
+  
+  <!-- Login Logic -->
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault(); // Ngăn form submit mặc định
+      
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      
+      console.log('🔐 Đang đăng nhập...');
+      console.log('Username:', username);
+      
+      // TODO: Gọi API backend để xác thực
+      // const response = await fetch('/api/auth/login', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ username, password })
+      // });
+      
+      // Giả lập đăng nhập thành công (XÓA ĐOẠN NÀY KHI CÓ BACKEND)
+      setTimeout(() => {
+        alert('✅ Đăng nhập thành công!');
+        
+        // Lưu token (giả lập)
+        localStorage.setItem('userToken', 'fake-jwt-token-12345');
+        localStorage.setItem('username', username);
+        
+        // Redirect sang dashboard
+        // window.location.href = 'dashboard.html';
+        
+        console.log('✅ Login success!');
+      }, 1000);
+    });
+        // Toggle show/hide password
+        function togglePassword() {
+      const passwordInput = document.getElementById('password');
+      const icon = document.querySelector('.toggle-password');
+      
+      console.log('Toggle password clicked!'); // Debug
+      console.log('Input:', passwordInput);
+      console.log('Icon:', icon);
+      
+      if (!passwordInput || !icon) {
+        console.error('Không tìm thấy password input hoặc icon!');
+        alert('Lỗi: Không tìm thấy password field!');
+        return;
+      }
+      
+      if (passwordInput.type === 'password') {
+        // Đổi sang text (hiện password)
+        passwordInput.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+        console.log('Password visible');
+      } else {
+        // Đổi về password (ẩn password)
+        passwordInput.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+        console.log('Password hidden');
+      }
+    }
+  </script>
+  
+</body>
+</html>
