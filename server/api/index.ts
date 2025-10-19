@@ -44,9 +44,9 @@ app.use(helmet({
 app.use(express.json({ limit: '1mb' }));
 app.use(generalLimiter);
 
-app.get('/api/health', (_req, res) => sendSuccess(res, { status: 'ok' }));
+app.get('/health', (_req, res) => sendSuccess(res, { status: 'ok' }));
 
-app.use('/api', apiRouter);
+app.use('/', apiRouter);
 
 app.use((req, _res, next) => {
   logger.info(`${req.method} ${req.originalUrl}`);
