@@ -2,11 +2,11 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
-import { generalLimiter } from '../src/middleware/rateLimiter.js';
-import { errorHandler } from '../src/middleware/errorHandler.js';
-import logger from '../src/utils/logger.js';
-import { sendSuccess } from '../src/utils/response.js';
-import apiRouter from '../src/routes/index.js';
+import { generalLimiter } from '../src/middleware/rateLimiter';
+import { errorHandler } from '../src/middleware/errorHandler';
+import logger from '../src/utils/logger';
+import { sendSuccess } from '../src/utils/response';
+import apiRouter from '../src/routes/index';
 
 dotenv.config();
 
