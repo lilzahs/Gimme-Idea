@@ -33,7 +33,7 @@ export default function MatrixBackground() {
   }, [spanCount])
 
   return (
-    <section className="absolute w-screen h-screen flex justify-center items-center gap-[2px] flex-wrap overflow-hidden before:content-[''] before:absolute before:w-full before:h-full before:bg-gradient-to-b before:from-black before:via-[#ff00ff] before:to-black before:animate-[matrixAnimate_5s_linear_infinite]">
+    <section className="fixed top-0 left-0 w-screen h-screen flex justify-center items-center gap-[2px] flex-wrap overflow-hidden before:content-[''] before:absolute before:w-full before:h-full before:bg-gradient-to-b before:from-black before:via-[#ff00ff] before:to-black before:animate-[matrixAnimate_5s_linear_infinite]">
       {Array.from({ length: spanCount }).map((_, i) => (
         <span
           key={i}
