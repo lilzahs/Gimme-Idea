@@ -5,7 +5,7 @@ export const createFeedbackSchema = z.object({
     overall: z.string().min(10, 'Overall feedback must be at least 10 characters'),
     pros: z.array(z.string()).min(1, 'At least one pro is required'),
     cons: z.array(z.string()).optional(),
-    suggestions: z.string().optional(),
+    suggestions: z.array(z.string()).optional(),
   }),
 });
 
@@ -14,7 +14,7 @@ export const updateFeedbackSchema = z.object({
     overall: z.string().min(10).optional(),
     pros: z.array(z.string()).optional(),
     cons: z.array(z.string()).optional(),
-    suggestions: z.string().optional(),
+    suggestions: z.array(z.string()).optional(),
   }),
 });
 

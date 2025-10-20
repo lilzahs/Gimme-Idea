@@ -19,11 +19,10 @@ import {
 
 const router = Router();
 
-// Feedback on projects
+// Feedback on projects - Allow any authenticated user to give feedback
 router.post(
   '/projects/:projectId/feedback',
   verifyToken,
-  requireRole(['REVIEWER', 'BOTH']),
   feedbackLimiter,
   validateBody(createFeedbackSchema),
   createFeedback,
