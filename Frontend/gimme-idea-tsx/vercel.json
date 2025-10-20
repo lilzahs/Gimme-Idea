@@ -1,23 +1,5 @@
 {
-  "version": 2,
-  "name": "gimme-idea-frontend",
   "framework": "nextjs",
   "buildCommand": "npm run build",
-  "devCommand": "npm run dev",
-  "installCommand": "npm install",
-  "outputDirectory": ".next",
-  "env": {
-    "NEXT_PUBLIC_API_URL": ""
-  },
-  "build": {
-    "env": {
-      "NEXT_PUBLIC_API_URL": "@api-url"
-    }
-  },
-  "regions": ["sin1"],
-  "functions": {
-    "app/**/*.{ts,tsx}": {
-      "maxDuration": 30
-    }
-  }
+  "installCommand": "npm install"
 }
