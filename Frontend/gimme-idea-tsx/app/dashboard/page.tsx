@@ -24,8 +24,8 @@ export default function DashboardPage() {
   const loadUserProjects = async () => {
     setIsLoading(true)
     try {
-      const response = await apiClient.getProjects({ userId: user?.id })
-      setProjects(response.data || [])
+      const response = await apiClient.getMyProjects()
+      setProjects(response.projects || [])
     } catch (error) {
       console.error("[v0] Failed to load projects:", error)
     } finally {
@@ -41,14 +41,14 @@ export default function DashboardPage() {
       <div className="relative z-10 min-h-screen pt-24 pb-16 px-4">
         <div className="max-w-7xl mx-auto">
           {/* Page Header */}
-          <div className="flex justify-between items-center mb-12">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-12">
             <div>
-              <h1 className="text-4xl font-bold text-primary mb-2">My Dashboard</h1>
-              <p className="text-gray text-lg">Welcome back, {user?.username}!</p>
+              <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-2">My Dashboard</h1>
+              <p className="text-gray text-base sm:text-lg">Welcome back, {user?.username}!</p>
             </div>
             <button
               onClick={() => router.push("/project/new")}
-              className="flex items-center gap-2 px-6 py-3 bg-primary text-black rounded font-semibold hover:shadow-lg transition-all"
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-primary text-black rounded font-semibold hover:shadow-lg transition-all whitespace-nowrap"
             >
               <Plus size={20} />
               New Project

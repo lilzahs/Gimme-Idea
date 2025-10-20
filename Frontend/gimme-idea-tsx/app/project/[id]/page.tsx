@@ -107,11 +107,11 @@ export default function ProjectDetailPage() {
       <div className="relative z-10 min-h-screen pt-24 pb-16 px-4">
         <div className="max-w-5xl mx-auto">
           {/* Project Header */}
-          <div className="bg-card rounded-lg p-8 mb-8 border-2 border-primary/20">
-            <div className="flex justify-between items-start mb-6">
+          <div className="bg-card rounded-lg p-6 sm:p-8 mb-8 border-2 border-primary/20">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-6">
               <div className="flex-1">
-                <h1 className="text-4xl font-bold text-primary mb-4">{currentProject.title}</h1>
-                <div className="flex items-center gap-4 text-gray text-sm">
+                <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-4">{currentProject.title}</h1>
+                <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-gray text-sm">
                   <span className="flex items-center gap-1">
                     <Eye size={16} />
                     {currentProject.viewCount} views
@@ -127,26 +127,26 @@ export default function ProjectDetailPage() {
                 </div>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-shrink-0">
                 {isOwner && (
                   <button
                     onClick={handleEdit}
-                    className="px-4 py-2 bg-input text-white rounded hover:bg-primary hover:text-black transition-all duration-300 flex items-center gap-2"
+                    className="px-4 py-2 bg-input text-white rounded hover:bg-primary hover:text-black transition-all duration-300 flex items-center gap-2 whitespace-nowrap"
                   >
                     <Edit size={18} />
-                    Edit
+                    <span className="hidden sm:inline">Edit</span>
                   </button>
                 )}
                 <button
                   onClick={handleBookmark}
-                  className={`px-4 py-2 rounded transition-all duration-300 flex items-center gap-2 ${
+                  className={`px-4 py-2 rounded transition-all duration-300 flex items-center gap-2 whitespace-nowrap ${
                     currentProject.isBookmarked
                       ? "bg-primary text-black"
                       : "bg-input text-white hover:bg-primary hover:text-black"
                   }`}
                 >
                   <Bookmark size={18} fill={currentProject.isBookmarked ? "currentColor" : "none"} />
-                  {currentProject.isBookmarked ? "Bookmarked" : "Bookmark"}
+                  <span className="hidden sm:inline">{currentProject.isBookmarked ? "Bookmarked" : "Bookmark"}</span>
                 </button>
               </div>
             </div>
@@ -186,13 +186,13 @@ export default function ProjectDetailPage() {
           </div>
 
           {/* Feedback Section */}
-          <div className="bg-card rounded-lg p-8 border-2 border-primary/20">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-primary">Feedback ({feedbacks.length})</h2>
+          <div className="bg-card rounded-lg p-6 sm:p-8 border-2 border-primary/20">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+              <h2 className="text-xl sm:text-2xl font-bold text-primary">Feedback ({feedbacks.length})</h2>
               {isAuthenticated && !isOwner && (
                 <button
                   onClick={() => setShowFeedbackForm(!showFeedbackForm)}
-                  className="px-6 py-2 bg-primary text-black rounded font-semibold hover:shadow-lg transition-all"
+                  className="px-6 py-2 bg-primary text-black rounded font-semibold hover:shadow-lg transition-all whitespace-nowrap"
                 >
                   {showFeedbackForm ? "Cancel" : "Give Feedback"}
                 </button>

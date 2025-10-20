@@ -217,6 +217,10 @@ class ApiClient {
     return this.request<any[]>("/projects/bookmarked")
   }
 
+  async getMyProjects() {
+    return this.request<any>("/projects/my/projects")
+  }
+
   // Feedback endpoints
   async getProjectFeedback(projectId: string) {
     return this.request<any[]>(`/projects/${projectId}/feedback`)
