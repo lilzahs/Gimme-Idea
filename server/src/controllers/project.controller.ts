@@ -117,6 +117,16 @@ export async function getProjects(req: Request, res: Response) {
             status: true,
           },
         },
+        bookmarks: req.user
+          ? {
+              where: {
+                userId: req.user.id,
+              },
+              select: {
+                id: true,
+              },
+            }
+          : false,
       },
       orderBy: {
         [sortBy as string]: sortOrder,
@@ -125,8 +135,16 @@ export async function getProjects(req: Request, res: Response) {
       take: limitNum,
     });
 
+    // Transform projects to include feedbackCount and isBookmarked
+    const transformedProjects = projects.map((project) => ({
+      ...project,
+      feedbackCount: project.feedback.length,
+      isBookmarked: req.user ? project.bookmarks.length > 0 : false,
+      bookmarks: undefined, // Remove bookmarks array from response
+    }));
+
     return sendSuccess(res, {
-      projects,
+      projects: transformedProjects,
       pagination: {
         total,
         page: pageNum,
@@ -172,6 +190,16 @@ export async function getProjectById(req: Request, res: Response) {
             },
           },
         },
+        bookmarks: req.user
+          ? {
+              where: {
+                userId: req.user.id,
+              },
+              select: {
+                id: true,
+              },
+            }
+          : false,
       },
     });
 
@@ -185,7 +213,16 @@ export async function getProjectById(req: Request, res: Response) {
       data: { viewCount: { increment: 1 } },
     });
 
-    return sendSuccess(res, { project });
+    // Transform project to include feedbackCount and isBookmarked
+    const transformedProject = {
+      ...project,
+      userId: project.builderId, // Add userId field for frontend compatibility
+      feedbackCount: project.feedback.length,
+      isBookmarked: req.user ? project.bookmarks.length > 0 : false,
+      bookmarks: undefined, // Remove bookmarks array from response
+    };
+
+    return sendSuccess(res, { project: transformedProject });
   } catch (error: any) {
     logger.error('Get project error:', error);
     return sendError(res, 'Failed to get project', 'GET_FAILED', error.message, 500);
@@ -343,5 +380,108 @@ export async function getMyProjects(req: Request, res: Response) {
   } catch (error: any) {
     logger.error('Get my projects error:', error);
     return sendError(res, 'Failed to get projects', 'GET_FAILED', error.message, 500);
+  }
+}
+
+/**
+ * Toggle bookmark on a project
+ * POST /api/projects/:id/bookmark
+ */
+export async function toggleBookmark(req: Request, res: Response) {
+  try {
+    if (!req.user) {
+      return sendError(res, 'Unauthorized', 'UNAUTHORIZED', null, 401);
+    }
+
+    const { id } = req.params;
+
+    // Check if project exists
+    const project = await prisma.project.findUnique({
+      where: { id },
+    });
+
+    if (!project) {
+      return sendError(res, 'Project not found', 'NOT_FOUND', null, 404);
+    }
+
+    // Check if bookmark exists
+    const existingBookmark = await prisma.bookmark.findUnique({
+      where: {
+        userId_projectId: {
+          userId: req.user.id,
+          projectId: id,
+        },
+      },
+    });
+
+    if (existingBookmark) {
+      // Remove bookmark
+      await prisma.bookmark.delete({
+        where: { id: existingBookmark.id },
+      });
+      logger.info(`Bookmark removed: project ${id} by user ${req.user.id}`);
+      return sendSuccess(res, { isBookmarked: false }, 'Bookmark removed');
+    } else {
+      // Add bookmark
+      await prisma.bookmark.create({
+        data: {
+          userId: req.user.id,
+          projectId: id,
+        },
+      });
+      logger.info(`Bookmark added: project ${id} by user ${req.user.id}`);
+      return sendSuccess(res, { isBookmarked: true }, 'Project bookmarked!');
+    }
+  } catch (error: any) {
+    logger.error('Toggle bookmark error:', error);
+    return sendError(res, 'Failed to toggle bookmark', 'BOOKMARK_FAILED', error.message, 500);
+  }
+}
+
+/**
+ * Get user's bookmarked projects
+ * GET /api/projects/bookmarked
+ */
+export async function getBookmarkedProjects(req: Request, res: Response) {
+  try {
+    if (!req.user) {
+      return sendError(res, 'Unauthorized', 'UNAUTHORIZED', null, 401);
+    }
+
+    const bookmarks = await prisma.bookmark.findMany({
+      where: { userId: req.user.id },
+      include: {
+        project: {
+          include: {
+            builder: {
+              select: {
+                id: true,
+                username: true,
+                avatarUrl: true,
+                reputationScore: true,
+              },
+            },
+            feedback: {
+              select: {
+                id: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Transform to return just projects with feedbackCount
+    const projects = bookmarks.map((b) => ({
+      ...b.project,
+      feedbackCount: b.project.feedback.length,
+      isBookmarked: true,
+    }));
+
+    return sendSuccess(res, { projects });
+  } catch (error: any) {
+    logger.error('Get bookmarked projects error:', error);
+    return sendError(res, 'Failed to get bookmarked projects', 'GET_FAILED', error.message, 500);
   }
 }

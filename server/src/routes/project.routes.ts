@@ -9,6 +9,8 @@ import {
   updateProject,
   deleteProject,
   getMyProjects,
+  toggleBookmark,
+  getBookmarkedProjects,
 } from '../controllers/project.controller.js';
 
 const router = Router();
@@ -21,6 +23,8 @@ router.post('/:id/view', (req, res) => res.json({ success: true })); // View cou
 // Protected routes (require authentication)
 router.post('/', verifyToken, requireRole(['BUILDER', 'BOTH']), validateBody(createProjectSchema), createProject);
 router.get('/my/projects', verifyToken, getMyProjects);
+router.post('/:id/bookmark', verifyToken, toggleBookmark);
+router.get('/bookmarked', verifyToken, getBookmarkedProjects);
 router.put('/:id', verifyToken, validateBody(updateProjectSchema), updateProject);
 router.delete('/:id', verifyToken, deleteProject);
 
