@@ -16,8 +16,8 @@ const oxanium = Oxanium({
 })
 
 export const metadata: Metadata = {
-  title: "Gimme Idea! - Your Creative Platform",
-  description: "Connect, create, and share your ideas with the world",
+  title: "Gimme Idea ! - Share your project to get feedback",
+  description: "A platform to share your ideas and get creative feedback from others.",
   generator: "Next.js",
 }
 
