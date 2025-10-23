@@ -47,6 +47,20 @@ app.use(helmet({
 app.use(express.json({ limit: '1mb' }));
 app.use(generalLimiter);
 
+// Root endpoint - welcome message
+app.get('/', (_req, res) => {
+  res.json({
+    success: true,
+    message: 'Gimme Idea API',
+    version: '1.0.0',
+    endpoints: {
+      health: '/api/health',
+      docs: 'https://github.com/lilzahs/Gimme-Idea',
+    },
+    status: 'running'
+  });
+});
+
 app.get('/api/health', (_req, res) => sendSuccess(res, { status: 'ok' }));
 
 app.use('/api', apiRouter);
