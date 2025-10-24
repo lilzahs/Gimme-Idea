@@ -7,66 +7,28 @@ import {
   updateNotificationSettings,
   deleteAccount,
 } from "../controllers/settings.controller.js";
+import {
+  changePasswordSchema,
+  updateProfileSchema,
+  notificationSettingsSchema,
+  deleteAccountSchema,
+} from "../validators/settings.schemas.js";
 
 const router = Router();
 
 // All routes require authentication
 router.use(verifyToken);
 
-router.put(
-  "/password",
-  validateBody({
-    type: "object",
-    properties: {
-      currentPassword: { type: "string", minLength: 1 },
-      newPassword: { type: "string", minLength: 6 },
-    },
-    required: ["currentPassword", "newPassword"],
-  }),
-  changePassword
-);
+router.put("/password", validateBody(changePasswordSchema), changePassword);
 
-router.put(
-  "/profile",
-  validateBody({
-    type: "object",
-    properties: {
-      username: { type: "string", minLength: 3, maxLength: 30 },
-      bio: { type: "string", maxLength: 500 },
-      avatarUrl: { type: "string" },
-      walletAddress: { type: "string" },
-      linkedinUrl: { type: "string" },
-      twitterHandle: { type: "string" },
-      githubUrl: { type: "string" },
-    },
-  }),
-  updateProfile
-);
+router.put("/profile", validateBody(updateProfileSchema), updateProfile);
 
 router.put(
   "/notifications",
-  validateBody({
-    type: "object",
-    properties: {
-      emailNotifications: { type: "boolean" },
-      feedbackNotifications: { type: "boolean" },
-      projectUpdates: { type: "boolean" },
-      weeklyDigest: { type: "boolean" },
-    },
-  }),
+  validateBody(notificationSettingsSchema),
   updateNotificationSettings
 );
 
-router.delete(
-  "/account",
-  validateBody({
-    type: "object",
-    properties: {
-      password: { type: "string", minLength: 1 },
-    },
-    required: ["password"],
-  }),
-  deleteAccount
-);
+router.delete("/account", validateBody(deleteAccountSchema), deleteAccount);
 
 export default router;

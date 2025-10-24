@@ -7,6 +7,10 @@ import {
   rejectFeedback,
   autoApproveAll,
 } from "../controllers/moderation.controller.js";
+import {
+  approveFeedbackSchema,
+  rejectFeedbackSchema,
+} from "../validators/moderation.schemas.js";
 
 const router = Router();
 
@@ -16,26 +20,10 @@ router.use(verifyToken);
 router.get("/", getModerationQueue);
 router.post(
   "/:id/approve",
-  validateBody({
-    type: "object",
-    properties: {
-      rewardAmount: { type: "number", minimum: 0 },
-      qualityScore: { type: "number", minimum: 0, maximum: 100 },
-    },
-    required: ["rewardAmount"],
-  }),
+  validateBody(approveFeedbackSchema),
   approveFeedback
 );
-router.post(
-  "/:id/reject",
-  validateBody({
-    type: "object",
-    properties: {
-      reason: { type: "string" },
-    },
-  }),
-  rejectFeedback
-);
+router.post("/:id/reject", validateBody(rejectFeedbackSchema), rejectFeedback);
 router.post("/auto-approve", autoApproveAll);
 
 export default router;
