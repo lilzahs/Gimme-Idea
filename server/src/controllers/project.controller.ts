@@ -1,8 +1,8 @@
-import type { Request, Response } from 'express';
-import { sendSuccess, sendError } from '../utils/response.js';
-import prisma from '../prisma/client.js';
-import logger from '../utils/logger.js';
-import { transformProject } from '../utils/transformers.js';
+import type { Request, Response } from "express";
+import { sendSuccess, sendError } from "../utils/response.js";
+import prisma from "../prisma/client.js";
+import logger from "../utils/logger.js";
+import { transformProject } from "../utils/transformers.js";
 
 /**
  * Create new project
@@ -11,31 +11,61 @@ import { transformProject } from '../utils/transformers.js';
 export async function createProject(req: Request, res: Response) {
   try {
     if (!req.user) {
-      return sendError(res, 'Unauthorized', 'UNAUTHORIZED', null, 401);
+      return sendError(res, "Unauthorized", "UNAUTHORIZED", null, 401);
     }
 
-    const { title, description, demoUrl, repoUrl, category, tags, bountyAmount, deadline } = req.body;
+    const {
+      title,
+      description,
+      demoUrl,
+      repoUrl,
+      category,
+      tags,
+      bountyAmount,
+      deadline,
+    } = req.body;
+
+    // Validate required fields
+    if (!title || !description || !category) {
+      return sendError(
+        res,
+        "Title, description, and category are required",
+        "MISSING_FIELDS",
+        null,
+        400
+      );
+    }
 
     // Convert deadline string to Date
     const deadlineDate = new Date(deadline);
 
     // Validate deadline is in future
     if (deadlineDate <= new Date()) {
-      return sendError(res, 'Deadline must be in the future', 'INVALID_DEADLINE', null, 400);
+      return sendError(
+        res,
+        "Deadline must be in the future",
+        "INVALID_DEADLINE",
+        null,
+        400
+      );
     }
+
+    // Ensure demoUrl is not empty
+    const validDemoUrl =
+      demoUrl && demoUrl.trim() !== "" ? demoUrl : "https://example.com";
 
     const project = await prisma.project.create({
       data: {
         builderId: req.user.id,
         title,
         description,
-        demoUrl,
+        demoUrl: validDemoUrl,
         repoUrl: repoUrl || null,
         category,
-        tags,
-        bountyAmount: parseFloat(bountyAmount),
+        tags: tags || [],
+        bountyAmount: parseFloat(bountyAmount || "0"),
         deadline: deadlineDate,
-        status: 'ACTIVE',
+        status: "ACTIVE",
       },
       include: {
         builder: {
@@ -54,10 +84,20 @@ export async function createProject(req: Request, res: Response) {
 
     const formattedProject = transformProject(project, req.user.id);
 
-    return sendSuccess(res, { project: formattedProject }, 'Project created successfully!');
+    return sendSuccess(
+      res,
+      { project: formattedProject },
+      "Project created successfully!"
+    );
   } catch (error: any) {
-    logger.error('Create project error:', error);
-    return sendError(res, 'Failed to create project', 'CREATE_FAILED', error.message, 500);
+    logger.error("Create project error:", error);
+    return sendError(
+      res,
+      "Failed to create project",
+      "CREATE_FAILED",
+      error.message,
+      500
+    );
   }
 }
 
@@ -71,10 +111,10 @@ export async function getProjects(req: Request, res: Response) {
       status,
       category,
       search,
-      page = '1',
-      limit = '10',
-      sortBy = 'createdAt',
-      sortOrder = 'desc',
+      page = "1",
+      limit = "10",
+      sortBy = "createdAt",
+      sortOrder = "desc",
     } = req.query;
 
     const pageNum = parseInt(page as string);
@@ -94,8 +134,8 @@ export async function getProjects(req: Request, res: Response) {
 
     if (search) {
       where.OR = [
-        { title: { contains: search as string, mode: 'insensitive' } },
-        { description: { contains: search as string, mode: 'insensitive' } },
+        { title: { contains: search as string, mode: "insensitive" } },
+        { description: { contains: search as string, mode: "insensitive" } },
       ];
     }
 
@@ -139,7 +179,9 @@ export async function getProjects(req: Request, res: Response) {
     });
 
     // Transform projects to include feedbackCount and isBookmarked
-    const transformedProjects = projects.map((project) => transformProject(project as any, req.user?.id));
+    const transformedProjects = projects.map((project) =>
+      transformProject(project as any, req.user?.id)
+    );
 
     return sendSuccess(res, {
       projects: transformedProjects,
@@ -151,8 +193,14 @@ export async function getProjects(req: Request, res: Response) {
       },
     });
   } catch (error: any) {
-    logger.error('Get projects error:', error);
-    return sendError(res, 'Failed to get projects', 'GET_FAILED', error.message, 500);
+    logger.error("Get projects error:", error);
+    return sendError(
+      res,
+      "Failed to get projects",
+      "GET_FAILED",
+      error.message,
+      500
+    );
   }
 }
 
@@ -202,7 +250,7 @@ export async function getProjectById(req: Request, res: Response) {
     });
 
     if (!project) {
-      return sendError(res, 'Project not found', 'NOT_FOUND', null, 404);
+      return sendError(res, "Project not found", "NOT_FOUND", null, 404);
     }
 
     // Increment view count (optional: track by IP/user to prevent spam)
@@ -216,8 +264,14 @@ export async function getProjectById(req: Request, res: Response) {
 
     return sendSuccess(res, { project: transformedProject });
   } catch (error: any) {
-    logger.error('Get project error:', error);
-    return sendError(res, 'Failed to get project', 'GET_FAILED', error.message, 500);
+    logger.error("Get project error:", error);
+    return sendError(
+      res,
+      "Failed to get project",
+      "GET_FAILED",
+      error.message,
+      500
+    );
   }
 }
 
@@ -228,12 +282,21 @@ export async function getProjectById(req: Request, res: Response) {
 export async function updateProject(req: Request, res: Response) {
   try {
     if (!req.user) {
-      return sendError(res, 'Unauthorized', 'UNAUTHORIZED', null, 401);
+      return sendError(res, "Unauthorized", "UNAUTHORIZED", null, 401);
     }
 
     const { id } = req.params;
-    const { title, description, demoUrl, repoUrl, category, tags, bountyAmount, deadline, status } =
-      req.body;
+    const {
+      title,
+      description,
+      demoUrl,
+      repoUrl,
+      category,
+      tags,
+      bountyAmount,
+      deadline,
+      status,
+    } = req.body;
 
     // Check if project exists and user is owner
     const existingProject = await prisma.project.findUnique({
@@ -241,11 +304,17 @@ export async function updateProject(req: Request, res: Response) {
     });
 
     if (!existingProject) {
-      return sendError(res, 'Project not found', 'NOT_FOUND', null, 404);
+      return sendError(res, "Project not found", "NOT_FOUND", null, 404);
     }
 
     if (existingProject.builderId !== req.user.id) {
-      return sendError(res, 'Forbidden - You can only update your own projects', 'FORBIDDEN', null, 403);
+      return sendError(
+        res,
+        "Forbidden - You can only update your own projects",
+        "FORBIDDEN",
+        null,
+        403
+      );
     }
 
     // Build update data
@@ -263,7 +332,13 @@ export async function updateProject(req: Request, res: Response) {
     if (deadline) {
       const deadlineDate = new Date(deadline);
       if (deadlineDate <= new Date()) {
-        return sendError(res, 'Deadline must be in the future', 'INVALID_DEADLINE', null, 400);
+        return sendError(
+          res,
+          "Deadline must be in the future",
+          "INVALID_DEADLINE",
+          null,
+          400
+        );
       }
       updateData.deadline = deadlineDate;
     }
@@ -286,10 +361,20 @@ export async function updateProject(req: Request, res: Response) {
 
     const formattedProject = transformProject(project as any, req.user.id);
 
-    return sendSuccess(res, { project: formattedProject }, 'Project updated successfully!');
+    return sendSuccess(
+      res,
+      { project: formattedProject },
+      "Project updated successfully!"
+    );
   } catch (error: any) {
-    logger.error('Update project error:', error);
-    return sendError(res, 'Failed to update project', 'UPDATE_FAILED', error.message, 500);
+    logger.error("Update project error:", error);
+    return sendError(
+      res,
+      "Failed to update project",
+      "UPDATE_FAILED",
+      error.message,
+      500
+    );
   }
 }
 
@@ -300,7 +385,7 @@ export async function updateProject(req: Request, res: Response) {
 export async function deleteProject(req: Request, res: Response) {
   try {
     if (!req.user) {
-      return sendError(res, 'Unauthorized', 'UNAUTHORIZED', null, 401);
+      return sendError(res, "Unauthorized", "UNAUTHORIZED", null, 401);
     }
 
     const { id } = req.params;
@@ -314,22 +399,30 @@ export async function deleteProject(req: Request, res: Response) {
     });
 
     if (!project) {
-      return sendError(res, 'Project not found', 'NOT_FOUND', null, 404);
+      return sendError(res, "Project not found", "NOT_FOUND", null, 404);
     }
 
     if (project.builderId !== req.user.id) {
-      return sendError(res, 'Forbidden - You can only delete your own projects', 'FORBIDDEN', null, 403);
+      return sendError(
+        res,
+        "Forbidden - You can only delete your own projects",
+        "FORBIDDEN",
+        null,
+        403
+      );
     }
 
     // Check if project has approved feedback (prevent deletion if bounty distributed)
-    const hasApprovedFeedback = project.feedback.some((f) => f.status === 'APPROVED');
+    const hasApprovedFeedback = project.feedback.some(
+      (f) => f.status === "APPROVED"
+    );
     if (hasApprovedFeedback) {
       return sendError(
         res,
-        'Cannot delete project with approved feedback',
-        'HAS_APPROVED_FEEDBACK',
+        "Cannot delete project with approved feedback",
+        "HAS_APPROVED_FEEDBACK",
         null,
-        400,
+        400
       );
     }
 
@@ -339,10 +432,16 @@ export async function deleteProject(req: Request, res: Response) {
 
     logger.info(`Project deleted: ${id} by user ${req.user.id}`);
 
-    return sendSuccess(res, {}, 'Project deleted successfully!');
+    return sendSuccess(res, {}, "Project deleted successfully!");
   } catch (error: any) {
-    logger.error('Delete project error:', error);
-    return sendError(res, 'Failed to delete project', 'DELETE_FAILED', error.message, 500);
+    logger.error("Delete project error:", error);
+    return sendError(
+      res,
+      "Failed to delete project",
+      "DELETE_FAILED",
+      error.message,
+      500
+    );
   }
 }
 
@@ -353,7 +452,7 @@ export async function deleteProject(req: Request, res: Response) {
 export async function getMyProjects(req: Request, res: Response) {
   try {
     if (!req.user) {
-      return sendError(res, 'Unauthorized', 'UNAUTHORIZED', null, 401);
+      return sendError(res, "Unauthorized", "UNAUTHORIZED", null, 401);
     }
 
     const projects = await prisma.project.findMany({
@@ -367,17 +466,23 @@ export async function getMyProjects(req: Request, res: Response) {
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
     const transformed = projects.map((project) =>
-      transformProject(project as any, req.user!.id),
+      transformProject(project as any, req.user!.id)
     );
 
     return sendSuccess(res, { projects: transformed });
   } catch (error: any) {
-    logger.error('Get my projects error:', error);
-    return sendError(res, 'Failed to get projects', 'GET_FAILED', error.message, 500);
+    logger.error("Get my projects error:", error);
+    return sendError(
+      res,
+      "Failed to get projects",
+      "GET_FAILED",
+      error.message,
+      500
+    );
   }
 }
 
@@ -388,7 +493,7 @@ export async function getMyProjects(req: Request, res: Response) {
 export async function toggleBookmark(req: Request, res: Response) {
   try {
     if (!req.user) {
-      return sendError(res, 'Unauthorized', 'UNAUTHORIZED', null, 401);
+      return sendError(res, "Unauthorized", "UNAUTHORIZED", null, 401);
     }
 
     const { id } = req.params;
@@ -399,7 +504,7 @@ export async function toggleBookmark(req: Request, res: Response) {
     });
 
     if (!project) {
-      return sendError(res, 'Project not found', 'NOT_FOUND', null, 404);
+      return sendError(res, "Project not found", "NOT_FOUND", null, 404);
     }
 
     // Check if bookmark exists
@@ -418,7 +523,7 @@ export async function toggleBookmark(req: Request, res: Response) {
         where: { id: existingBookmark.id },
       });
       logger.info(`Bookmark removed: project ${id} by user ${req.user.id}`);
-      return sendSuccess(res, { isBookmarked: false }, 'Bookmark removed');
+      return sendSuccess(res, { isBookmarked: false }, "Bookmark removed");
     } else {
       // Add bookmark
       await prisma.bookmark.create({
@@ -428,11 +533,17 @@ export async function toggleBookmark(req: Request, res: Response) {
         },
       });
       logger.info(`Bookmark added: project ${id} by user ${req.user.id}`);
-      return sendSuccess(res, { isBookmarked: true }, 'Project bookmarked!');
+      return sendSuccess(res, { isBookmarked: true }, "Project bookmarked!");
     }
   } catch (error: any) {
-    logger.error('Toggle bookmark error:', error);
-    return sendError(res, 'Failed to toggle bookmark', 'BOOKMARK_FAILED', error.message, 500);
+    logger.error("Toggle bookmark error:", error);
+    return sendError(
+      res,
+      "Failed to toggle bookmark",
+      "BOOKMARK_FAILED",
+      error.message,
+      500
+    );
   }
 }
 
@@ -443,7 +554,7 @@ export async function toggleBookmark(req: Request, res: Response) {
 export async function getBookmarkedProjects(req: Request, res: Response) {
   try {
     if (!req.user) {
-      return sendError(res, 'Unauthorized', 'UNAUTHORIZED', null, 401);
+      return sendError(res, "Unauthorized", "UNAUTHORIZED", null, 401);
     }
 
     const bookmarks = await prisma.bookmark.findMany({
@@ -467,7 +578,7 @@ export async function getBookmarkedProjects(req: Request, res: Response) {
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
 
     // Transform to return just projects with feedbackCount
@@ -477,13 +588,19 @@ export async function getBookmarkedProjects(req: Request, res: Response) {
           ...bookmark.project,
           bookmarks: [{ id: bookmark.id, userId: req.user!.id }],
         } as any,
-        req.user!.id,
-      ),
+        req.user!.id
+      )
     );
 
     return sendSuccess(res, { projects });
   } catch (error: any) {
-    logger.error('Get bookmarked projects error:', error);
-    return sendError(res, 'Failed to get bookmarked projects', 'GET_FAILED', error.message, 500);
+    logger.error("Get bookmarked projects error:", error);
+    return sendError(
+      res,
+      "Failed to get bookmarked projects",
+      "GET_FAILED",
+      error.message,
+      500
+    );
   }
 }
