@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { PasswordInput } from "@/components/ui/password-input"
 import { useAuth } from "@/contexts/auth-context"
 
 export default function LoginPage() {
@@ -61,8 +62,7 @@ export default function LoginPage() {
 
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">Password</label>
-              <Input
-                type="password"
+              <PasswordInput
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

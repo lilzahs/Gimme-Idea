@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { PasswordInput } from "@/components/ui/password-input"
 import { useAuth } from "@/contexts/auth-context"
 
 export default function SignupPage() {
@@ -90,8 +91,7 @@ export default function SignupPage() {
 
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">Password</label>
-              <Input
-                type="password"
+              <PasswordInput
                 name="password"
                 placeholder="••••••••"
                 value={formData.password}
@@ -103,8 +103,7 @@ export default function SignupPage() {
 
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">Confirm Password</label>
-              <Input
-                type="password"
+              <PasswordInput
                 name="confirmPassword"
                 placeholder="••••••••"
                 value={formData.confirmPassword}
