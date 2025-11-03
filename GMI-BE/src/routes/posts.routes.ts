@@ -42,13 +42,16 @@ router.get('/', optionalAuthMiddleware, async (req: AuthRequest, res: Response) 
     ])
 
     res.json({
-      posts: posts.map(post => ({
-        ...post,
-        commentCount: post._count.comments
-      })),
-      total,
-      limit: parseInt(limit as string),
-      offset: parseInt(offset as string)
+      success: true,
+      data: {
+        posts: posts.map(post => ({
+          ...post,
+          commentCount: post._count.comments
+        })),
+        total,
+        limit: parseInt(limit as string),
+        offset: parseInt(offset as string)
+      }
     })
   } catch (error) {
     console.error('[Posts] List error:', error)

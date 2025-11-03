@@ -11,17 +11,26 @@ const router = Router()
  */
 router.post('/connect', async (req: AuthRequest, res: Response) => {
   try {
+    console.log('[Wallet] Connect request received')
+    console.log('[Wallet] Request body:', JSON.stringify(req.body, null, 2))
+
     const { address, type, signature, message }: WalletConnectInput = req.body
 
     if (!address || !type || !signature || !message) {
+      console.log('[Wallet] Missing required fields')
       return res.status(400).json({ error: 'Missing required fields' })
     }
+
+    console.log('[Wallet] All fields present, verifying signature...')
 
     // Verify signature
     const isValid = await verifyWalletSignature(address, signature, message)
     if (!isValid) {
+      console.log('[Wallet] Signature verification failed')
       return res.status(401).json({ error: 'Invalid signature' })
     }
+
+    console.log('[Wallet] Signature verified successfully')
 
     // Create or update wallet
     const wallet = await prisma.wallet.upsert({

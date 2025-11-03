@@ -28,7 +28,7 @@ export default function ProfilePage() {
       router.push("/")
     } else if (userProfile) {
       setFormData({
-        name: userProfile.name,
+        name: userProfile.name || "",
         bio: userProfile.bio || "",
       })
     }

@@ -10,7 +10,7 @@
 
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useWallet } from "@solana/wallet-adapter-react"
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui"
@@ -24,10 +24,15 @@ import { AlertCircle, CheckCircle } from "lucide-react"
 export default function ConnectWallet() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [mounted, setMounted] = useState(false)
   const router = useRouter()
   const wallet = useWallet()
   const setWallet = useAppStore((state) => state.setWallet)
   const setUserProfile = useAppStore((state) => state.setUserProfile)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const handleConnectComplete = async () => {
     if (!wallet.publicKey || !wallet.signMessage) {
@@ -44,6 +49,11 @@ export default function ConnectWallet() {
       // 1. Sign authentication message
       const { signature, message, address } = await signAuthMessage(wallet)
 
+      console.log('[Connect] Wallet address:', address)
+      console.log('[Connect] Wallet type:', wallet.wallet?.adapter.name)
+      console.log('[Connect] Message:', message)
+      console.log('[Connect] Signature:', signature)
+
       // 2. Call GMI-BE API to connect wallet
       const response = await API.Wallet.connectWallet({
         address,
@@ -51,6 +61,8 @@ export default function ConnectWallet() {
         signature,
         message
       })
+
+      console.log('[Connect] API Response:', response)
 
       if (!response.success || !response.data) {
         throw new Error(response.error || 'Failed to connect wallet')
@@ -118,7 +130,7 @@ export default function ConnectWallet() {
         )}
 
         <div className="w-full flex flex-col items-center gap-3">
-          <WalletMultiButton className="h-12" />
+          {mounted && <WalletMultiButton className="h-12" />}
           <Button
             onClick={handleConnectComplete}
             disabled={!wallet.connected || loading}

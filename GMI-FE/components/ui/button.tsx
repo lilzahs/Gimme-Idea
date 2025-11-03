@@ -48,11 +48,14 @@ function Button({
   }) {
   const Comp = asChild ? Slot : 'button'
 
+  // Filter out non-standard props that shouldn't be passed to DOM
+  const { isLoading, ...restProps } = props as any
+
   return (
     <Comp
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
-      {...props}
+      {...restProps}
     />
   )
 }

@@ -7,7 +7,8 @@ import { WalletModalProvider } from "@solana/wallet-adapter-react-ui"
 import { PhantomWalletAdapter, SolflareWalletAdapter } from "@solana/wallet-adapter-wallets"
 import { DEVNET_RPC } from "./config"
 
-require("@solana/wallet-adapter-react-ui/styles.css")
+// CSS is imported in app/layout.tsx to avoid HMR issues
+import "@solana/wallet-adapter-react-ui/styles.css"
 
 export function SolanaWalletProvider({ children }: { children: React.ReactNode }) {
   const endpoint = DEVNET_RPC
