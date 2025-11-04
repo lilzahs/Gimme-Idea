@@ -35,10 +35,7 @@ app.use(morgan('dev'))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-// Access code middleware (applies to all routes except /api/access)
-app.use(accessMiddleware)
-
-// Health check
+// Health check (before access middleware so it's publicly accessible)
 app.get('/api/health', (_req, res) => {
   res.json({
     status: 'ok',
@@ -46,6 +43,9 @@ app.get('/api/health', (_req, res) => {
     environment: process.env.NODE_ENV || 'development'
   })
 })
+
+// Access code middleware (applies to all routes except /api/access and /api/health)
+app.use(accessMiddleware)
 
 // Import routes
 import accessRoutes from './routes/access.routes'
