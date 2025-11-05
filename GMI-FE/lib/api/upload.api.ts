@@ -17,9 +17,10 @@ export interface UploadResponse {
 export async function uploadImage(
   file: File,
   walletAddress: string,
-  walletSignature: string
+  walletSignature: string,
+  message?: string
 ): Promise<ApiResponse<UploadResponse>> {
-  return apiUpload('/api/upload', file, walletAddress, walletSignature)
+  return apiUpload('/api/upload', file, walletAddress, walletSignature, message)
 }
 
 /**

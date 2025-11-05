@@ -15,9 +15,10 @@ import {
 export async function uploadPostImage(
   file: File,
   walletAddress: string,
-  walletSignature: string
+  walletSignature: string,
+  message?: string
 ): Promise<string> {
-  const response = await apiUploadImage(file, walletAddress, walletSignature)
+  const response = await apiUploadImage(file, walletAddress, walletSignature, message)
 
   if (!response.success || !response.data) {
     throw new Error(response.error || 'Failed to upload image')

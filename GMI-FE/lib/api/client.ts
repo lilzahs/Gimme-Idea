@@ -143,10 +143,16 @@ export async function apiUpload<T = any>(
   endpoint: string,
   file: File,
   walletAddress: string,
-  walletSignature: string
+  walletSignature: string,
+  message?: string
 ): Promise<ApiResponse<T>> {
   const formData = new FormData()
   formData.append('image', file)
+
+  // Add message for signature verification if provided
+  if (message) {
+    formData.append('message', message)
+  }
 
   try {
     const response = await fetch(`${API_URL}${endpoint}`, {

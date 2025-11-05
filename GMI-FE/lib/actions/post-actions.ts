@@ -64,9 +64,10 @@ export async function getPost(id: string) {
 export async function createPost(
   input: CreatePostInput,
   walletAddress: string,
-  walletSignature: string
+  walletSignature: string,
+  message?: string
 ) {
-  const response = await apiCreatePost(input, walletAddress, walletSignature)
+  const response = await apiCreatePost(input, walletAddress, walletSignature, message)
 
   if (!response.success || !response.data) {
     throw new Error(response.error || 'Failed to create post')

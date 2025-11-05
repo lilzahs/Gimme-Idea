@@ -75,9 +75,13 @@ export async function getPost(id: string): Promise<ApiResponse<Post>> {
 export async function createPost(
   input: CreatePostInput,
   walletAddress: string,
-  walletSignature: string
+  walletSignature: string,
+  message?: string
 ): Promise<ApiResponse<Post>> {
-  return apiPost('/api/posts', input, {
+  // Include message in body for signature verification
+  const body = message ? { ...input, message } : input
+
+  return apiPost('/api/posts', body, {
     walletAddress,
     walletSignature
   })

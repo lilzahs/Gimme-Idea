@@ -128,17 +128,17 @@ export default function CreatePost() {
         return
       }
 
+      // Get wallet signature from cache (used for both upload and createPost)
+      const cached = getCachedSignature(appWallet.address || '')
+      if (!cached) {
+        throw new Error('Wallet signature not found. Please reconnect your wallet.')
+      }
+
       let imageUrl = "/project-management-team.png"
 
       // Upload image to Supabase Storage
       if (imageFile) {
-        // Get wallet signature from cache
-        const cached = getCachedSignature(appWallet.address || '')
-        if (!cached) {
-          throw new Error('Wallet signature not found. Please reconnect your wallet.')
-        }
-
-        imageUrl = await uploadPostImage(imageFile, appWallet.address || '', cached.signature)
+        imageUrl = await uploadPostImage(imageFile, appWallet.address || '', cached.signature, cached.message)
       }
 
       // Create the post first
@@ -154,7 +154,7 @@ export default function CreatePost() {
         prize_pool_count: withPrizes ? Number.parseInt(prizePool.winnerCount) : 0,
         ends_at: withPrizes && prizePool.endsAt ? new Date(prizePool.endsAt).toISOString() : undefined,
         escrow_locked: false, // Prize pool not locked yet - can be locked later if needed
-      })
+      }, appWallet.address || '', cached.signature, cached.message)
 
       console.log("[v0] Post created successfully:", newPost.id)
 
