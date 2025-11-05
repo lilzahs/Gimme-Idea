@@ -27,7 +27,16 @@ export const authMiddleware = async (
     // Verify signature if provided
     if (signature) {
       // Try header first (for uploads), then body (for JSON requests), then fallback
-      const message = messageFromHeader || req.body?.message || `Sign in to Gimme Idea at ${Date.now()}`
+      // Decode base64 if from header (frontend encodes to handle newlines)
+      let message = req.body?.message
+      if (messageFromHeader) {
+        try {
+          message = Buffer.from(messageFromHeader, 'base64').toString('utf-8')
+        } catch {
+          message = messageFromHeader // Fallback if decode fails
+        }
+      }
+      message = message || `Sign in to Gimme Idea at ${Date.now()}`
       const isValid = await verifyWalletSignature(walletAddress, signature, message)
 
       if (!isValid) {

@@ -156,9 +156,9 @@ export async function apiUpload<T = any>(
       'x-wallet-signature': walletSignature
     }
 
-    // Send message via header for reliable transmission
+    // Send message via header for reliable transmission (base64 encode to handle newlines)
     if (message) {
-      headers['x-wallet-message'] = message
+      headers['x-wallet-message'] = btoa(message)
     }
 
     const response = await fetch(`${API_URL}${endpoint}`, {
