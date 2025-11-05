@@ -48,10 +48,10 @@ export const authMiddleware = async (
         }
       })
     } else {
-      // Update last active time
+      // Update last active time (auto-updated by @updatedAt, trigger by dummy update)
       await prisma.wallet.update({
         where: { id: wallet.id },
-        data: { lastActiveAt: new Date() }
+        data: { type: wallet.type }
       })
     }
 
