@@ -28,7 +28,7 @@ const upload = multer({
  * POST /api/upload
  * Upload image to Supabase Storage
  */
-router.post('/', authMiddleware, upload.single('image'), async (req: AuthRequest, res: Response) => {
+router.post('/', upload.single('image'), authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' })
