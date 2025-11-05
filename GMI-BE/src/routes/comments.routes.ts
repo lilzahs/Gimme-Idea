@@ -3,13 +3,13 @@ import { AuthRequest, CreateCommentInput } from '../types'
 import { authMiddleware } from '../middleware/auth.middleware'
 import prisma from '../config/database'
 
-const router = Router()
+const router = Router({ mergeParams: true })
 
 /**
  * POST /api/posts/:postId/comments
  * Add comment to post
  */
-router.post('/:postId', authMiddleware, async (req: AuthRequest, res: Response) => {
+router.post('/', authMiddleware, async (req: AuthRequest, res: Response) => {
   try {
     const { postId } = req.params
     const { content, parentId }: CreateCommentInput = req.body
@@ -73,7 +73,7 @@ router.post('/:postId', authMiddleware, async (req: AuthRequest, res: Response) 
  * GET /api/posts/:postId/comments
  * Get all comments for a post
  */
-router.get('/:postId', async (req: AuthRequest, res: Response) => {
+router.get('/', async (req: AuthRequest, res: Response) => {
   try {
     const { postId } = req.params
 

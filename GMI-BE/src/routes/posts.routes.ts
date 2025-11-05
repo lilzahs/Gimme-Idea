@@ -2,8 +2,12 @@ import { Router, Response } from 'express'
 import { AuthRequest, CreatePostInput } from '../types'
 import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth.middleware'
 import prisma from '../config/database'
+import commentsRoutes from './comments.routes'
 
 const router = Router()
+
+// Mount nested comments routes
+router.use('/:postId/comments', commentsRoutes)
 
 /**
  * GET /api/posts

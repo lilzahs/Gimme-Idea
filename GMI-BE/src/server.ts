@@ -51,7 +51,6 @@ app.use(accessMiddleware)
 import accessRoutes from './routes/access.routes'
 import walletRoutes from './routes/wallet.routes'
 import postsRoutes from './routes/posts.routes'
-import commentsRoutes from './routes/comments.routes'
 import rankingsRoutes from './routes/rankings.routes'
 import tipsRoutes from './routes/tips.routes'
 import prizesRoutes from './routes/prizes.routes'
@@ -60,8 +59,7 @@ import uploadRoutes from './routes/upload.routes'
 // API Routes
 app.use('/api/access', accessRoutes)
 app.use('/api/wallet', walletRoutes)
-app.use('/api/posts', postsRoutes)
-app.use('/api/comments', commentsRoutes)
+app.use('/api/posts', postsRoutes) // Comments routes nested inside posts
 app.use('/api/rankings', rankingsRoutes)
 app.use('/api/tips', tipsRoutes)
 app.use('/api/prizes', prizesRoutes)
