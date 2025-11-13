@@ -216,9 +216,10 @@ export default function PostDetail() {
                 href={post.project_link}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary hover:underline text-sm"
               >
-                Visit Project →
+                <Button variant="outline" size="sm" className="gap-1">
+                  Visit Project →
+                </Button>
               </a>
             </div>
 

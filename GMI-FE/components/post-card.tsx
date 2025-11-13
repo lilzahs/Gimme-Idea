@@ -35,15 +35,25 @@ export function PostCard({
   prizePoolAmount,
   commentsCount = 0,
 }: PostCardProps) {
+  console.log('[PostCard] Rendering:', { id, title, imageUrl })
+
   return (
     <Link href={`/post/${id}`}>
       <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
-        {imageUrl && (
+        {imageUrl ? (
           <img
-            src={imageUrl || "/placeholder.svg"}
+            src={imageUrl}
             alt={title}
             className="w-full aspect-video object-cover"
+            onError={(e) => {
+              console.error('[PostCard] Image failed to load:', imageUrl)
+              e.currentTarget.src = "/placeholder.svg"
+            }}
           />
+        ) : (
+          <div className="w-full aspect-video bg-muted flex items-center justify-center text-muted-foreground">
+            No Image
+          </div>
         )}
         <div className="p-4 space-y-3">
           <h3 className="font-semibold text-lg line-clamp-2">{title}</h3>

@@ -85,7 +85,17 @@ export default function Dashboard() {
         })
 
         // post-actions returns the unwrapped backend response: {success: true, data: {posts: [...], total, ...}}
-        setPosts(response.data.posts || [])
+        const posts = response.posts || []
+        console.log('[Dashboard] Fetched posts:', posts.length)
+        if (posts.length > 0) {
+          console.log('[Dashboard] First post:', {
+            id: posts[0].id,
+            title: posts[0].title,
+            image_url: posts[0].image_url,
+            project_link: posts[0].project_link
+          })
+        }
+        setPosts(posts)
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to fetch posts")
         console.error("[Dashboard] Error fetching posts:", err)
