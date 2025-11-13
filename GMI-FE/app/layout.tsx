@@ -12,6 +12,10 @@ const _geistMono = Geist_Mono({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "Gimme Idea - Web3 Feedback Platform",
   description: "Share your ideas and get feedback from the community",
+  icons: {
+    icon: "/favicon-gimme.png",
+    apple: "/favicon-gimme.png",
+  },
 }
 
 export default function RootLayout({
