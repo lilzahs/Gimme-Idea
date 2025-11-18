@@ -32,14 +32,7 @@ interface Post {
 
 // Transform backend camelCase response to app store snake_case format
 export function transformBackendPost(backendPost: any): Post {
-  console.log('[Transform] Backend post:', {
-    id: backendPost.id,
-    title: backendPost.title,
-    imageUrl: backendPost.imageUrl,
-    projectLink: backendPost.projectLink
-  })
-
-  const transformed = {
+  return {
     id: backendPost.id,
     wallet_address: backendPost.wallet?.address || backendPost.walletAddress || '',
     title: backendPost.title,
@@ -54,15 +47,6 @@ export function transformBackendPost(backendPost: any): Post {
     escrow_locked: !!backendPost.prizePool?.escrowTx,
     created_at: backendPost.createdAt
   }
-
-  console.log('[Transform] Transformed to:', {
-    id: transformed.id,
-    title: transformed.title,
-    image_url: transformed.image_url,
-    project_link: transformed.project_link
-  })
-
-  return transformed
 }
 
 interface AppState {

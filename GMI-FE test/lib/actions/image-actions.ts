@@ -20,9 +20,6 @@ export async function uploadPostImage(
   message?: string
 ): Promise<string> {
   // Skip compression - upload original file directly
-  // Compression was causing issues with image display
-  console.log(`[Upload] Uploading file: ${file.name}, size: ${(file.size / 1024 / 1024).toFixed(2)}MB`)
-
   const response = await apiUploadImage(file, walletAddress, walletSignature, message)
 
   if (!response.success || !response.data) {

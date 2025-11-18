@@ -54,11 +54,7 @@ export async function apiRequest<T = any>(
   }
 
   try {
-    const url = `${API_URL}${endpoint}`
-    console.log(`[API] ${method} ${url}`)
-    console.log('[API] Headers:', { ...requestHeaders, 'x-access-code': requestHeaders['x-access-code'] })
-
-    const response = await fetch(url, {
+    const response = await fetch(`${API_URL}${endpoint}`, {
       method,
       headers: requestHeaders,
       body: body ? JSON.stringify(body) : undefined,
@@ -67,14 +63,11 @@ export async function apiRequest<T = any>(
 
     // Check if response has content before parsing JSON
     const text = await response.text()
-    console.log(`[API] Response status: ${response.status}`)
-    console.log('[API] Response text:', text.substring(0, 200))
-
     let data
     try {
       data = text ? JSON.parse(text) : {}
     } catch (parseError) {
-      console.error('[API Client] JSON parse error:', text)
+      console.error('[API] JSON parse error:', parseError)
       return {
         error: 'Invalid response from server',
         success: false
@@ -82,20 +75,19 @@ export async function apiRequest<T = any>(
     }
 
     if (!response.ok) {
-      console.error('[API] Request failed:', data)
+      console.error(`[API] ${method} ${endpoint} failed:`, data.error || response.status)
       return {
         error: data.error || `Request failed with status ${response.status}`,
         success: false
       }
     }
 
-    console.log('[API] Success:', data)
     return {
       data,
       success: true
     }
   } catch (error) {
-    console.error('[API Client] Error:', error)
+    console.error(`[API] ${method} ${endpoint} error:`, error)
     return {
       error: error instanceof Error ? error.message : 'Network error',
       success: false

@@ -35,8 +35,6 @@ export function PostCard({
   prizePoolAmount,
   commentsCount = 0,
 }: PostCardProps) {
-  console.log('[PostCard] Rendering:', { id, title, imageUrl })
-
   return (
     <Link href={`/post/${id}`}>
       <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">

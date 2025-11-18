@@ -24,17 +24,11 @@ export async function getPosts(params?: {
   page?: number
   limit?: number
 }) {
-  console.log('[getPosts] Calling API with params:', params)
   const response = await apiGetPosts(params)
-
-  console.log('[getPosts] API response:', response)
 
   if (!response.success || !response.data) {
     throw new Error(response.error || 'Failed to get posts')
   }
-
-  console.log('[getPosts] Response data:', response.data)
-  console.log('[getPosts] Posts array:', response.data.posts)
 
   // Transform posts but keep the rest of response structure
   return {
@@ -88,13 +82,9 @@ export async function createPost(
 
   // Backend returns { success: true, data: { post: {...} } }
   const backendPost = response.data.post || response.data
-  console.log('[createPost] Backend response:', backendPost)
 
   // Transform backend camelCase to snake_case
-  const transformedPost = transformBackendPost(backendPost)
-  console.log('[createPost] Transformed post:', transformedPost)
-
-  return transformedPost
+  return transformBackendPost(backendPost)
 }
 
 /**
