@@ -2,150 +2,81 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 const ACCESS_CODE = import.meta.env.VITE_ACCESS_CODE || 'GMI2025';
 
-interface ApiResponse<T = any> {
-  success: boolean;
-  data?: T;
-  error?: string;
+interface Post {
+  id: number;
+  title: string;
+  content: string;
+  imageUrl?: string;
+  walletAddress: string;
+  upvotes: number;
+  downvotes: number;
+  createdAt: string;
+}
+
+interface Comment {
+  id: number;
+  postId: number;
+  content: string;
+  walletAddress: string;
+  createdAt: string;
 }
 
 class ApiClient {
-  private baseURL: string;
+  private baseUrl: string;
   private accessCode: string;
 
-  constructor(baseURL: string, accessCode: string) {
-    this.baseURL = baseURL;
+  constructor(baseUrl: string, accessCode: string) {
+    this.baseUrl = baseUrl;
     this.accessCode = accessCode;
   }
 
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<ApiResponse<T>> {
-    const url = `${this.baseURL}${endpoint}`;
-
-    const headers: HeadersInit = {
+  private async request(endpoint: string, options: RequestInit = {}) {
+    const url = `${this.baseUrl}${endpoint}`;
+    const headers = {
       'Content-Type': 'application/json',
       'x-access-code': this.accessCode,
       ...options.headers,
     };
 
-    try {
-      const response = await fetch(url, {
-        ...options,
-        headers,
-      });
+    const response = await fetch(url, {
+      ...options,
+      headers,
+    });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        return {
-          success: false,
-          error: data.error || `HTTP error! status: ${response.status}`,
-        };
-      }
-
-      return data;
-    } catch (error) {
-      console.error('API request failed:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      };
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.statusText}`);
     }
+
+    return response.json();
   }
 
-  // Posts API
-  async getPosts(params?: {
-    category?: string;
-    search?: string;
-    sortBy?: string;
-    page?: number;
-    limit?: number;
-  }) {
-    const queryParams = new URLSearchParams(params as any).toString();
-    const endpoint = `/api/posts${queryParams ? `?${queryParams}` : ''}`;
-    return this.request(endpoint);
+  // Posts
+  async getPosts(params?: { limit?: number; offset?: number; sort?: string }) {
+    const query = new URLSearchParams(params as any).toString();
+    return this.request(`/api/posts${query ? `?${query}` : ''}`);
   }
 
-  async getPost(id: string) {
+  async getPost(id: number) {
     return this.request(`/api/posts/${id}`);
   }
 
   async createPost(
-    postData: any,
+    postData: { title: string; content: string; imageUrl?: string },
     walletAddress: string,
     signature: string,
     message?: string
   ) {
     return this.request('/api/posts', {
       method: 'POST',
-      headers: {
-        'x-wallet-address': walletAddress,
-        'x-wallet-signature': signature,
-        ...(message && { 'x-signature-message': message }),
-      },
-      body: JSON.stringify(postData),
+      body: JSON.stringify({
+        ...postData,
+        walletAddress,
+        signature,
+        message,
+      }),
     });
   }
 
-  async updatePost(
-    id: string,
-    postData: any,
-    walletAddress: string,
-    signature: string,
-    message?: string
-  ) {
-    return this.request(`/api/posts/${id}`, {
-      method: 'PUT',
-      headers: {
-        'x-wallet-address': walletAddress,
-        'x-wallet-signature': signature,
-        ...(message && { 'x-signature-message': message }),
-      },
-      body: JSON.stringify(postData),
-    });
-  }
-
-  async deletePost(
-    id: string,
-    walletAddress: string,
-    signature: string,
-    message?: string
-  ) {
-    return this.request(`/api/posts/${id}`, {
-      method: 'DELETE',
-      headers: {
-        'x-wallet-address': walletAddress,
-        'x-wallet-signature': signature,
-        ...(message && { 'x-signature-message': message }),
-      },
-    });
-  }
-
-  // Comments API
-  async getComments(postId: string) {
-    return this.request(`/api/posts/${postId}/comments`);
-  }
-
-  async createComment(
-    postId: string,
-    content: string,
-    walletAddress: string,
-    signature: string,
-    message?: string
-  ) {
-    return this.request(`/api/posts/${postId}/comments`, {
-      method: 'POST',
-      headers: {
-        'x-wallet-address': walletAddress,
-        'x-wallet-signature': signature,
-        ...(message && { 'x-signature-message': message }),
-      },
-      body: JSON.stringify({ content }),
-    });
-  }
-
-  // Upload API
   async uploadImage(
     file: File,
     walletAddress: string,
@@ -154,57 +85,75 @@ class ApiClient {
   ) {
     const formData = new FormData();
     formData.append('image', file);
+    formData.append('walletAddress', walletAddress);
+    formData.append('signature', signature);
+    if (message) formData.append('message', message);
 
-    const url = `${this.baseURL}/api/upload/image`;
+    const response = await fetch(`${this.baseUrl}/api/upload`, {
+      method: 'POST',
+      headers: {
+        'x-access-code': this.accessCode,
+      },
+      body: formData,
+    });
 
-    try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'x-access-code': this.accessCode,
-          'x-wallet-address': walletAddress,
-          'x-wallet-signature': signature,
-          ...(message && { 'x-signature-message': message }),
-        },
-        body: formData,
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        return {
-          success: false,
-          error: data.error || `HTTP error! status: ${response.status}`,
-        };
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Upload failed:', error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      };
+    if (!response.ok) {
+      throw new Error(`Upload Error: ${response.statusText}`);
     }
+
+    return response.json();
   }
 
-  // Wallet API
-  async getWalletInfo(address: string) {
-    return this.request(`/api/wallet/${address}`);
+  async votePost(
+    postId: number,
+    voteType: 'upvote' | 'downvote',
+    walletAddress: string,
+    signature: string,
+    message?: string
+  ) {
+    return this.request(`/api/posts/${postId}/vote`, {
+      method: 'POST',
+      body: JSON.stringify({
+        voteType,
+        walletAddress,
+        signature,
+        message,
+      }),
+    });
   }
 
-  // Rankings API
-  async getRankings(params?: { period?: string; limit?: number }) {
-    const queryParams = new URLSearchParams(params as any).toString();
-    const endpoint = `/api/rankings${queryParams ? `?${queryParams}` : ''}`;
-    return this.request(endpoint);
+  // Comments
+  async getComments(postId: number) {
+    return this.request(`/api/posts/${postId}/comments`);
   }
 
-  // Health Check
-  async healthCheck() {
-    return this.request('/api/health');
+  async createComment(
+    postId: number,
+    content: string,
+    walletAddress: string,
+    signature: string,
+    message?: string
+  ) {
+    return this.request(`/api/posts/${postId}/comments`, {
+      method: 'POST',
+      body: JSON.stringify({
+        content,
+        walletAddress,
+        signature,
+        message,
+      }),
+    });
+  }
+
+  // Rankings
+  async getRankings(period: 'daily' | 'weekly' | 'monthly' | 'all-time' = 'weekly') {
+    return this.request(`/api/rankings?period=${period}`);
+  }
+
+  async getUserRanking(walletAddress: string) {
+    return this.request(`/api/rankings/user/${walletAddress}`);
   }
 }
 
 export const apiClient = new ApiClient(API_URL, ACCESS_CODE);
-export default apiClient;
+export type { Post, Comment };

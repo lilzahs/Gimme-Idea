@@ -33,7 +33,7 @@ export const LandingView: React.FC = () => {
             </h1>
 
             <p className="text-xl text-gray-400 leading-relaxed max-w-lg mb-10 font-inter">
-              Where Solana builders validate ideas before deployment. Get brutal, actionable insights from verified developers and users.
+            Get brutal and honest feedback developers and users.
             </p>
 
             <div className="flex flex-wrap gap-4">
