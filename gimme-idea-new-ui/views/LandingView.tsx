@@ -22,7 +22,7 @@ export const LandingView: React.FC = () => {
           >
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-mono text-brand-accent mb-6">
               <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-              SOLANA MAINNET BETA
+              SOLANA DEVNET BETA
             </div>
 
             <h1 className="text-5xl lg:text-7xl font-bold font-space leading-[0.95] tracking-tighter mb-8">
