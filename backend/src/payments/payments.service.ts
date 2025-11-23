@@ -162,4 +162,98 @@ export class PaymentsService {
       data: transactionsResponse,
     };
   }
+
+  /**
+   * Get top donators (for donate page)
+   */
+  async getTopDonators(limit: number = 10): Promise<ApiResponse<any[]>> {
+    const supabase = this.supabaseService.getAdminClient();
+
+    // Query to get top donators with total amount donated
+    const { data, error } = await supabase
+      .from('transactions')
+      .select(`
+        from_wallet,
+        user:users!transactions_user_id_fkey(username, avatar)
+      `)
+      .eq('status', 'confirmed')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      throw new Error(`Failed to fetch donators: ${error.message}`);
+    }
+
+    // Aggregate donations by user
+    const donatorMap = new Map<string, any>();
+
+    data?.forEach(tx => {
+      const wallet = tx.from_wallet;
+      if (!donatorMap.has(wallet)) {
+        donatorMap.set(wallet, {
+          wallet,
+          username: tx.user?.username || 'Anonymous',
+          avatar: tx.user?.avatar,
+          totalDonated: 0,
+          donationCount: 0,
+        });
+      }
+      const donator = donatorMap.get(wallet);
+      donator.totalDonated += tx.amount || 0;
+      donator.donationCount += 1;
+    });
+
+    // Convert to array and sort by total donated
+    const topDonators = Array.from(donatorMap.values())
+      .sort((a, b) => b.totalDonated - a.totalDonated)
+      .slice(0, limit);
+
+    return {
+      success: true,
+      data: topDonators,
+    };
+  }
+
+  /**
+   * Get recent donations (for donate page)
+   */
+  async getRecentDonations(limit: number = 20): Promise<ApiResponse<any[]>> {
+    const supabase = this.supabaseService.getAdminClient();
+
+    const { data: donations, error } = await supabase
+      .from('transactions')
+      .select(`
+        *,
+        from_user:users!transactions_user_id_fkey(username, avatar),
+        project:projects(title)
+      `)
+      .eq('status', 'confirmed')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      throw new Error(`Failed to fetch recent donations: ${error.message}`);
+    }
+
+    const recentDonations = donations?.map(d => ({
+      id: d.id,
+      txHash: d.tx_hash,
+      from: {
+        wallet: d.from_wallet,
+        username: d.from_user?.username || 'Anonymous',
+        avatar: d.from_user?.avatar,
+      },
+      to: {
+        wallet: d.to_wallet,
+      },
+      amount: d.amount,
+      type: d.type,
+      project: d.project ? { title: d.project.title } : null,
+      createdAt: d.created_at,
+    })) || [];
+
+    return {
+      success: true,
+      data: recentDonations,
+    };
+  }
 }
