@@ -12,8 +12,8 @@ import { LoadingLightbulb, LoadingStatus } from './LoadingLightbulb';
 
 export const WalletModal = () => {
   const { isWalletModalOpen, closeWalletModal, setUser, setWalletConnected } = useAppStore();
-  const { select, wallets: availableWallets } = useWallet();
-  const { connectAndLogin } = useWalletAuth();
+  const { select, connect, wallets: availableWallets, wallet } = useWallet();
+  const { login } = useWalletAuth();
   const [status, setStatus] = useState<LoadingStatus>('loading');
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -39,12 +39,28 @@ export const WalletModal = () => {
         throw new Error(`${walletName} wallet not found`);
       }
 
-      // Select the wallet (this triggers connection UI in wallet extension)
+      // Select the wallet (sets it in context)
       select(selectedWallet.adapter.name);
 
-      // Wait for user to approve connection in wallet popup
-      // The connectAndLogin will wait for publicKey to be available
-      const userData = await connectAndLogin();
+      // Wait for wallet to be set in context
+      let attempts = 0;
+      while (!wallet && attempts < 20) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        attempts++;
+      }
+
+      if (!wallet) {
+        throw new Error('Wallet selection timeout');
+      }
+
+      // Now connect to the wallet (this will trigger wallet popup)
+      await connect();
+
+      // Wait a bit for connection to complete
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Perform login with signature
+      const userData = await login();
 
       // Update app store with real user data
       setUser(userData.user);
@@ -68,7 +84,7 @@ export const WalletModal = () => {
       }, 2000);
 
       // Better error messages
-      if (error.message?.includes('User rejected')) {
+      if (error.message?.includes('User rejected') || error.message?.includes('User canceled')) {
         toast.error('Connection cancelled by user');
       } else if (error.message?.includes('timeout')) {
         toast.error('Connection timeout - please try again');
