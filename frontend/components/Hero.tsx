@@ -5,7 +5,7 @@ import { Terminal, Code, Cpu, LayoutGrid, Plus } from 'lucide-react';
 import { useAppStore } from '../lib/store';
 
 const Hero: React.FC = () => {
-  const { setView } = useAppStore();
+  const { setView, openSubmitModal } = useAppStore();
 
   return (
     <section className="relative min-h-screen flex items-center justify-center pt-20 overflow-hidden">
@@ -46,15 +46,15 @@ const Hero: React.FC = () => {
             </p>
 
             <div className="flex flex-wrap gap-4 mt-8">
-              <button 
-                onClick={() => setView('upload')}
+              <button
+                onClick={() => openSubmitModal('project')}
                 className="px-8 py-4 bg-white text-black font-bold rounded-full hover:bg-gold transition-all duration-300 transform hover:scale-105 flex items-center gap-2"
               >
                 <Plus className="w-5 h-5" />
                 Start Building
               </button>
-              <button 
-                onClick={() => setView('dashboard')}
+              <button
+                onClick={() => setView('projects-dashboard')}
                 className="px-8 py-4 bg-transparent border border-white/20 text-white font-bold rounded-full hover:border-white hover:bg-white/5 transition-all duration-300 flex items-center gap-2"
               >
                 <LayoutGrid className="w-5 h-5" />
