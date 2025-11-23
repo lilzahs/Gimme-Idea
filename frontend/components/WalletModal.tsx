@@ -5,11 +5,15 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAppStore } from '../lib/store';
+import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletAuth } from '../lib/useWalletAuth';
 import toast from 'react-hot-toast';
 import { LoadingLightbulb, LoadingStatus } from './LoadingLightbulb';
 
 export const WalletModal = () => {
-  const { isWalletModalOpen, closeWalletModal, connectWallet } = useAppStore();
+  const { isWalletModalOpen, closeWalletModal, setUser, setWalletConnected } = useAppStore();
+  const { select, wallets: availableWallets } = useWallet();
+  const { connectAndLogin } = useWalletAuth();
   const [status, setStatus] = useState<LoadingStatus>('loading');
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -28,12 +32,29 @@ export const WalletModal = () => {
     setStatus('loading');
 
     try {
-      // Call the store action
-      await connectWallet(walletName);
-      
+      // Find and select the wallet adapter
+      const selectedWallet = availableWallets.find(w => w.adapter.name.toLowerCase().includes(walletName.toLowerCase()));
+
+      if (!selectedWallet) {
+        throw new Error(`${walletName} wallet not found`);
+      }
+
+      // Select the wallet (this triggers connection)
+      select(selectedWallet.adapter.name);
+
+      // Wait for wallet selection to propagate
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Connect and perform login with signature
+      const userData = await connectAndLogin();
+
+      // Update app store with real user data
+      setUser(userData.user);
+      setWalletConnected(true);
+
       // Show success state
       setStatus('success');
-      
+
       // Wait a bit for the user to see the success animation before closing
       setTimeout(() => {
         toast.success(`Connected to ${walletName}`);
@@ -41,33 +62,28 @@ export const WalletModal = () => {
         setIsProcessing(false);
       }, 1500);
 
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Wallet connection error:', error);
       setStatus('error');
       setTimeout(() => {
         setIsProcessing(false);
       }, 2000);
-      toast.error("Failed to connect");
+      toast.error(error.message || "Failed to connect wallet");
     }
   };
 
   const wallets = [
-    { 
-        name: 'Phantom', 
-        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Phantom_wallet_logo.png/1200px-Phantom_wallet_logo.png?20220525001338', 
+    {
+        name: 'Phantom',
+        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Phantom_wallet_logo.png/1200px-Phantom_wallet_logo.png?20220525001338',
         // Purple Hover
-        color: 'hover:bg-[#AB9FF2]/20 hover:border-[#AB9FF2]/50' 
+        color: 'hover:bg-[#AB9FF2]/20 hover:border-[#AB9FF2]/50'
     },
-    { 
-        name: 'Solflare', 
-        icon: 'https://play-lh.googleusercontent.com/fXvU754g5c8Y181E8Y-gT1-rW80qV3d8nZ67Z35c7c67791808c7a089501008a301c', 
+    {
+        name: 'Solflare',
+        icon: 'https://play-lh.googleusercontent.com/fXvU754g5c8Y181E8Y-gT1-rW80qV3d8nZ67Z35c7c67791808c7a089501008a301c',
         // Bright Yellow/Gold Hover
-        color: 'hover:bg-[#FFD700]/20 hover:border-[#FFD700]/50' 
-    },
-    { 
-        name: 'MetaMask', 
-        icon: 'https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg', 
-        // Orange Hover
-        color: 'hover:bg-[#F6851B]/20 hover:border-[#F6851B]/50' 
+        color: 'hover:bg-[#FFD700]/20 hover:border-[#FFD700]/50'
     },
   ];
 
@@ -124,7 +140,7 @@ export const WalletModal = () => {
                         <div className={`w-2.5 h-2.5 rounded-full bg-gray-600 transition-all ${
                             wallet.name === 'Phantom' ? 'group-hover:bg-[#AB9FF2] group-hover:shadow-[0_0_10px_#AB9FF2]' :
                             wallet.name === 'Solflare' ? 'group-hover:bg-[#FFD700] group-hover:shadow-[0_0_10px_#FFD700]' :
-                            'group-hover:bg-[#F6851B] group-hover:shadow-[0_0_10px_#F6851B]'
+                            'group-hover:bg-white group-hover:shadow-[0_0_10px_white]'
                         }`} />
                     </button>
                 ))}

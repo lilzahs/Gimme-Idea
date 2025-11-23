@@ -39,6 +39,8 @@ interface AppState {
 
   connectWallet: (walletType: string) => Promise<void>;
   disconnectWallet: () => void;
+  setUser: (user: User) => void;
+  setWalletConnected: (connected: boolean) => void;
   updateUserProfile: (data: Partial<User>) => Promise<void>;
 
   openUserProfile: (author: { username: string; wallet: string; avatar?: string }) => Promise<void>;
@@ -121,6 +123,14 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   disconnectWallet: () => {
     set({ user: null, walletConnected: false, currentView: 'landing' });
+  },
+
+  setUser: (user) => {
+    set({ user });
+  },
+
+  setWalletConnected: (connected) => {
+    set({ walletConnected: connected });
   },
 
   updateUserProfile: async (data) => {

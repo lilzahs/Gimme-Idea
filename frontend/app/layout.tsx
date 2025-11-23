@@ -2,6 +2,7 @@ import './globals.css';
 import type { Metadata } from 'next';
 import { Inter, JetBrains_Mono, Space_Grotesk } from 'next/font/google';
 import { Toaster } from 'react-hot-toast';
+import { WalletProvider } from '../components/WalletProvider';
 import React from 'react';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
@@ -21,23 +22,25 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} ${mono.variable} ${space.variable} font-sans bg-background text-white min-h-screen selection:bg-accent selection:text-black`}>
-        <Toaster 
-          position="bottom-right"
-          toastOptions={{
-            style: {
-              background: '#1A1A1A',
-              color: '#fff',
-              border: '1px solid #333',
-            },
-            success: {
-              iconTheme: {
-                primary: '#14F195',
-                secondary: '#000',
+        <WalletProvider>
+          <Toaster
+            position="bottom-right"
+            toastOptions={{
+              style: {
+                background: '#1A1A1A',
+                color: '#fff',
+                border: '1px solid #333',
               },
-            },
-          }}
-        />
-        {children}
+              success: {
+                iconTheme: {
+                  primary: '#14F195',
+                  secondary: '#000',
+                },
+              },
+            }}
+          />
+          {children}
+        </WalletProvider>
       </body>
     </html>
   );
