@@ -135,7 +135,7 @@ export const apiClient = {
       method: 'POST',
     }),
 
-  // Payments (if you have payment endpoints)
+  // Payments
   verifyTransaction: (data: {
     signature: string;
     type: 'tip' | 'bounty' | 'reward';
@@ -145,6 +145,30 @@ export const apiClient = {
   }) =>
     apiFetch<any>('/payments/verify', {
       method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  getTopDonators: (limit?: number) =>
+    apiFetch<any[]>(`/payments/top-donators${limit ? `?limit=${limit}` : ''}`),
+
+  getRecentDonations: (limit?: number) =>
+    apiFetch<any[]>(`/payments/recent-donations${limit ? `?limit=${limit}` : ''}`),
+
+  // Users
+  getUserByUsername: (username: string) =>
+    apiFetch<any>(`/users/${username}`),
+
+  getUserProjects: (username: string) =>
+    apiFetch<any[]>(`/users/${username}/projects`),
+
+  updateUserProfile: (data: {
+    username?: string;
+    bio?: string;
+    avatar?: string;
+    socialLinks?: any;
+  }) =>
+    apiFetch<any>('/users/profile', {
+      method: 'PATCH',
       body: JSON.stringify(data),
     }),
 };
