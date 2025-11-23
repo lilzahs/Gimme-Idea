@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Body, Query, UseGuards } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { VerifyPaymentDto } from './dto/verify-payment.dto';
 import { AuthGuard } from '../common/guards/auth.guard';
@@ -30,5 +30,25 @@ export class PaymentsController {
   @UseGuards(AuthGuard)
   async getHistory(@CurrentUser('userId') userId: string): Promise<ApiResponse<Transaction[]>> {
     return this.paymentsService.getTransactionHistory(userId);
+  }
+
+  /**
+   * GET /api/payments/top-donators
+   * Get top donators (public - for donate page)
+   */
+  @Get('top-donators')
+  async getTopDonators(@Query('limit') limit?: string): Promise<ApiResponse<any[]>> {
+    const limitNum = limit ? parseInt(limit) : 10;
+    return this.paymentsService.getTopDonators(limitNum);
+  }
+
+  /**
+   * GET /api/payments/recent-donations
+   * Get recent donations (public - for donate page)
+   */
+  @Get('recent-donations')
+  async getRecentDonations(@Query('limit') limit?: string): Promise<ApiResponse<any[]>> {
+    const limitNum = limit ? parseInt(limit) : 20;
+    return this.paymentsService.getRecentDonations(limitNum);
   }
 }
