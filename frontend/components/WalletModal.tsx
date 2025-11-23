@@ -39,13 +39,11 @@ export const WalletModal = () => {
         throw new Error(`${walletName} wallet not found`);
       }
 
-      // Select the wallet (this triggers connection)
+      // Select the wallet (this triggers connection UI in wallet extension)
       select(selectedWallet.adapter.name);
 
-      // Wait for wallet selection to propagate
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // Connect and perform login with signature
+      // Wait for user to approve connection in wallet popup
+      // The connectAndLogin will wait for publicKey to be available
       const userData = await connectAndLogin();
 
       // Update app store with real user data
@@ -68,7 +66,15 @@ export const WalletModal = () => {
       setTimeout(() => {
         setIsProcessing(false);
       }, 2000);
-      toast.error(error.message || "Failed to connect wallet");
+
+      // Better error messages
+      if (error.message?.includes('User rejected')) {
+        toast.error('Connection cancelled by user');
+      } else if (error.message?.includes('timeout')) {
+        toast.error('Connection timeout - please try again');
+      } else {
+        toast.error(error.message || "Failed to connect wallet");
+      }
     }
   };
 

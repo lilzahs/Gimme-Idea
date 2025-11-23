@@ -53,8 +53,18 @@ export function useWalletAuth() {
         await connect();
       }
 
-      // Wait a bit for publicKey to be available
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Wait for publicKey to be available with timeout
+      let attempts = 0;
+      const maxAttempts = 20; // 10 seconds total
+
+      while (!publicKey && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        attempts++;
+      }
+
+      if (!publicKey || !signMessage) {
+        throw new Error('Wallet connection timeout or does not support signing');
+      }
 
       // Perform login with signature
       const userData = await login();
@@ -65,7 +75,7 @@ export function useWalletAuth() {
       await disconnect();
       throw error;
     }
-  }, [connected, connect, login, disconnect]);
+  }, [connected, connect, login, disconnect, publicKey, signMessage]);
 
   return {
     publicKey,
