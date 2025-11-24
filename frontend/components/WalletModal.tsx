@@ -54,13 +54,17 @@ export const WalletModal = () => {
       }
 
       // Now connect to the wallet (this will trigger wallet popup)
+      console.log('Connecting to wallet...');
       await connect();
 
       // Wait a bit for connection to complete
+      console.log('Waiting for connection to complete...');
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       // Perform login with signature
+      console.log('Calling login to sign message...');
       const userData = await login();
+      console.log('Login successful, user data:', userData);
 
       // Update app store with real user data
       setUser(userData.user);

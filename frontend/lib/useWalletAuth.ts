@@ -10,6 +10,8 @@ export function useWalletAuth() {
   const { publicKey, signMessage, connect, disconnect, wallet, connected } = useWallet();
 
   const login = useCallback(async () => {
+    console.log('Login function called, publicKey:', publicKey?.toBase58(), 'signMessage available:', !!signMessage);
+
     if (!publicKey || !signMessage) {
       throw new Error('Wallet not connected or does not support message signing');
     }
@@ -18,22 +20,28 @@ export function useWalletAuth() {
       // Create message for signing (SIWS pattern)
       const timestamp = new Date().toISOString();
       const message = `Login to GimmeIdea\n\nTimestamp: ${timestamp}\nWallet: ${publicKey.toBase58()}`;
+      console.log('Message to sign:', message);
 
       // Encode message for signing
       const encodedMessage = new TextEncoder().encode(message);
 
       // Request signature from wallet
+      console.log('Requesting signature from wallet...');
       const signature = await signMessage(encodedMessage);
+      console.log('Signature received:', signature);
 
       // Convert signature to base58 for backend
       const signatureBase58 = bs58.encode(signature);
+      console.log('Signature base58:', signatureBase58);
 
       // Send to backend for verification
+      console.log('Sending to backend for verification...');
       const response = await apiClient.login({
         publicKey: publicKey.toBase58(),
         signature: signatureBase58,
         message,
       });
+      console.log('Backend response:', response);
 
       if (!response.success || !response.data) {
         throw new Error(response.error || 'Login failed');

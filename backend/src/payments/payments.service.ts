@@ -174,6 +174,7 @@ export class PaymentsService {
       .from('transactions')
       .select(`
         from_wallet,
+        amount,
         user:users!transactions_user_id_fkey(username, avatar)
       `)
       .eq('status', 'confirmed')
@@ -186,13 +187,15 @@ export class PaymentsService {
     // Aggregate donations by user
     const donatorMap = new Map<string, any>();
 
-    data?.forEach(tx => {
+    data?.forEach((tx: any) => {
       const wallet = tx.from_wallet;
+      const user = Array.isArray(tx.user) ? tx.user[0] : tx.user;
+
       if (!donatorMap.has(wallet)) {
         donatorMap.set(wallet, {
           wallet,
-          username: tx.user?.username || 'Anonymous',
-          avatar: tx.user?.avatar,
+          username: user?.username || 'Anonymous',
+          avatar: user?.avatar,
           totalDonated: 0,
           donationCount: 0,
         });
