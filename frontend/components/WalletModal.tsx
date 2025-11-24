@@ -12,7 +12,7 @@ import { LoadingLightbulb, LoadingStatus } from './LoadingLightbulb';
 
 export const WalletModal = () => {
   const { isWalletModalOpen, closeWalletModal, setUser, setWalletConnected } = useAppStore();
-  const { select, connect, wallets: availableWallets, wallet } = useWallet();
+  const { select, connect, wallets: availableWallets, wallet, connected, publicKey } = useWallet();
   const { login } = useWalletAuth();
   const [status, setStatus] = useState<LoadingStatus>('loading');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -20,51 +20,66 @@ export const WalletModal = () => {
   // Reset state when modal opens
   useEffect(() => {
     if (isWalletModalOpen) {
-        setStatus('loading');
         setIsProcessing(false);
+        setStatus('loading');
     }
   }, [isWalletModalOpen]);
 
   if (!isWalletModalOpen) return null;
 
   const handleConnect = async (walletName: string) => {
-    setIsProcessing(true);
-    setStatus('loading');
+    // Find the wallet adapter
+    const selectedWallet = availableWallets.find(w =>
+      w.adapter.name.toLowerCase().includes(walletName.toLowerCase())
+    );
+
+    if (!selectedWallet) {
+      toast.error(`${walletName} wallet not found`);
+      return;
+    }
+
+    console.log('Connecting to:', selectedWallet.adapter.name);
+    console.log('ReadyState:', selectedWallet.adapter.readyState);
 
     try {
-      // Find and select the wallet adapter
-      const selectedWallet = availableWallets.find(w => w.adapter.name.toLowerCase().includes(walletName.toLowerCase()));
-
-      if (!selectedWallet) {
-        throw new Error(`${walletName} wallet not found`);
-      }
-
-      // Select the wallet (sets it in context)
+      // Select wallet (synchronous) then immediately connect
+      // This preserves user gesture context for the popup
       select(selectedWallet.adapter.name);
 
-      // Wait for wallet to be set in context
-      let attempts = 0;
-      while (!wallet && attempts < 20) {
-        await new Promise(resolve => setTimeout(resolve, 100));
-        attempts++;
+      // Call connect() which will trigger popup synchronously
+      const connectPromise = connect();
+
+      // NOW show loading UI (after popup is triggered)
+      setIsProcessing(true);
+      setStatus('loading');
+
+      // Wait for connection to complete
+      console.log('Waiting for wallet approval...');
+      await connectPromise;
+
+      // Double-check we have publicKey
+      let connectionAttempts = 0;
+      const maxAttempts = 20; // 10 seconds max
+
+      while (!publicKey && connectionAttempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        connectionAttempts++;
+
+        if (connectionAttempts % 5 === 0) {
+          console.log(`Waiting for publicKey... ${connectionAttempts}/20`);
+        }
       }
 
-      if (!wallet) {
-        throw new Error('Wallet selection timeout');
+      if (!publicKey) {
+        throw new Error('Connection timeout - please approve the connection in your wallet');
       }
 
-      // Now connect to the wallet (this will trigger wallet popup)
-      console.log('Connecting to wallet...');
-      await connect();
+      console.log('✅ Wallet connected! PublicKey:', publicKey.toBase58());
 
-      // Wait a bit for connection to complete
-      console.log('Waiting for connection to complete...');
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Perform login with signature
-      console.log('Calling login to sign message...');
+      // Perform SIWS authentication
+      console.log('Requesting authentication signature...');
       const userData = await login();
-      console.log('Login successful, user data:', userData);
+      console.log('✅ Login successful:', userData.user.username);
 
       // Update app store with real user data
       setUser(userData.user);

@@ -2,7 +2,7 @@ import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Connection, PublicKey, Transaction } from '@solana/web3.js';
 import * as nacl from 'tweetnacl';
-import bs58 from 'bs58';
+import * as bs58 from 'bs58';
 
 @Injectable()
 export class SolanaService implements OnModuleInit {
@@ -35,15 +35,31 @@ export class SolanaService implements OnModuleInit {
     message: string
   ): boolean {
     try {
+      console.log('=== Signature Verification Debug ===');
+      console.log('PublicKey:', publicKey);
+      console.log('Signature (base58):', signature);
+      console.log('Message:', JSON.stringify(message));
+      console.log('Message length:', message.length);
+      console.log('Message bytes:', Buffer.from(message).toString('hex').slice(0, 100));
+
       const publicKeyBytes = new PublicKey(publicKey).toBytes();
       const signatureBytes = bs58.decode(signature);
       const messageBytes = new TextEncoder().encode(message);
 
-      return nacl.sign.detached.verify(
+      console.log('PublicKey bytes length:', publicKeyBytes.length);
+      console.log('Signature bytes length:', signatureBytes.length);
+      console.log('Message bytes length:', messageBytes.length);
+
+      const isValid = nacl.sign.detached.verify(
         messageBytes,
         signatureBytes,
         publicKeyBytes
       );
+
+      console.log('Verification result:', isValid);
+      console.log('=================================');
+
+      return isValid;
     } catch (error) {
       console.error('Signature verification error:', error);
       return false;

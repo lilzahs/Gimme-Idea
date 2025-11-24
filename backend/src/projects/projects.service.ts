@@ -45,8 +45,13 @@ export class ProjectsService {
       );
     }
 
-    // Apply sorting
-    const sortColumn = query.sortBy === 'feedbackCount' ? 'feedback_count' : query.sortBy;
+    // Apply sorting (convert camelCase to snake_case for database columns)
+    const sortColumnMap = {
+      feedbackCount: 'feedback_count',
+      createdAt: 'created_at',
+      votes: 'votes'
+    };
+    const sortColumn = sortColumnMap[query.sortBy] || query.sortBy;
     supabaseQuery = supabaseQuery.order(sortColumn, { ascending: query.sortOrder === 'asc' });
 
     // Apply pagination
