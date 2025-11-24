@@ -2,6 +2,7 @@
 import { create } from 'zustand';
 import { Project, User, Comment, Notification } from './types';
 import { apiClient } from './api-client';
+import { buildCommentTree } from './comment-utils';
 
 type View = 'landing' | 'projects-dashboard' | 'ideas-dashboard' | 'project-detail' | 'idea-detail' | 'profile' | 'donate';
 
@@ -200,8 +201,8 @@ export const useAppStore = create<AppState>((set, get) => ({
         set((state) => ({
           projects: [response.data, ...state.projects],
           currentView: project.type === 'project' ? 'projects-dashboard' : 'ideas-dashboard',
-          isLoading: false,
-          isSubmitModalOpen: false
+          isLoading: false
+          // Note: isSubmitModalOpen is controlled by SubmissionModal to show success animation
         }));
       }
     } catch (error) {
@@ -264,6 +265,10 @@ export const useAppStore = create<AppState>((set, get) => ({
         // Refresh project to get updated comments
         const projectResponse = await apiClient.getProject(projectId);
         if (projectResponse.success && projectResponse.data) {
+          // Transform flat comments to nested structure
+          if (projectResponse.data.comments && projectResponse.data.comments.length > 0) {
+            projectResponse.data.comments = buildCommentTree(projectResponse.data.comments);
+          }
           set((state) => ({
             projects: state.projects.map(p => p.id === projectId ? projectResponse.data : p)
           }));
@@ -287,6 +292,10 @@ export const useAppStore = create<AppState>((set, get) => ({
         // Refresh project to get updated comments
         const projectResponse = await apiClient.getProject(projectId);
         if (projectResponse.success && projectResponse.data) {
+          // Transform flat comments to nested structure
+          if (projectResponse.data.comments && projectResponse.data.comments.length > 0) {
+            projectResponse.data.comments = buildCommentTree(projectResponse.data.comments);
+          }
           set((state) => ({
             projects: state.projects.map(p => p.id === projectId ? projectResponse.data : p)
           }));
@@ -304,6 +313,10 @@ export const useAppStore = create<AppState>((set, get) => ({
       // Refresh project to get updated comment likes
       const projectResponse = await apiClient.getProject(projectId);
       if (projectResponse.success && projectResponse.data) {
+        // Transform flat comments to nested structure
+        if (projectResponse.data.comments && projectResponse.data.comments.length > 0) {
+          projectResponse.data.comments = buildCommentTree(projectResponse.data.comments);
+        }
         set((state) => ({
           projects: state.projects.map(p => p.id === projectId ? projectResponse.data : p)
         }));
@@ -320,6 +333,10 @@ export const useAppStore = create<AppState>((set, get) => ({
       // Refresh project to get updated comment dislikes
       const projectResponse = await apiClient.getProject(projectId);
       if (projectResponse.success && projectResponse.data) {
+        // Transform flat comments to nested structure
+        if (projectResponse.data.comments && projectResponse.data.comments.length > 0) {
+          projectResponse.data.comments = buildCommentTree(projectResponse.data.comments);
+        }
         set((state) => ({
           projects: state.projects.map(p => p.id === projectId ? projectResponse.data : p)
         }));
@@ -363,8 +380,24 @@ export const useAppStore = create<AppState>((set, get) => ({
       if (!existingProject) {
         const response = await apiClient.getProject(id);
         if (response.success && response.data) {
+          // Transform flat comments to nested structure
+          if (response.data.comments && response.data.comments.length > 0) {
+            response.data.comments = buildCommentTree(response.data.comments);
+          }
           set((state) => ({
             projects: [response.data, ...state.projects]
+          }));
+        }
+      } else if (existingProject.comments && existingProject.comments.length > 0) {
+        // Transform existing project's comments if not already transformed
+        const hasNestedReplies = existingProject.comments.some(c => c.replies && c.replies.length > 0);
+        if (!hasNestedReplies) {
+          const transformedProject = {
+            ...existingProject,
+            comments: buildCommentTree(existingProject.comments)
+          };
+          set((state) => ({
+            projects: state.projects.map(p => p.id === id ? transformedProject : p)
           }));
         }
       }

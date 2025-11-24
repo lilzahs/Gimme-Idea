@@ -3,15 +3,23 @@ import React from 'react';
 
 export interface Comment {
   id: string;
-  author: string; // If anonymous, this will be "Anonymous"
-  avatar?: string;
+  projectId: string;
   content: string;
-  timestamp: string;
+  author?: {
+    username: string;
+    wallet: string;
+    avatar?: string;
+  } | null; // Nullable when isAnonymous
   likes: number;
-  dislikes: number;
-  tips: number; // Total USDC tipped
-  replies?: Comment[];
+  parentCommentId?: string; // For nested replies
   isAnonymous?: boolean;
+  tipsAmount?: number; // Total tips received
+  createdAt: string;
+  // Frontend-only fields for compatibility
+  timestamp?: string;
+  dislikes?: number;
+  tips?: number;
+  replies?: Comment[];
 }
 
 export interface Project {

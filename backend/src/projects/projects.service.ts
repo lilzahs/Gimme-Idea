@@ -121,6 +121,20 @@ export class ProjectsService {
       throw new NotFoundException('Project not found');
     }
 
+    // Fetch comments for this project
+    const { data: comments } = await supabase
+      .from('comments')
+      .select(`
+        *,
+        author:users!comments_user_id_fkey(
+          username,
+          wallet,
+          avatar
+        )
+      `)
+      .eq('project_id', id)
+      .order('created_at', { ascending: true });
+
     const projectResponse: Project = {
       id: project.id,
       type: project.type || 'project',
@@ -147,6 +161,22 @@ export class ProjectsService {
       teamInfo: project.team_info,
       isAnonymous: project.is_anonymous,
       createdAt: project.created_at,
+      // Include comments
+      comments: comments ? comments.map(c => ({
+        id: c.id,
+        projectId: c.project_id,
+        content: c.content,
+        author: c.is_anonymous ? null : {
+          username: c.author.username,
+          wallet: c.author.wallet,
+          avatar: c.author.avatar,
+        },
+        likes: c.likes || 0,
+        parentCommentId: c.parent_comment_id,
+        isAnonymous: c.is_anonymous,
+        tipsAmount: c.tips_amount || 0,
+        createdAt: c.created_at,
+      })) : [],
     };
 
     return {

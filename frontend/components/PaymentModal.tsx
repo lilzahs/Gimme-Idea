@@ -6,22 +6,42 @@ import { X, Check, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { LoadingLightbulb, LoadingStatus } from './LoadingLightbulb';
+import { useWallet, useConnection } from '@solana/wallet-adapter-react';
+import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import {
+  getAssociatedTokenAddress,
+  createTransferInstruction,
+  TOKEN_PROGRAM_ID,
+  ASSOCIATED_TOKEN_PROGRAM_ID
+} from '@solana/spl-token';
+import { apiClient } from '../lib/api-client';
 
 interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
   recipientName: string;
+  recipientWallet?: string;
   context: 'project' | 'comment';
+  commentId?: string;
+  projectId?: string;
   onConfirm?: (amount: number) => void;
 }
 
-export const PaymentModal: React.FC<PaymentModalProps> = ({ 
-  isOpen, 
-  onClose, 
-  recipientName, 
+// USDC Devnet Token Mint Address
+const USDC_MINT_DEVNET = new PublicKey('4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU');
+
+export const PaymentModal: React.FC<PaymentModalProps> = ({
+  isOpen,
+  onClose,
+  recipientName,
+  recipientWallet,
   context,
-  onConfirm 
+  commentId,
+  projectId,
+  onConfirm
 }) => {
+  const { publicKey, sendTransaction } = useWallet();
+  const { connection } = useConnection();
   const [amount, setAmount] = useState('10');
   const [processing, setProcessing] = useState(false);
   const [status, setStatus] = useState<LoadingStatus>('loading');
@@ -37,32 +57,107 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   }, [isOpen]);
 
   const handlePayment = async () => {
+    if (!publicKey) {
+      toast.error('Please connect your wallet first');
+      return;
+    }
+
+    if (!recipientWallet) {
+      toast.error('Recipient wallet address not available');
+      return;
+    }
+
+    const amountNum = Number(amount);
+    if (isNaN(amountNum) || amountNum <= 0) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
+
     setProcessing(true);
     setStatus('loading');
 
     try {
-        // Simulate transaction time
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        
-        // Generate mock transaction hash
-        const mockHash = Array.from({length: 64}, () => Math.floor(Math.random() * 16).toString(16)).join('');
-        setTxHash(mockHash);
+      const recipientPubKey = new PublicKey(recipientWallet);
 
-        setStatus('success');
-        
-        if (onConfirm) {
-            setTimeout(() => {
-                onConfirm(Number(amount));
-            }, 500);
-        }
-        
-        // Wait longer before closing so user can click the link
-        // User will close manually or it closes after a long delay
-    } catch (e) {
-        setStatus('error');
+      // Get associated token accounts for sender and recipient
+      const fromTokenAccount = await getAssociatedTokenAddress(
+        USDC_MINT_DEVNET,
+        publicKey
+      );
+
+      const toTokenAccount = await getAssociatedTokenAddress(
+        USDC_MINT_DEVNET,
+        recipientPubKey
+      );
+
+      // Create transfer instruction
+      // USDC has 6 decimals
+      const amountInSmallestUnit = amountNum * Math.pow(10, 6);
+
+      const transaction = new Transaction().add(
+        createTransferInstruction(
+          fromTokenAccount,
+          toTokenAccount,
+          publicKey,
+          amountInSmallestUnit,
+          [],
+          TOKEN_PROGRAM_ID
+        )
+      );
+
+      // Send transaction
+      const signature = await sendTransaction(transaction, connection);
+
+      // Wait for confirmation
+      const latestBlockhash = await connection.getLatestBlockhash();
+      await connection.confirmTransaction({
+        signature,
+        blockhash: latestBlockhash.blockhash,
+        lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+      });
+
+      setTxHash(signature);
+      setStatus('success');
+
+      // Verify transaction with backend
+      try {
+        await apiClient.verifyTransaction({
+          signature,
+          type: context === 'comment' ? 'tip' : 'bounty',
+          amount: amountNum,
+          commentId,
+          projectId,
+        });
+      } catch (backendError) {
+        console.error('Failed to verify transaction with backend:', backendError);
+        // Transaction succeeded on-chain but backend verification failed
+        // This is not critical - the blockchain is the source of truth
+      }
+
+      if (onConfirm) {
         setTimeout(() => {
-            setProcessing(false);
-        }, 2000);
+          onConfirm(amountNum);
+        }, 500);
+      }
+    } catch (error: any) {
+      console.error('Payment failed:', error);
+      setStatus('error');
+
+      // Provide user-friendly error messages
+      let errorMessage = 'Transaction failed';
+      if (error.message?.includes('User rejected')) {
+        errorMessage = 'Transaction cancelled';
+      } else if (error.message?.includes('insufficient funds')) {
+        errorMessage = 'Insufficient USDC balance';
+      } else if (error.message?.includes('Token account not found')) {
+        errorMessage = 'USDC account not found. Please ensure you have USDC in your wallet.';
+      }
+
+      toast.error(errorMessage);
+
+      setTimeout(() => {
+        setProcessing(false);
+      }, 2000);
     }
   };
 

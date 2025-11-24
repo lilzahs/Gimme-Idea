@@ -9,9 +9,9 @@ export class UpdateProjectDto {
   @IsOptional()
   description?: string;
 
-  @IsEnum(['DeFi', 'NFT', 'Gaming', 'Infrastructure', 'DAO'])
+  @IsEnum(['DeFi', 'NFT', 'Gaming', 'Infrastructure', 'DAO', 'DePIN', 'Social', 'Mobile', 'Security'])
   @IsOptional()
-  category?: 'DeFi' | 'NFT' | 'Gaming' | 'Infrastructure' | 'DAO';
+  category?: 'DeFi' | 'NFT' | 'Gaming' | 'Infrastructure' | 'DAO' | 'DePIN' | 'Social' | 'Mobile' | 'Security';
 
   @IsEnum(['Idea', 'Prototype', 'Devnet', 'Mainnet'])
   @IsOptional()

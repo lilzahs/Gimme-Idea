@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, RefreshCw } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useAppStore } from '../lib/store';
 import { useWallet } from '@solana/wallet-adapter-react';
@@ -40,41 +40,43 @@ export const WalletModal = () => {
 
     console.log('Connecting to:', selectedWallet.adapter.name);
     console.log('ReadyState:', selectedWallet.adapter.readyState);
+    console.log('Already connected?', connected);
 
     try {
-      // Select wallet (synchronous) then immediately connect
-      // This preserves user gesture context for the popup
+      // Select wallet
       select(selectedWallet.adapter.name);
 
-      // Call connect() which will trigger popup synchronously
-      const connectPromise = connect();
+      // If not already connected, connect and wait for approval
+      if (!connected) {
+        console.log('Wallet not connected, initiating connection...');
+        await connect();
+      } else {
+        console.log('Wallet already connected, skipping connect() call');
+      }
 
-      // NOW show loading UI (after popup is triggered)
-      setIsProcessing(true);
-      setStatus('loading');
+      // Get publicKey directly from the adapter
+      const connectedPublicKey = selectedWallet.adapter.publicKey || publicKey;
 
-      // Wait for connection to complete
-      console.log('Waiting for wallet approval...');
-      await connectPromise;
+      if (!connectedPublicKey) {
+        console.error('Wallet connected but publicKey is null');
+        throw new Error('Connection failed - please try again');
+      }
 
-      // Double-check we have publicKey
-      let connectionAttempts = 0;
-      const maxAttempts = 20; // 10 seconds max
+      console.log('✅ Wallet connected! PublicKey:', connectedPublicKey.toBase58());
 
-      while (!publicKey && connectionAttempts < maxAttempts) {
-        await new Promise(resolve => setTimeout(resolve, 500));
-        connectionAttempts++;
+      // If still not connected in hook state, wait a bit
+      if (!connected) {
+        console.log('Waiting for React hook state to update...');
+        let attempts = 0;
+        while (!connected && attempts < 20) {
+          await new Promise(resolve => setTimeout(resolve, 100));
+          attempts++;
+        }
 
-        if (connectionAttempts % 5 === 0) {
-          console.log(`Waiting for publicKey... ${connectionAttempts}/20`);
+        if (!connected) {
+          console.warn('Hook connected state not updated, but adapter has publicKey. Proceeding anyway...');
         }
       }
-
-      if (!publicKey) {
-        throw new Error('Connection timeout - please approve the connection in your wallet');
-      }
-
-      console.log('✅ Wallet connected! PublicKey:', publicKey.toBase58());
 
       // Perform SIWS authentication
       console.log('Requesting authentication signature...');
@@ -85,27 +87,23 @@ export const WalletModal = () => {
       setUser(userData.user);
       setWalletConnected(true);
 
-      // Show success state
-      setStatus('success');
-
-      // Wait a bit for the user to see the success animation before closing
-      setTimeout(() => {
-        toast.success(`Connected to ${walletName}`);
-        closeWalletModal();
-        setIsProcessing(false);
-      }, 1500);
+      // Show success toast and close modal
+      toast.success(`Connected to ${walletName}`);
+      closeWalletModal();
 
     } catch (error: any) {
       console.error('Wallet connection error:', error);
-      setStatus('error');
-      setTimeout(() => {
-        setIsProcessing(false);
-      }, 2000);
 
-      // Better error messages
+      // User-friendly error messages
       if (error.message?.includes('User rejected') || error.message?.includes('User canceled')) {
         toast.error('Connection cancelled by user');
-      } else if (error.message?.includes('timeout')) {
+      } else if (error.message?.includes('not connected') || error.message?.includes('does not support')) {
+        // When wallet state is not ready, suggest clicking again
+        toast.error('Almost there! Please click Connect again', {
+          duration: 4000,
+          icon: <RefreshCw className="w-5 h-5 animate-spin text-blue-500" />,
+        });
+      } else if (error.message?.includes('timeout') || error.message?.includes('failed')) {
         toast.error('Connection timeout - please try again');
       } else {
         toast.error(error.message || "Failed to connect wallet");

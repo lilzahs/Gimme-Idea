@@ -69,29 +69,49 @@ export const Profile = () => {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+        // Check file size (max 2MB)
+        const maxSize = 2 * 1024 * 1024; // 2MB in bytes
+        if (file.size > maxSize) {
+            toast.error('Image size must be less than 2MB');
+            return;
+        }
+
         const reader = new FileReader();
         reader.onloadend = () => {
-            setEditForm({ ...editForm, avatar: reader.result as string });
+            const result = reader.result as string;
+            // Check if base64 string is too large (max ~2MB after encoding)
+            // Base64 encoding increases size by ~37%, so 2MB file becomes ~2.7MB as base64
+            if (result.length > 2800000) {
+                toast.error('Avatar image is too large after encoding. Please use a smaller image.');
+                return;
+            }
+            setEditForm({ ...editForm, avatar: result });
+            toast.success('Avatar uploaded! Remember to save your profile.');
         };
         reader.readAsDataURL(file);
     }
   };
 
-  const handleSaveProfile = () => {
+  const handleSaveProfile = async () => {
       if (!isOwnProfile) return;
-      updateUserProfile({
-          username: editForm.username,
-          bio: editForm.bio,
-          avatar: editForm.avatar,
-          socials: {
-              twitter: editForm.twitter,
-              github: editForm.github,
-              telegram: editForm.telegram,
-              facebook: editForm.facebook
-          }
-      });
-      setIsEditing(false);
-      toast.success("Profile Updated!");
+      try {
+          // API expects socialLinks but User type has socials, so we send the correct format to API
+          await updateUserProfile({
+              username: editForm.username,
+              bio: editForm.bio,
+              avatar: editForm.avatar,
+              socialLinks: {
+                  twitter: editForm.twitter,
+                  github: editForm.github,
+                  telegram: editForm.telegram,
+                  facebook: editForm.facebook
+              }
+          } as any); // Type assertion needed due to API/User type mismatch
+          setIsEditing(false);
+          toast.success("Profile Updated!");
+      } catch (error) {
+          toast.error("Failed to update profile. Please try again.");
+      }
   };
 
   const handleCancelProfile = () => {

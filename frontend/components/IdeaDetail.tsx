@@ -53,20 +53,25 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, projectId, isReply =
         }
     };
 
+    const authorName = comment.isAnonymous ? 'Anonymous' : (comment.author?.username || 'Anonymous');
+    const authorInitial = authorName[0].toUpperCase();
+    const tipsAmount = comment.tipsAmount || comment.tips || 0;
+    const timestamp = comment.createdAt || comment.timestamp || '';
+
     return (
         <div className={`flex gap-4 mb-6 animate-in fade-in slide-in-from-bottom-2 duration-300 ${isReply ? 'ml-12 mt-4' : ''}`}>
             <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold flex-shrink-0 border border-white/10 ${comment.isAnonymous ? 'bg-gray-800 text-gray-400' : 'bg-white/10 text-white'}`}>
-                {comment.isAnonymous ? <EyeOff className="w-5 h-5" /> : comment.author[0].toUpperCase()}
+                {comment.isAnonymous ? <EyeOff className="w-5 h-5" /> : authorInitial}
             </div>
             <div className="flex-grow">
                 <div className="flex items-center gap-2 mb-1">
                     <span className={`font-bold text-sm ${comment.isAnonymous ? 'text-gray-400 italic' : 'text-white'}`}>
-                        {comment.isAnonymous ? 'Anonymous' : comment.author}
+                        {authorName}
                     </span>
-                    <span className="text-xs text-gray-600">{comment.timestamp}</span>
-                    {comment.tips > 0 && (
+                    <span className="text-xs text-gray-600">{new Date(timestamp).toLocaleDateString()}</span>
+                    {tipsAmount > 0 && (
                         <span className="text-[10px] bg-gold/10 text-gold px-1.5 py-0.5 rounded border border-gold/20 flex items-center gap-1">
-                            <DollarSign className="w-2 h-2" /> {comment.tips}
+                            <DollarSign className="w-2 h-2" /> {tipsAmount}
                         </span>
                     )}
                 </div>
@@ -111,9 +116,11 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, projectId, isReply =
                         )}
                     </motion.button>
 
-                    <button onClick={handleDislike} className="flex items-center gap-1 hover:text-red-400">
-                        <ThumbsDown className="w-3 h-3" /> {comment.dislikes || 0}
-                    </button>
+                    {comment.dislikes !== undefined && (
+                        <button onClick={handleDislike} className="flex items-center gap-1 hover:text-red-400">
+                            <ThumbsDown className="w-3 h-3" /> {comment.dislikes || 0}
+                        </button>
+                    )}
 
                     <button 
                         onClick={() => setReplyingTo(!replyingTo)} 
@@ -122,8 +129,8 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, projectId, isReply =
                         <MessageCircle className="w-3 h-3" /> Reply
                     </button>
 
-                    <button 
-                        onClick={() => onTip(comment.id, comment.isAnonymous ? 'Anonymous' : comment.author)}
+                    <button
+                        onClick={() => onTip(comment.id, authorName)}
                         className="flex items-center gap-1 text-gold/80 hover:text-gold transition-colors"
                     >
                         <DollarSign className="w-3 h-3" /> Tip USDC

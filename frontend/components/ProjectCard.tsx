@@ -41,9 +41,13 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   };
 
   return (
-    <div 
+    <div
       onClick={() => navigateToProject(project.id, project.type)}
-      className={`bg-[#050505] backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-1 group cursor-pointer flex flex-col h-full shadow-[0_4px_20px_rgba(0,0,0,0.5)] relative z-10 ${isIdea ? 'hover:border-gold/50' : 'hover:border-[#9945FF]/50'}`}
+      className={`backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-1 group cursor-pointer flex flex-col h-full shadow-[0_4px_20px_rgba(0,0,0,0.5)] relative z-10 ${
+        isIdea
+          ? 'bg-gradient-to-b from-[#1a1508] via-[#0d0a04] to-[#050505] hover:border-gold/50'
+          : 'bg-[#050505] hover:border-[#9945FF]/50'
+      }`}
     >
       {/* Visual Header - Only show large banner for Projects */}
       {!isIdea && (

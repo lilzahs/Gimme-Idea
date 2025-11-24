@@ -56,9 +56,23 @@ export const SubmissionModal = () => {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+        // Check file size (max 2MB)
+        const maxSize = 2 * 1024 * 1024; // 2MB in bytes
+        if (file.size > maxSize) {
+            toast.error('Image size must be less than 2MB');
+            return;
+        }
+
         const reader = new FileReader();
         reader.onloadend = () => {
-            setImagePreview(reader.result as string);
+            const result = reader.result as string;
+            // Check if base64 string is too large (max ~2MB after encoding)
+            // Base64 encoding increases size by ~37%, so 2MB file becomes ~2.7MB as base64
+            if (result.length > 2800000) {
+                toast.error('Image is too large after encoding. Please use a smaller image or provide an image URL instead.');
+                return;
+            }
+            setImagePreview(result);
         };
         reader.readAsDataURL(file);
     }
@@ -139,7 +153,7 @@ export const SubmissionModal = () => {
             toast.success(`${submitType === 'project' ? 'Project' : 'Idea'} submitted successfully!`);
             setIsSubmitting(false);
             closeSubmitModal();
-        }, 1000);
+        }, 2000);
     } catch (error) {
         setStatus('error');
         setIsSubmitting(false);

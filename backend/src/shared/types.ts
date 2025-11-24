@@ -6,7 +6,7 @@ export interface Project {
   type?: 'project' | 'idea';
   title: string;
   description: string;
-  category: 'DeFi' | 'NFT' | 'Gaming' | 'Infrastructure' | 'DAO';
+  category: 'DeFi' | 'NFT' | 'Gaming' | 'Infrastructure' | 'DAO' | 'DePIN' | 'Social' | 'Mobile' | 'Security';
   votes: number;
   feedbackCount: number;
   stage: 'Idea' | 'Prototype' | 'Devnet' | 'Mainnet';
@@ -27,6 +27,7 @@ export interface Project {
   teamInfo?: string;
   isAnonymous?: boolean;
   createdAt: string;
+  comments?: Comment[];
 }
 
 export interface Comment {

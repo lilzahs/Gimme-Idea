@@ -13,7 +13,7 @@ interface CommentItemProps {
     comment: Comment;
     projectId: string;
     isReply?: boolean;
-    onTip: (commentId: string, author: string) => void;
+    onTip: (commentId: string, authorUsername: string, authorWallet: string) => void;
 }
 
 // Extracted CommentItem to prevent re-renders and isolate state
@@ -59,18 +59,23 @@ const CommentItem: React.FC<CommentItemProps> = ({
         }
     };
 
+    const authorName = comment.isAnonymous ? 'Anonymous' : (comment.author?.username || 'Anonymous');
+    const authorInitial = authorName[0].toUpperCase();
+    const tipsAmount = comment.tipsAmount || comment.tips || 0;
+    const timestamp = comment.createdAt || comment.timestamp || '';
+
     return (
         <div className={`flex gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300 ${isReply ? 'ml-12 mt-4' : ''}`}>
             <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center font-bold text-gray-400 flex-shrink-0">
-                {comment.author[0].toUpperCase()}
+                {authorInitial}
             </div>
             <div className="flex-grow">
                 <div className="flex items-center gap-2 mb-1">
-                    <span className="font-bold text-sm">{comment.author}</span>
-                    <span className="text-xs text-gray-500">{comment.timestamp}</span>
-                    {comment.tips > 0 && (
+                    <span className="font-bold text-sm">{authorName}</span>
+                    <span className="text-xs text-gray-500">{new Date(timestamp).toLocaleDateString()}</span>
+                    {tipsAmount > 0 && (
                         <span className="text-[10px] bg-gold/10 text-gold px-1.5 py-0.5 rounded border border-gold/20 flex items-center gap-1">
-                            <DollarSign className="w-2 h-2" /> {comment.tips}
+                            <DollarSign className="w-2 h-2" /> {tipsAmount}
                         </span>
                     )}
                 </div>
@@ -115,12 +120,14 @@ const CommentItem: React.FC<CommentItemProps> = ({
                         )}
                     </motion.button>
                     
-                    <button 
-                        onClick={handleDislike}
-                        className="flex items-center gap-1 text-xs text-gray-500 hover:text-red-400 transition-colors"
-                    >
-                        <ThumbsDown className="w-3 h-3" /> {comment.dislikes || 0}
-                    </button>
+                    {comment.dislikes !== undefined && (
+                        <button
+                            onClick={handleDislike}
+                            className="flex items-center gap-1 text-xs text-gray-500 hover:text-red-400 transition-colors"
+                        >
+                            <ThumbsDown className="w-3 h-3" /> {comment.dislikes || 0}
+                        </button>
+                    )}
                     
                     {!isReply && (
                         <button 
@@ -131,9 +138,13 @@ const CommentItem: React.FC<CommentItemProps> = ({
                         </button>
                     )}
                     
-                    <button 
-                        onClick={() => onTip(comment.id, comment.author)}
+                    <button
+                        onClick={() => {
+                            const wallet = comment.author?.wallet || '';
+                            onTip(comment.id, authorName, wallet);
+                        }}
                         className="flex items-center gap-1 text-xs text-gold/80 hover:text-gold transition-colors"
+                        disabled={comment.isAnonymous || !comment.author?.wallet}
                     >
                         <DollarSign className="w-3 h-3" /> Tip USDC
                     </button>
@@ -175,6 +186,7 @@ export const ProjectDetail = () => {
   // Payment Modal State
   const [showPayment, setShowPayment] = useState(false);
   const [paymentRecipient, setPaymentRecipient] = useState('');
+  const [paymentRecipientWallet, setPaymentRecipientWallet] = useState('');
   const [paymentContext, setPaymentContext] = useState<'project' | 'comment'>('project');
   const [selectedCommentId, setSelectedCommentId] = useState<string | null>(null);
 
@@ -209,20 +221,30 @@ export const ProjectDetail = () => {
 
   // Triggered from Project Button
   const openProjectTip = () => {
+    if (!project.author?.wallet) {
+      toast.error("Project author wallet not available");
+      return;
+    }
     setPaymentContext('project');
     setPaymentRecipient(project.title);
+    setPaymentRecipientWallet(project.author.wallet);
     setShowPayment(true);
   };
 
   // Triggered from Comment Item
-  const openCommentTip = (commentId: string, author: string) => {
+  const openCommentTip = (commentId: string, authorUsername: string, authorWallet: string) => {
       if (!user) {
           toast.error("Connect wallet to tip");
           return;
       }
+      if (!authorWallet) {
+          toast.error("Comment author wallet not available");
+          return;
+      }
       setSelectedCommentId(commentId);
       setPaymentContext('comment');
-      setPaymentRecipient(author);
+      setPaymentRecipient(authorUsername);
+      setPaymentRecipientWallet(authorWallet);
       setShowPayment(true);
   };
 
@@ -386,11 +408,14 @@ export const ProjectDetail = () => {
         </div>
       </div>
 
-      <PaymentModal 
-        isOpen={showPayment} 
-        onClose={() => setShowPayment(false)} 
+      <PaymentModal
+        isOpen={showPayment}
+        onClose={() => setShowPayment(false)}
         recipientName={paymentRecipient}
+        recipientWallet={paymentRecipientWallet}
         context={paymentContext}
+        commentId={selectedCommentId || undefined}
+        projectId={project.id}
         onConfirm={handlePaymentConfirm}
       />
     </motion.div>

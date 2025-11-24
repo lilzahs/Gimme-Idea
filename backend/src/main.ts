@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
+import { json, urlencoded } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -13,6 +14,10 @@ async function bootstrap() {
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   });
+
+  // Increase body size limit for base64 images (up to 10MB)
+  app.use(json({ limit: '10mb' }));
+  app.use(urlencoded({ limit: '10mb', extended: true }));
 
   // Enable validation pipes
   app.useGlobalPipes(
@@ -32,6 +37,7 @@ async function bootstrap() {
   console.log(`🚀 Backend server is running on: http://localhost:${port}`);
   console.log(`📡 API available at: http://localhost:${port}/api`);
   console.log(`🌐 CORS enabled for: ${frontendUrl}`);
+  console.log(`📦 Body size limit: 10MB (supports large base64 images)`);
 }
 
 bootstrap();
