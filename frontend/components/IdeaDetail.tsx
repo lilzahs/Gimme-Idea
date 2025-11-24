@@ -13,7 +13,7 @@ interface CommentItemProps {
     comment: Comment;
     projectId: string;
     isReply?: boolean;
-    onTip: (commentId: string, author: string) => void;
+    onTip: (commentId: string, author: string, wallet: string) => void;
 }
 
 const CommentItem: React.FC<CommentItemProps> = ({ comment, projectId, isReply = false, onTip }) => {
@@ -130,10 +130,14 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, projectId, isReply =
                     </button>
 
                     <button
-                        onClick={() => onTip(comment.id, authorName)}
+                        onClick={() => {
+                            const wallet = comment.author?.wallet || '';
+                            onTip(comment.id, authorName, wallet);
+                        }}
                         className="flex items-center gap-1 text-gold/80 hover:text-gold transition-colors"
+                        disabled={comment.isAnonymous || !comment.author?.wallet}
                     >
-                        <DollarSign className="w-3 h-3" /> Tip USDC
+                        <DollarSign className="w-3 h-3" /> Tip SOL
                     </button>
                 </div>
 
@@ -171,6 +175,7 @@ export const IdeaDetail = () => {
   // Payment Modal State
   const [showPayment, setShowPayment] = useState(false);
   const [paymentRecipient, setPaymentRecipient] = useState('');
+  const [recipientWallet, setRecipientWallet] = useState('');
   const [selectedCommentId, setSelectedCommentId] = useState<string | null>(null);
 
   const project = projects.find(p => p.id === selectedProjectId);
@@ -201,20 +206,21 @@ export const IdeaDetail = () => {
       }
   };
 
-  const openCommentTip = (commentId: string, author: string) => {
+  const openCommentTip = (commentId: string, author: string, wallet: string) => {
       if (!user) {
           toast.error("Connect wallet to tip");
           return;
       }
       setSelectedCommentId(commentId);
       setPaymentRecipient(author);
+      setRecipientWallet(wallet);
       setShowPayment(true);
   };
 
   const handlePaymentConfirm = (amount: number) => {
       if (selectedCommentId) {
           tipComment(project.id, selectedCommentId, amount);
-          toast.success(`Tipped ${amount} USDC to ${paymentRecipient}`);
+          toast.success(`Tipped ${amount} SOL to ${paymentRecipient}`);
       }
   };
 
@@ -331,10 +337,11 @@ export const IdeaDetail = () => {
             </div>
         </div>
 
-        <PaymentModal 
-            isOpen={showPayment} 
-            onClose={() => setShowPayment(false)} 
+        <PaymentModal
+            isOpen={showPayment}
+            onClose={() => setShowPayment(false)}
             recipientName={paymentRecipient}
+            recipientWallet={recipientWallet}
             context={'comment'}
             onConfirm={handlePaymentConfirm}
         />

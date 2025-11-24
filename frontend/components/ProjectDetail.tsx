@@ -146,7 +146,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
                         className="flex items-center gap-1 text-xs text-gold/80 hover:text-gold transition-colors"
                         disabled={comment.isAnonymous || !comment.author?.wallet}
                     >
-                        <DollarSign className="w-3 h-3" /> Tip USDC
+                        <DollarSign className="w-3 h-3" /> Tip SOL
                     </button>
                 </div>
 
@@ -251,9 +251,9 @@ export const ProjectDetail = () => {
   const handlePaymentConfirm = (amount: number) => {
       if (paymentContext === 'comment' && selectedCommentId) {
           tipComment(project.id, selectedCommentId, amount);
-          toast.success(`Tipped ${amount} USDC to ${paymentRecipient}`);
+          toast.success(`Tipped ${amount} SOL to ${paymentRecipient}`);
       } else {
-          toast.success(`Contributed ${amount} USDC to ${project.title}`);
+          toast.success(`Contributed ${amount} SOL to ${project.title}`);
       }
   };
 

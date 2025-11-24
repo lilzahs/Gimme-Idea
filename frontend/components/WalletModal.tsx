@@ -114,13 +114,13 @@ export const WalletModal = () => {
   const wallets = [
     {
         name: 'Phantom',
-        icon: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Phantom_wallet_logo.png/1200px-Phantom_wallet_logo.png?20220525001338',
+        icon: '/asset/phantom-logo.svg',
         // Purple Hover
         color: 'hover:bg-[#AB9FF2]/20 hover:border-[#AB9FF2]/50'
     },
     {
         name: 'Solflare',
-        icon: 'https://play-lh.googleusercontent.com/fXvU754g5c8Y181E8Y-gT1-rW80qV3d8nZ67Z35c7c67791808c7a089501008a301c',
+        icon: '/asset/solflare-logo.png',
         // Bright Yellow/Gold Hover
         color: 'hover:bg-[#FFD700]/20 hover:border-[#FFD700]/50'
     },

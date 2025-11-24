@@ -12,9 +12,23 @@ interface DashboardProps {
 }
 
 export default function Dashboard({ mode }: DashboardProps) {
-  const { projects, searchQuery, setSearchQuery, openSubmitModal, fetchProjects } = useAppStore();
+  const { projects, searchQuery, setSearchQuery, openSubmitModal, fetchProjects, isLoading } = useAppStore();
   const [categoryFilter, setCategoryFilter] = useState('All');
+  const [stars, setStars] = useState<{ id: number; top: string; left: string; size: number; duration: string; opacity: number }[]>([]);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+
+  // Generate stars on mount
+  useEffect(() => {
+    const newStars = Array.from({ length: 50 }).map((_, i) => ({
+      id: i,
+      top: `${Math.random() * 100}%`,
+      left: `${Math.random() * 100}%`,
+      size: Math.random() * 2 + 1,
+      duration: `${Math.random() * 3 + 2}s`,
+      opacity: Math.random()
+    }));
+    setStars(newStars);
+  }, []);
 
   // Fetch projects on mount
   useEffect(() => {
@@ -43,12 +57,32 @@ export default function Dashboard({ mode }: DashboardProps) {
       animate={{ opacity: 1 }}
       className="min-h-screen pb-20 relative"
     >
-      {/* Background */}
+      {/* Background with Animated Stars */}
       <div className="fixed inset-0 z-[-1] pointer-events-none">
           <div className="absolute inset-0 bg-gradient-to-br from-[#0f111a] via-[#13131f] to-[#0f111a]" />
           <div className={`absolute top-[-10%] left-[10%] w-[600px] h-[600px] ${mode === 'project' ? 'bg-purple-900/30' : 'bg-yellow-900/30'} rounded-full blur-[120px] mix-blend-screen`} />
           <div className="absolute bottom-[10%] right-[10%] w-[500px] h-[500px] bg-blue-900/30 rounded-full blur-[120px] mix-blend-screen" />
           <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:100px_100px]" />
+
+          {/* Animated Stars */}
+          <div className="stars-container">
+            {stars.map((star) => (
+              <div
+                key={star.id}
+                className="star"
+                style={{
+                  top: star.top,
+                  left: star.left,
+                  width: `${star.size}px`,
+                  height: `${star.size}px`,
+                  '--duration': star.duration,
+                  '--opacity': star.opacity
+                } as React.CSSProperties}
+              />
+            ))}
+            <div className="shooting-star" style={{ top: '20%', left: '80%' }} />
+            <div className="shooting-star" style={{ top: '60%', left: '10%', animationDelay: '2s' }} />
+          </div>
       </div>
 
       <div className="pt-32 px-6 max-w-7xl mx-auto">
@@ -129,40 +163,53 @@ export default function Dashboard({ mode }: DashboardProps) {
         </div>
 
         {/* Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-          {filteredProjects.map((project, index) => (
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-32">
             <motion.div
-              key={project.id}
-              layout
-              initial={{ opacity: 0, y: 20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              transition={{
-                duration: 0.4,
-                delay: index * 0.05, // Stagger effect
-                type: "spring",
-                stiffness: 100,
-                damping: 15
-              }}
-            >
-              <ProjectCard project={project} />
-            </motion.div>
-          ))}
-        </div>
-        
-        {filteredProjects.length === 0 && (
-           <div className="text-center py-32 bg-white/[0.02] rounded-3xl border border-white/5 mt-8">
-             <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
-                 <Filter className="w-8 h-8 text-gray-500" />
-             </div>
-             <p className="text-gray-400 text-lg mb-2">No {mode}s found.</p>
-             <button 
-                onClick={() => { setCategoryFilter('All'); setSearchQuery(''); }}
-                className={`${accentText} hover:text-white underline underline-offset-4 transition-colors`}
-             >
-                Clear all filters
-             </button>
-           </div>
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              className="w-16 h-16 border-4 border-white/10 border-t-white rounded-full mb-4"
+            />
+            <p className="text-gray-400 animate-pulse">Loading {mode}s...</p>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+              {filteredProjects.map((project, index) => (
+                <motion.div
+                  key={project.id}
+                  layout
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{
+                    duration: 0.4,
+                    delay: index * 0.05, // Stagger effect
+                    type: "spring",
+                    stiffness: 100,
+                    damping: 15
+                  }}
+                >
+                  <ProjectCard project={project} />
+                </motion.div>
+              ))}
+            </div>
+
+            {filteredProjects.length === 0 && (
+               <div className="text-center py-32 bg-white/[0.02] rounded-3xl border border-white/5 mt-8">
+                 <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                     <Filter className="w-8 h-8 text-gray-500" />
+                 </div>
+                 <p className="text-gray-400 text-lg mb-2">No {mode}s found.</p>
+                 <button
+                    onClick={() => { setCategoryFilter('All'); setSearchQuery(''); }}
+                    className={`${accentText} hover:text-white underline underline-offset-4 transition-colors`}
+                 >
+                    Clear all filters
+                 </button>
+               </div>
+            )}
+          </>
         )}
       </div>
     </motion.div>

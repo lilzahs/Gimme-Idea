@@ -106,6 +106,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       isLoading: false,
       walletConnected: true,
       isWalletModalOpen: false,
+      currentView: 'ideas-dashboard', // Auto-redirect to Ideas Dashboard after wallet connect
       user: {
         wallet: '8xF3...92a',
         username: 'anon_builder',
@@ -185,7 +186,12 @@ export const useAppStore = create<AppState>((set, get) => ({
       set({ isLoading: true });
       const response = await apiClient.getProjects(filters);
       if (response.success && response.data) {
-        set({ projects: response.data, isLoading: false });
+        // Map imageUrl to image for frontend compatibility
+        const projects = response.data.map(p => ({
+          ...p,
+          image: p.imageUrl || p.image
+        }));
+        set({ projects, isLoading: false });
       }
     } catch (error) {
       console.error('Failed to fetch projects:', error);
@@ -198,8 +204,13 @@ export const useAppStore = create<AppState>((set, get) => ({
       set({ isLoading: true });
       const response = await apiClient.createProject(project);
       if (response.success && response.data) {
+        // Map imageUrl to image for frontend compatibility
+        const newProject = {
+          ...response.data,
+          image: response.data.imageUrl || response.data.image
+        };
         set((state) => ({
-          projects: [response.data, ...state.projects],
+          projects: [newProject, ...state.projects],
           currentView: project.type === 'project' ? 'projects-dashboard' : 'ideas-dashboard',
           isLoading: false
           // Note: isSubmitModalOpen is controlled by SubmissionModal to show success animation
@@ -262,17 +273,22 @@ export const useAppStore = create<AppState>((set, get) => ({
         isAnonymous
       });
       if (response.success && response.data) {
-        // Refresh project to get updated comments
-        const projectResponse = await apiClient.getProject(projectId);
-        if (projectResponse.success && projectResponse.data) {
-          // Transform flat comments to nested structure
-          if (projectResponse.data.comments && projectResponse.data.comments.length > 0) {
-            projectResponse.data.comments = buildCommentTree(projectResponse.data.comments);
-          }
-          set((state) => ({
-            projects: state.projects.map(p => p.id === projectId ? projectResponse.data : p)
-          }));
-        }
+        // Optimistic update: Add comment immediately without refetching
+        const newComment = response.data;
+        set((state) => {
+          const project = state.projects.find(p => p.id === projectId);
+          if (!project) return state;
+
+          const updatedProject = {
+            ...project,
+            comments: [...(project.comments || []), newComment],
+            feedbackCount: (project.feedbackCount || 0) + 1
+          };
+
+          return {
+            projects: state.projects.map(p => p.id === projectId ? updatedProject : p)
+          };
+        });
       }
     } catch (error) {
       console.error('Failed to add comment:', error);
@@ -289,17 +305,41 @@ export const useAppStore = create<AppState>((set, get) => ({
         isAnonymous
       });
       if (response.success && response.data) {
-        // Refresh project to get updated comments
-        const projectResponse = await apiClient.getProject(projectId);
-        if (projectResponse.success && projectResponse.data) {
-          // Transform flat comments to nested structure
-          if (projectResponse.data.comments && projectResponse.data.comments.length > 0) {
-            projectResponse.data.comments = buildCommentTree(projectResponse.data.comments);
-          }
-          set((state) => ({
-            projects: state.projects.map(p => p.id === projectId ? projectResponse.data : p)
-          }));
-        }
+        // Optimistic update: Add reply immediately
+        const newReply = response.data;
+        set((state) => {
+          const project = state.projects.find(p => p.id === projectId);
+          if (!project || !project.comments) return state;
+
+          // Add reply to parent comment
+          const updateCommentsWithReply = (comments: Comment[]): Comment[] => {
+            return comments.map(comment => {
+              if (comment.id === commentId) {
+                return {
+                  ...comment,
+                  replies: [...(comment.replies || []), newReply]
+                };
+              }
+              if (comment.replies && comment.replies.length > 0) {
+                return {
+                  ...comment,
+                  replies: updateCommentsWithReply(comment.replies)
+                };
+              }
+              return comment;
+            });
+          };
+
+          const updatedProject = {
+            ...project,
+            comments: updateCommentsWithReply(project.comments),
+            feedbackCount: (project.feedbackCount || 0) + 1
+          };
+
+          return {
+            projects: state.projects.map(p => p.id === projectId ? updatedProject : p)
+          };
+        });
       }
     } catch (error) {
       console.error('Failed to add reply:', error);
@@ -373,22 +413,38 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ isNavigating: true });
 
     try {
-      // Fetch project details if not already in store
+      // Fetch project details if not already in store OR if it doesn't have comments
       const state = get();
       const existingProject = state.projects.find(p => p.id === id);
+      const needsFetch = !existingProject || !existingProject.comments || existingProject.comments.length === 0;
 
-      if (!existingProject) {
+      if (needsFetch) {
+        // Fetch full project data with comments
         const response = await apiClient.getProject(id);
         if (response.success && response.data) {
+          // Map imageUrl to image for frontend compatibility
+          const project = {
+            ...response.data,
+            image: response.data.imageUrl || response.data.image
+          };
           // Transform flat comments to nested structure
-          if (response.data.comments && response.data.comments.length > 0) {
-            response.data.comments = buildCommentTree(response.data.comments);
+          if (project.comments && project.comments.length > 0) {
+            project.comments = buildCommentTree(project.comments);
           }
-          set((state) => ({
-            projects: [response.data, ...state.projects]
-          }));
+
+          if (existingProject) {
+            // Update existing project with full data
+            set((state) => ({
+              projects: state.projects.map(p => p.id === id ? project : p)
+            }));
+          } else {
+            // Add new project to store
+            set((state) => ({
+              projects: [project, ...state.projects]
+            }));
+          }
         }
-      } else if (existingProject.comments && existingProject.comments.length > 0) {
+      } else {
         // Transform existing project's comments if not already transformed
         const hasNestedReplies = existingProject.comments.some(c => c.replies && c.replies.length > 0);
         if (!hasNestedReplies) {

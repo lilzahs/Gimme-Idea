@@ -5,6 +5,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Wallet, Bell, Search, Menu, X, LayoutGrid, Plus, Trophy, BarChart3, User as UserIcon, Lightbulb, Heart, Rocket } from 'lucide-react';
 import { useAppStore } from '../lib/store';
+import Image from 'next/image';
 
 const Navbar = () => {
   const { 
@@ -73,18 +74,14 @@ const Navbar = () => {
         <button onClick={() => setView('landing')} className="flex items-center gap-3 group">
           <div className="relative w-10 h-10 flex items-center justify-center">
              <div className="absolute inset-0 bg-[#FFD700]/20 rounded-full blur-md opacity-50 group-hover:opacity-100 transition-opacity duration-300" />
-             <svg width="36" height="36" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="relative z-10">
-                <defs>
-                    <linearGradient id="g-bulb-gradient" x1="4" y1="4" x2="36" y2="36" gradientUnits="userSpaceOnUse">
-                        <stop offset="0" stopColor="#FFD700" />
-                        <stop offset="1" stopColor="#FDB931" />
-                    </linearGradient>
-                </defs>
-                <path d="M28 11C26 7 22 5 17 5C10.5 5 5 10.5 5 17C5 22 8 26 13 28V31C13 32 13.5 33 15 33H19C20.5 33 21 32 21 31V28C25 26 29 22 29 17" stroke="url(#g-bulb-gradient)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M29 17H19" stroke="url(#g-bulb-gradient)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M13 33H21" stroke="#9945FF" strokeWidth="2" strokeLinecap="round" />
-                <path d="M14 35H20" stroke="#9945FF" strokeWidth="1.5" strokeLinecap="round" opacity="0.7" />
-            </svg>
+             <Image
+               src="/asset/logo-gmi.png"
+               alt="Gimme Idea Logo"
+               width={36}
+               height={36}
+               className="relative z-10 object-contain"
+               priority
+             />
           </div>
           <div className="flex flex-col items-start leading-none hidden sm:flex">
             <span className="text-white font-bold text-lg tracking-tight">Gimme</span>
@@ -202,12 +199,20 @@ const Navbar = () => {
               
               {/* User Menu */}
               <div className="relative group">
-                  <div 
+                  <div
                     onClick={() => setShowUserMenu(!showUserMenu)}
                     className="flex items-center gap-2 px-1 pr-4 py-1 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full cursor-pointer transition-all"
                   >
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 overflow-hidden">
-                        {user.avatar && <img src={user.avatar} className="w-full h-full object-cover" />}
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 overflow-hidden relative">
+                        {user.avatar && (
+                          <Image
+                            src={user.avatar}
+                            alt={user.username}
+                            width={32}
+                            height={32}
+                            className="w-full h-full object-cover"
+                          />
+                        )}
                     </div>
                     <span className="text-sm font-mono font-medium hidden sm:block text-gray-300 group-hover:text-white max-w-[100px] truncate">{user.username}</span>
                   </div>

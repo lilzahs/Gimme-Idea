@@ -8,12 +8,6 @@ import toast from 'react-hot-toast';
 import { LoadingLightbulb, LoadingStatus } from './LoadingLightbulb';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
-import {
-  getAssociatedTokenAddress,
-  createTransferInstruction,
-  TOKEN_PROGRAM_ID,
-  ASSOCIATED_TOKEN_PROGRAM_ID
-} from '@solana/spl-token';
 import { apiClient } from '../lib/api-client';
 
 interface PaymentModalProps {
@@ -26,9 +20,6 @@ interface PaymentModalProps {
   projectId?: string;
   onConfirm?: (amount: number) => void;
 }
-
-// USDC Devnet Token Mint Address
-const USDC_MINT_DEVNET = new PublicKey('4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU');
 
 export const PaymentModal: React.FC<PaymentModalProps> = ({
   isOpen,
@@ -79,30 +70,15 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     try {
       const recipientPubKey = new PublicKey(recipientWallet);
 
-      // Get associated token accounts for sender and recipient
-      const fromTokenAccount = await getAssociatedTokenAddress(
-        USDC_MINT_DEVNET,
-        publicKey
-      );
-
-      const toTokenAccount = await getAssociatedTokenAddress(
-        USDC_MINT_DEVNET,
-        recipientPubKey
-      );
-
-      // Create transfer instruction
-      // USDC has 6 decimals
-      const amountInSmallestUnit = amountNum * Math.pow(10, 6);
+      // Create SOL transfer instruction
+      const lamports = amountNum * LAMPORTS_PER_SOL;
 
       const transaction = new Transaction().add(
-        createTransferInstruction(
-          fromTokenAccount,
-          toTokenAccount,
-          publicKey,
-          amountInSmallestUnit,
-          [],
-          TOKEN_PROGRAM_ID
-        )
+        SystemProgram.transfer({
+          fromPubkey: publicKey,
+          toPubkey: recipientPubKey,
+          lamports,
+        })
       );
 
       // Send transaction
@@ -148,9 +124,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       if (error.message?.includes('User rejected')) {
         errorMessage = 'Transaction cancelled';
       } else if (error.message?.includes('insufficient funds')) {
-        errorMessage = 'Insufficient USDC balance';
-      } else if (error.message?.includes('Token account not found')) {
-        errorMessage = 'USDC account not found. Please ensure you have USDC in your wallet.';
+        errorMessage = 'Insufficient SOL balance';
       }
 
       toast.error(errorMessage);
@@ -232,7 +206,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                                 Transfer Complete
                             </motion.h2>
 
-                            <motion.div 
+                            <motion.div
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.5 }}
@@ -240,7 +214,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                             >
                                 <div className="flex justify-between text-sm mb-2">
                                     <span className="text-gray-400">Amount</span>
-                                    <span className="font-bold text-white">{amount} USDC</span>
+                                    <span className="font-bold text-white">{amount} SOL</span>
                                 </div>
                                 <div className="flex justify-between text-sm">
                                     <span className="text-gray-400">To</span>
@@ -280,23 +254,24 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                         <h2 className="text-2xl font-bold mb-1">
                             {context === 'project' ? 'Support Project' : 'Tip Contributor'}
                         </h2>
-                        <p className="text-gray-400 text-sm mb-6">Send USDC to <span className="text-white font-bold">{recipientName}</span></p>
+                        <p className="text-gray-400 text-sm mb-6">Send SOL to <span className="text-white font-bold">{recipientName}</span></p>
 
                         <div className="space-y-4 mb-8">
                             <div>
-                                <label className="block text-xs text-gray-500 mb-1 font-mono uppercase">Amount (USDC)</label>
+                                <label className="block text-xs text-gray-500 mb-1 font-mono uppercase">Amount (SOL)</label>
                                 <div className="relative">
-                                    <input 
-                                        type="number" 
+                                    <input
+                                        type="number"
                                         value={amount}
                                         onChange={(e) => setAmount(e.target.value)}
+                                        step="0.1"
                                         className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-2xl font-bold outline-none focus:border-primary transition-colors text-white"
                                     />
-                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 font-mono">USDC</span>
+                                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 font-mono">SOL</span>
                                 </div>
                             </div>
                             <div className="flex gap-2">
-                                {['5', '10', '25', '50', '100'].map((val) => (
+                                {['0.1', '0.5', '1', '2', '5'].map((val) => (
                                     <button 
                                         key={val}
                                         onClick={() => setAmount(val)}
@@ -304,7 +279,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                                             amount === val ? 'bg-primary/20 border-primary text-white' : 'bg-transparent border-white/10 text-gray-400 hover:bg-white/5'
                                         }`}
                                     >
-                                        ${val}
+                                        {val} SOL
                                     </button>
                                 ))}
                             </div>

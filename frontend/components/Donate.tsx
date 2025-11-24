@@ -7,13 +7,18 @@ import { Heart, Send, Twitter, Copy, Check, Trophy, Clock, DollarSign, Crown, Ex
 import toast from 'react-hot-toast';
 import { useAppStore } from '../lib/store';
 import { apiClient } from '../lib/api-client';
+import { useWallet, useConnection } from '@solana/wallet-adapter-react';
+import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
 
 export const Donate = () => {
   const { user, openConnectReminder } = useAppStore();
+  const { publicKey, sendTransaction } = useWallet();
+  const { connection } = useConnection();
   const [copied, setCopied] = useState(false);
-  const [amount, setAmount] = useState('10');
+  const [amount, setAmount] = useState('0.5');
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [txHash, setTxHash] = useState('');
   const [activeTab, setActiveTab] = useState<'recent' | 'top'>('top');
   const [recentDonations, setRecentDonations] = useState<any[]>([]);
   const [topDonators, setTopDonators] = useState<any[]>([]);
@@ -55,24 +60,78 @@ export const Donate = () => {
   };
 
   const handleDonate = async () => {
-    if (!user) {
+    if (!user || !publicKey) {
         openConnectReminder();
         return;
     }
 
+    const amountNum = Number(amount);
+    if (isNaN(amountNum) || amountNum <= 0) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
+
     setIsProcessing(true);
-    
-    // Simulate transaction
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    setIsProcessing(false);
-    setIsSuccess(true);
-    toast.success("Donation sent!");
-    
-    // Keep success state longer to show the effect
-    setTimeout(() => {
+
+    try {
+      const recipientPubKey = new PublicKey(walletAddress);
+
+      // Create SOL transfer instruction
+      const lamports = amountNum * LAMPORTS_PER_SOL;
+
+      const transaction = new Transaction().add(
+        SystemProgram.transfer({
+          fromPubkey: publicKey,
+          toPubkey: recipientPubKey,
+          lamports,
+        })
+      );
+
+      // Send transaction
+      const signature = await sendTransaction(transaction, connection);
+
+      // Wait for confirmation
+      const latestBlockhash = await connection.getLatestBlockhash();
+      await connection.confirmTransaction({
+        signature,
+        blockhash: latestBlockhash.blockhash,
+        lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+      });
+
+      setTxHash(signature);
+      setIsProcessing(false);
+      setIsSuccess(true);
+      toast.success("Donation sent successfully!");
+
+      // Verify with backend
+      try {
+        await apiClient.verifyTransaction({
+          signature,
+          type: 'bounty',
+          amount: amountNum,
+        });
+      } catch (backendError) {
+        console.error('Failed to verify with backend:', backendError);
+      }
+
+      // Keep success state for 5 seconds
+      setTimeout(() => {
         setIsSuccess(false);
-    }, 5000);
+        setTxHash('');
+      }, 5000);
+    } catch (error: any) {
+      console.error('Donation failed:', error);
+      setIsProcessing(false);
+
+      let errorMessage = 'Transaction failed';
+      if (error.message?.includes('User rejected')) {
+        errorMessage = 'Transaction cancelled';
+      } else if (error.message?.includes('insufficient funds')) {
+        errorMessage = 'Insufficient SOL balance';
+      }
+
+      toast.error(errorMessage);
+    }
   };
 
   return (
@@ -150,9 +209,9 @@ export const Donate = () => {
                                     />
                                 ))}
                             </div>
-                            
+
                             <h3 className="text-2xl font-bold text-white mb-2 font-display">Donation Received!</h3>
-                            <p className="text-gray-400 mb-6">You successfully sent <span className="text-white font-bold">{amount} USDC</span></p>
+                            <p className="text-gray-400 mb-6">You successfully sent <span className="text-white font-bold">{amount} SOL</span></p>
                             
                             <div className="w-full bg-white/5 border border-white/10 rounded-xl p-4 max-w-xs">
                                 <div className="flex justify-between items-center text-sm mb-2">
@@ -161,7 +220,12 @@ export const Donate = () => {
                                 </div>
                                 <div className="flex justify-between items-center text-sm">
                                     <span className="text-gray-500">Transaction</span>
-                                    <a href="#" className="text-blue-400 hover:text-blue-300 font-mono flex items-center gap-1">
+                                    <a
+                                        href={txHash ? `https://solscan.io/tx/${txHash}?cluster=devnet` : '#'}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-blue-400 hover:text-blue-300 font-mono flex items-center gap-1"
+                                    >
                                         View <ExternalLink className="w-3 h-3" />
                                     </a>
                                 </div>
@@ -184,32 +248,30 @@ export const Donate = () => {
                              <div className="mb-6">
                                 <label className="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">Select Amount</label>
                                 <div className="grid grid-cols-4 gap-2 mb-4">
-                                    {['5', '10', '50', '100'].map((val) => (
+                                    {['0.1', '0.5', '1', '2'].map((val) => (
                                         <button
                                             key={val}
                                             onClick={() => setAmount(val)}
                                             className={`py-3 rounded-xl font-mono font-bold transition-all border ${
-                                                amount === val 
-                                                ? 'bg-blue-500/20 border-blue-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.3)]' 
+                                                amount === val
+                                                ? 'bg-blue-500/20 border-blue-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.3)]'
                                                 : 'bg-white/5 border-white/5 text-gray-400 hover:bg-white/10 hover:text-white hover:border-white/10'
                                             }`}
                                         >
-                                            ${val}
+                                            {val} SOL
                                         </button>
                                     ))}
                                 </div>
                                 <div className="relative group/input">
-                                    <input 
+                                    <input
                                         type="number"
                                         value={amount}
                                         onChange={(e) => setAmount(e.target.value)}
-                                        className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-4 text-2xl font-bold text-white outline-none focus:border-blue-500 transition-colors pl-12 group-hover/input:border-white/20"
+                                        step="0.1"
+                                        className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-4 text-2xl font-bold text-white outline-none focus:border-blue-500 transition-colors pr-16 group-hover/input:border-white/20"
                                     />
-                                    <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none">
-                                        <img src="https://cryptologos.cc/logos/usd-coin-usdc-logo.png" className="w-6 h-6" alt="USDC" />
-                                    </div>
                                     <div className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-mono text-gray-500 pointer-events-none">
-                                        USDC
+                                        SOL
                                     </div>
                                 </div>
                             </div>
