@@ -32,7 +32,7 @@ const Hero: React.FC = () => {
           >
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6 backdrop-blur-sm">
               <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-              <span className="text-xs font-mono text-green-400 uppercase tracking-wide">Solana Mainnet Beta Compatible</span>
+              <span className="text-xs font-mono text-green-400 uppercase tracking-wide">Solana Devnet Beta Compatible</span>
             </div>
             
             <h1 className="text-5xl lg:text-7xl font-display font-bold leading-tight mb-6">
@@ -71,15 +71,15 @@ const Hero: React.FC = () => {
             className="flex gap-8 border-t border-white/10 pt-8"
           >
             <div>
-              <p className="text-3xl font-display font-bold text-white">2.3K</p>
+              <p className="text-3xl font-display font-bold text-white">500+</p>
               <p className="text-xs text-gray-500 font-mono uppercase">Active Projects</p>
             </div>
             <div>
-              <p className="text-3xl font-display font-bold text-white">18K</p>
+              <p className="text-3xl font-display font-bold text-white">1K+</p>
               <p className="text-xs text-gray-500 font-mono uppercase">Feedback Loops</p>
             </div>
             <div>
-              <p className="text-3xl font-display font-bold text-gold">420+</p>
+              <p className="text-3xl font-display font-bold text-gold">100+</p>
               <p className="text-xs text-gray-500 font-mono uppercase">Success Stories</p>
             </div>
           </motion.div>
