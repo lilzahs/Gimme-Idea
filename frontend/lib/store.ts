@@ -270,9 +270,9 @@ export const useAppStore = create<AppState>((set, get) => ({
         };
         set((state) => ({
           projects: [newProject, ...state.projects],
-          currentView: project.type === 'project' ? 'projects-dashboard' : 'ideas-dashboard',
           isLoading: false
           // Note: isSubmitModalOpen is controlled by SubmissionModal to show success animation
+          // Routing is handled by SubmissionModal using Next.js router
         }));
       }
     } catch (error) {
@@ -562,7 +562,9 @@ export const useAppStore = create<AppState>((set, get) => ({
           };
 
           return {
-            projects: state.projects.map(p => p.id === projectId ? updatedProject : p)
+            projects: state.projects.map(p => p.id === projectId ? updatedProject : p),
+            // Also update selectedProject if it matches
+            selectedProject: state.selectedProject?.id === projectId ? updatedProject : state.selectedProject
           };
         });
       }
@@ -613,7 +615,9 @@ export const useAppStore = create<AppState>((set, get) => ({
           };
 
           return {
-            projects: state.projects.map(p => p.id === projectId ? updatedProject : p)
+            projects: state.projects.map(p => p.id === projectId ? updatedProject : p),
+            // Also update selectedProject if it matches
+            selectedProject: state.selectedProject?.id === projectId ? updatedProject : state.selectedProject
           };
         });
       }

@@ -3,6 +3,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useAppStore } from '../lib/store';
+import { useRouter } from 'next/navigation';
 import { Upload, Rocket, X, Image as ImageIcon, Lightbulb, Box, Layers, EyeOff, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -11,6 +12,7 @@ import { LoadingLightbulb, LoadingStatus } from './LoadingLightbulb';
 
 export const SubmissionModal = () => {
   const { isSubmitModalOpen, submitType, closeSubmitModal, addProject, user, openConnectReminder } = useAppStore();
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState<LoadingStatus>('loading');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -149,6 +151,8 @@ export const SubmissionModal = () => {
             toast.success(`${submitType === 'project' ? 'Project' : 'Idea'} submitted successfully!`);
             setIsSubmitting(false);
             closeSubmitModal();
+            // Navigate to appropriate page after submission
+            router.push(submitType === 'project' ? '/projects' : '/idea');
         }, 2000);
     } catch (error) {
         setStatus('error');
