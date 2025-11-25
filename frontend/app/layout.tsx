@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   title: 'Gimme Idea | Solana Feedback Platform',
   description: 'Validate your Solana protocol ideas with community feedback.',
   icons: {
-    icon: '/asset/favicon-gmi.ico',
+    icon: '/favicon.ico',
   },
 };
 
