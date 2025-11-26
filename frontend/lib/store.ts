@@ -472,6 +472,16 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   handleRealtimeNewComment: (projectId, commentData) => {
+    const state = get();
+
+    // IMPORTANT: Skip realtime updates for comments created by current user
+    // (they're already added via optimistic update in addComment)
+    // This prevents duplicates with mismatched anonymous status
+    if (state.user && commentData.user_id === state.user.id) {
+      console.log('⏭️ Skipping realtime update for own comment:', commentData.id);
+      return;
+    }
+
     set((state) => {
       const project = state.projects.find(p => p.id === projectId);
       if (!project) return state;
