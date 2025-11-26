@@ -61,7 +61,7 @@ ${idea.problem}
 ${idea.solution}
 
 **Opportunity:**
-${idea.opportunity || 'Not specified'}
+${idea.opportunity}
 
 **Go-to-Market Strategy:**
 ${idea.goMarket || 'Not specified'}
@@ -84,15 +84,15 @@ ${idea.teamInfo || 'Not specified'}
 - Great ideas worth investing: 80-90 points
 - Only exceptional, unicorn-potential ideas: 90+ points
 
-Provide your assessment in Vietnamese for better user understanding.
+Provide your assessment in English for better user understanding.
 
 Format your response as JSON:
 {
   "score": <number 0-100>,
-  "strengths": ["điểm mạnh 1", "điểm mạnh 2", "điểm mạnh 3"],
-  "weaknesses": ["vấn đề 1", "vấn đề 2", "vấn đề 3"],
-  "suggestions": ["gợi ý 1", "gợi ý 2", "gợi ý 3"],
-  "comment": "Nhận xét tổng quan 2-3 câu, khuyến khích nhưng thành thật"
+  "strengths": ["strength 1", "strength 2", "strength 3"],
+  "weaknesses": ["weaknesses 1", "weaknesses 2", "weaknesses 3","weaknesses..."],
+  "suggestions": ["suggestion 1", "suggestion 2", "suggestion 3"],
+  "comment": "Comment and reply based on the quality of the post, whether it is long or not, if they post quality content then reply long and complete enough to deserve what they post. But if they post incomplete content, too short and lacking information then reply just enough."
 }`;
 
     try {

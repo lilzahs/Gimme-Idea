@@ -9,6 +9,8 @@ import toast from 'react-hot-toast';
 import { Comment } from '../lib/types';
 import { PaymentModal } from './PaymentModal';
 import { AICommentBadge } from './AICommentBadge';
+import { MarkdownContent } from './MarkdownContent';
+import { MarkdownGuide } from './MarkdownGuide';
 
 interface CommentItemProps {
     comment: Comment;
@@ -79,7 +81,9 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, projectId, isReply =
                         </span>
                     )}
                 </div>
-                <p className="text-gray-300 text-sm leading-relaxed mb-3">{comment.content}</p>
+                <div className="text-gray-300 text-sm leading-relaxed mb-3">
+                    <MarkdownContent content={comment.content} />
+                </div>
                 
                 {/* Actions */}
                 <div className="flex items-center gap-4 text-xs text-gray-500">
@@ -267,28 +271,38 @@ export const IdeaDetail = () => {
                 <div className="space-y-12">
                      <section>
                          <h3 className="text-xl font-bold text-[#FFD700] mb-4 font-mono uppercase tracking-wider">The Problem</h3>
-                         <p className="text-lg text-gray-200 leading-relaxed whitespace-pre-line">{project.problem}</p>
+                         <div className="text-lg text-gray-200 leading-relaxed">
+                             <MarkdownContent content={project.problem} />
+                         </div>
                      </section>
                      
                      <section>
                          <h3 className="text-xl font-bold text-[#FFD700] mb-4 font-mono uppercase tracking-wider">The Solution</h3>
                          <div className="p-6 bg-white/5 border-l-4 border-[#FFD700] rounded-r-xl">
-                            <p className="text-lg text-white leading-relaxed whitespace-pre-line">{project.solution}</p>
+                            <div className="text-lg text-white leading-relaxed">
+                                <MarkdownContent content={project.solution} />
+                            </div>
                          </div>
                      </section>
 
                      <div className="grid md:grid-cols-2 gap-8">
                          <section>
                              <h3 className="text-sm font-bold text-gray-500 mb-2 font-mono uppercase">Opportunity</h3>
-                             <p className="text-gray-300">{project.opportunity || "Not specified."}</p>
+                             <div className="text-gray-300">
+                                 {project.opportunity ? <MarkdownContent content={project.opportunity} /> : "Not specified."}
+                             </div>
                          </section>
                          <section>
                              <h3 className="text-sm font-bold text-gray-500 mb-2 font-mono uppercase">Go To Market</h3>
-                             <p className="text-gray-300">{project.goMarket || "Not specified."}</p>
+                             <div className="text-gray-300">
+                                 {project.goMarket ? <MarkdownContent content={project.goMarket} /> : "Not specified."}
+                             </div>
                          </section>
                          <section>
                              <h3 className="text-sm font-bold text-gray-500 mb-2 font-mono uppercase">Team Info</h3>
-                             <p className="text-gray-300">{project.teamInfo || "Not specified."}</p>
+                             <div className="text-gray-300">
+                                 {project.teamInfo ? <MarkdownContent content={project.teamInfo} /> : "Not specified."}
+                             </div>
                          </section>
                      </div>
                 </div>
@@ -313,13 +327,16 @@ export const IdeaDetail = () => {
                                 placeholder="Add your insight or question..."
                             />
                             <div className="flex justify-between items-center">
-                                <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer select-none">
-                                    <div className={`w-4 h-4 border rounded ${isAnonComment ? 'bg-[#FFD700] border-[#FFD700]' : 'border-gray-500'}`}>
-                                        {isAnonComment && <EyeOff className="w-3 h-3 text-black" />}
-                                    </div>
-                                    <input type="checkbox" checked={isAnonComment} onChange={e => setIsAnonComment(e.target.checked)} className="hidden" />
-                                    Comment Anonymously
-                                </label>
+                                <div className="flex items-center gap-4">
+                                    <label className="flex items-center gap-2 text-sm text-gray-400 cursor-pointer select-none">
+                                        <div className={`w-4 h-4 border rounded ${isAnonComment ? 'bg-[#FFD700] border-[#FFD700]' : 'border-gray-500'}`}>
+                                            {isAnonComment && <EyeOff className="w-3 h-3 text-black" />}
+                                        </div>
+                                        <input type="checkbox" checked={isAnonComment} onChange={e => setIsAnonComment(e.target.checked)} className="hidden" />
+                                        Comment Anonymously
+                                    </label>
+                                    <MarkdownGuide />
+                                </div>
                                 <button type="submit" className="bg-white text-black px-6 py-2 rounded-full font-bold flex items-center gap-2 hover:bg-[#FFD700] transition-colors">
                                     Send <Send className="w-4 h-4" />
                                 </button>
