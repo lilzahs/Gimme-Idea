@@ -3,12 +3,12 @@ import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { SupabaseService } from './shared/supabase.service';
 import { SolanaService } from './shared/solana.service';
-import { AIService } from './shared/ai.service';
 import { AuthModule } from './auth/auth.module';
 import { ProjectsModule } from './projects/projects.module';
 import { CommentsModule } from './comments/comments.module';
 import { UsersModule } from './users/users.module';
 import { PaymentsModule } from './payments/payments.module';
+import { AIModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -21,9 +21,10 @@ import { PaymentsModule } from './payments/payments.module';
     CommentsModule,
     UsersModule,
     PaymentsModule,
+    AIModule,
   ],
   controllers: [AppController],
-  providers: [SupabaseService, SolanaService, AIService],
-  exports: [SupabaseService, SolanaService, AIService],
+  providers: [SupabaseService, SolanaService],
+  exports: [SupabaseService, SolanaService],
 })
 export class AppModule {}
