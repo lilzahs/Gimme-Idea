@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { Project } from '../lib/types';
 import { LoadingLightbulb, LoadingStatus } from './LoadingLightbulb';
+import { MarkdownGuide } from './MarkdownGuide';
 
 export const SubmissionModal = () => {
   const { isSubmitModalOpen, submitType, closeSubmitModal, addProject, user, openConnectReminder } = useAppStore();
@@ -405,6 +406,10 @@ export const SubmissionModal = () => {
                         {/* Idea Specific */}
                         {!isProject && (
                             <div className="space-y-6">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <p className="text-xs text-gray-400">✨ Markdown formatting supported</p>
+                                    <MarkdownGuide />
+                                </div>
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">The Problem *</label>
                                     <textarea 
