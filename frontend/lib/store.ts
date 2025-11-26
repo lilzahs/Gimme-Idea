@@ -527,9 +527,14 @@ export const useAppStore = create<AppState>((set, get) => ({
           selectedProject: state.selectedProject?.id === projectId ? updatedProject : state.selectedProject
         };
       } else {
-        // It's a top-level comment - check if it already exists
-        const commentExists = project.comments?.some(c => c.id === newComment.id);
-        if (commentExists) return state;
+        // It's a top-level comment - check if it already exists in EITHER projects or selectedProject
+        const commentExistsInProjects = project.comments?.some(c => c.id === newComment.id);
+        const commentExistsInSelected = state.selectedProject?.comments?.some(c => c.id === newComment.id);
+
+        if (commentExistsInProjects || commentExistsInSelected) {
+          console.log('⏭️ Comment already exists (preventing duplicate):', newComment.id);
+          return state;
+        }
 
         const updatedProject = {
           ...project,
