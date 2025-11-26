@@ -184,6 +184,7 @@ export const IdeaDetail = () => {
   const router = useRouter();
   const [commentText, setCommentText] = useState('');
   const [isAnonComment, setIsAnonComment] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Payment Modal State
   const [showPayment, setShowPayment] = useState(false);
@@ -245,12 +246,17 @@ export const IdeaDetail = () => {
           openWalletModal();
           return;
       }
+      if (isSubmitting || !commentText.trim()) return; // Prevent double submit
+
+      setIsSubmitting(true);
       try {
         await addComment(project.id, commentText, isAnonComment);
         setCommentText('');
         toast.success('Comment added');
       } catch (error) {
         toast.error('Failed to add comment');
+      } finally {
+        setIsSubmitting(false);
       }
   };
 
@@ -366,8 +372,12 @@ export const IdeaDetail = () => {
                                     <input type="checkbox" checked={isAnonComment} onChange={e => setIsAnonComment(e.target.checked)} className="hidden" />
                                     Comment Anonymously
                                 </label>
-                                <button type="submit" className="bg-white text-black px-6 py-2 rounded-full font-bold flex items-center gap-2 hover:bg-[#FFD700] transition-colors">
-                                    Send <Send className="w-4 h-4" />
+                                <button
+                                    type="submit"
+                                    disabled={isSubmitting || !commentText.trim()}
+                                    className="bg-white text-black px-6 py-2 rounded-full font-bold flex items-center gap-2 hover:bg-[#FFD700] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {isSubmitting ? 'Sending...' : 'Send'} <Send className="w-4 h-4" />
                                 </button>
                             </div>
                         </form>

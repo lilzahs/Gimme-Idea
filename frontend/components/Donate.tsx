@@ -103,15 +103,19 @@ export const Donate = () => {
       setIsSuccess(true);
       toast.success("Donation sent successfully!");
 
-      // Verify with backend
+      // Verify with backend (optional - transaction is already successful on-chain)
       try {
         await apiClient.verifyTransaction({
           signature,
           type: 'bounty',
           amount: amountNum,
         });
-      } catch (backendError) {
-        console.error('Failed to verify with backend:', backendError);
+      } catch (backendError: any) {
+        // Silent fail - transaction is already successful on-chain
+        // Backend verification is for tracking/leaderboard purposes only
+        if (backendError?.response?.status !== 400) {
+          console.warn('Backend verification skipped:', backendError.message || 'Unknown error');
+        }
       }
 
       // Keep success state for 5 seconds

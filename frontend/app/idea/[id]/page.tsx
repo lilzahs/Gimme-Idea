@@ -8,11 +8,14 @@ import { useAppStore } from '../../../lib/store';
 export default function IdeaDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { setSelectedProject, fetchProjectById, isLoading } = useAppStore();
+  const { selectedProject, setSelectedProject, fetchProjectById, isLoading } = useAppStore();
   const ideaId = params.id as string;
 
   useEffect(() => {
     if (ideaId) {
+      // Clear old project immediately to prevent showing wrong data
+      setSelectedProject(null);
+
       // Fetch the project by ID and set it as selected
       fetchProjectById(ideaId).then((project) => {
         if (project) {
@@ -28,7 +31,8 @@ export default function IdeaDetailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ideaId]);
 
-  if (isLoading || !ideaId) {
+  // Show loading spinner until project is loaded
+  if (isLoading || !ideaId || !selectedProject || selectedProject.id !== ideaId) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-16 h-16 border-4 border-white/10 border-t-white rounded-full animate-spin" />

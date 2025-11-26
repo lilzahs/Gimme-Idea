@@ -522,7 +522,9 @@ export const useAppStore = create<AppState>((set, get) => ({
         };
 
         return {
-          projects: state.projects.map(p => p.id === projectId ? updatedProject : p)
+          projects: state.projects.map(p => p.id === projectId ? updatedProject : p),
+          // Also update selectedProject if it's the same project
+          selectedProject: state.selectedProject?.id === projectId ? updatedProject : state.selectedProject
         };
       } else {
         // It's a top-level comment - check if it already exists
@@ -536,7 +538,9 @@ export const useAppStore = create<AppState>((set, get) => ({
         };
 
         return {
-          projects: state.projects.map(p => p.id === projectId ? updatedProject : p)
+          projects: state.projects.map(p => p.id === projectId ? updatedProject : p),
+          // Also update selectedProject if it's the same project
+          selectedProject: state.selectedProject?.id === projectId ? updatedProject : state.selectedProject
         };
       }
     });
@@ -574,7 +578,9 @@ export const useAppStore = create<AppState>((set, get) => ({
       };
 
       return {
-        projects: state.projects.map(p => p.id === projectId ? updatedProject : p)
+        projects: state.projects.map(p => p.id === projectId ? updatedProject : p),
+        // Also update selectedProject if it's the same project
+        selectedProject: state.selectedProject?.id === projectId ? updatedProject : state.selectedProject
       };
     });
   },
@@ -608,7 +614,9 @@ export const useAppStore = create<AppState>((set, get) => ({
       };
 
       return {
-        projects: state.projects.map(p => p.id === projectId ? updatedProject : p)
+        projects: state.projects.map(p => p.id === projectId ? updatedProject : p),
+        // Also update selectedProject if it's the same project
+        selectedProject: state.selectedProject?.id === projectId ? updatedProject : state.selectedProject
       };
     });
   },
