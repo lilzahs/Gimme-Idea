@@ -9,7 +9,7 @@ import { AIService } from '../ai/ai.service';
 @Injectable()
 export class ProjectsService {
   private readonly logger = new Logger(ProjectsService.name);
-  private readonly AI_BOT_WALLET = 'GimmeAI1111111111111111111111111111111111111';
+  private readonly AI_BOT_WALLET = 'FzcnaZMYcoAYpLgr7Wym2b8hrKYk3VXsRxWSLuvZKLJm';
 
   constructor(
     private supabaseService: SupabaseService,
@@ -414,7 +414,7 @@ export class ProjectsService {
           .from('users')
           .insert({
             wallet: this.AI_BOT_WALLET,
-            username: 'AI Assistant',
+            username: 'Gimme Idea Guy',
             avatar: null,
           })
           .select('id')
