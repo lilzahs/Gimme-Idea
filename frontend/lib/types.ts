@@ -56,6 +56,7 @@ export interface Project {
 }
 
 export interface User {
+  id?: string; // Database user ID (returned from backend)
   wallet: string;
   username: string;
   reputation: number;
