@@ -340,12 +340,20 @@ export const useAppStore = create<AppState>((set, get) => ({
           ...response.data,
           image: response.data.imageUrl || response.data.image
         };
-        set((state) => ({
-          projects: [newProject, ...state.projects],
-          isLoading: false
-          // Note: isSubmitModalOpen is controlled by SubmissionModal to show success animation
-          // Routing is handled by SubmissionModal using Next.js router
-        }));
+        
+        set((state) => {
+          // Check for duplicates (prevent race condition with realtime)
+          if (state.projects.some(p => p.id === newProject.id)) {
+            return { isLoading: false };
+          }
+          
+          return {
+            projects: [newProject, ...state.projects],
+            isLoading: false
+            // Note: isSubmitModalOpen is controlled by SubmissionModal to show success animation
+            // Routing is handled by SubmissionModal using Next.js router
+          };
+        });
       }
     } catch (error) {
       console.error('Failed to create project:', error);
