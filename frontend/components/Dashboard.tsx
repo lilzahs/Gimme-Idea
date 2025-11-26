@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { ProjectCard } from './ProjectCard';
+import { RecommendedIdeas } from './RecommendedIdeas';
 import { useAppStore } from '../lib/store';
 import { Filter, Plus, TrendingUp, Activity, X, Lightbulb, Rocket } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -135,6 +136,11 @@ export default function Dashboard({ mode }: DashboardProps) {
                     <p className="text-3xl font-display font-bold text-white">8</p>
                 </div>
             </div>
+        )}
+
+        {/* Recommended Ideas Section (only for ideas mode) */}
+        {mode === 'idea' && !searchQuery && (
+          <RecommendedIdeas />
         )}
 
         {/* Search & Categories */}

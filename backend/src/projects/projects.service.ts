@@ -75,11 +75,6 @@ export class ProjectsService {
       supabaseQuery = supabaseQuery.order(sortColumn, { ascending: sortOrder });
     }
 
-    // For ideas, always add secondary sort by AI score if not already sorting by it
-    if (query.type === 'idea' && sortColumn !== 'ai_score') {
-      supabaseQuery = supabaseQuery.order('ai_score', { ascending: false, nullsFirst: false });
-    }
-
     // Apply pagination
     supabaseQuery = supabaseQuery.range(query.offset, query.offset + query.limit - 1);
 
@@ -109,6 +104,64 @@ export class ProjectsService {
       bounty: p.bounty,
       imageUrl: p.image_url,
       // Idea-specific fields
+      problem: p.problem,
+      solution: p.solution,
+      opportunity: p.opportunity,
+      goMarket: p.go_market,
+      teamInfo: p.team_info,
+      isAnonymous: p.is_anonymous,
+      createdAt: p.created_at,
+    }));
+
+    return {
+      success: true,
+      data: projects,
+    };
+  }
+
+  /**
+   * Get top recommended ideas based on AI score
+   */
+  async getRecommendedIdeas(limit: number = 3): Promise<ApiResponse<Project[]>> {
+    const supabase = this.supabaseService.getAdminClient();
+
+    const { data, error } = await supabase
+      .from('projects')
+      .select(`
+        *,
+        author:users!projects_author_id_fkey(
+          username,
+          wallet,
+          avatar
+        )
+      `)
+      .eq('type', 'idea')
+      .not('ai_score', 'is', null)
+      .order('ai_score', { ascending: false, nullsFirst: false })
+      .limit(limit);
+
+    if (error) {
+      throw new Error(`Failed to fetch recommended ideas: ${error.message}`);
+    }
+
+    const projects: Project[] = data.map(p => ({
+      id: p.id,
+      type: p.type || 'project',
+      title: p.title,
+      description: p.description,
+      category: p.category,
+      votes: p.votes || 0,
+      feedbackCount: p.feedback_count || 0,
+      stage: p.stage,
+      tags: p.tags || [],
+      website: p.website,
+      author: p.is_anonymous ? null : {
+        username: p.author.username,
+        wallet: p.author.wallet,
+        avatar: p.author.avatar,
+      },
+      bounty: p.bounty,
+      imageUrl: p.image_url,
       problem: p.problem,
       solution: p.solution,
       opportunity: p.opportunity,
