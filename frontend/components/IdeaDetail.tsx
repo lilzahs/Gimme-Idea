@@ -65,10 +65,15 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, projectId, isReply =
 
     return (
         <div className={`flex gap-4 mb-6 animate-in fade-in slide-in-from-bottom-2 duration-300 ${isReply ? 'ml-12 mt-4' : ''}`}>
-            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold flex-shrink-0 border border-white/10 ${comment.isAnonymous ? 'bg-gray-800 text-gray-400' : 'bg-white/10 text-white'}`}>
-                {comment.isAnonymous ? <EyeOff className="w-5 h-5" /> : authorInitial}
-            </div>
-            <div className="flex-grow">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold flex-shrink-0 border border-white/10 overflow-hidden ${comment.isAnonymous ? 'bg-gray-800 text-gray-400' : 'bg-white/10 text-white'}`}>
+                        {comment.isAnonymous ? (
+                            <EyeOff className="w-5 h-5" />
+                        ) : comment.author?.avatar ? (
+                            <img src={comment.author.avatar} alt={authorName} className="w-full h-full object-cover" />
+                        ) : (
+                            authorInitial
+                        )}
+                    </div>            <div className="flex-grow">
                 <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <span className={`font-bold text-sm ${comment.isAnonymous ? 'text-gray-400 italic' : 'text-white'}`}>
                         {authorName}
@@ -316,8 +321,14 @@ export const IdeaDetail = () => {
 
                 <div className="flex items-center gap-4 text-sm text-gray-400 mb-8 border-b border-white/10 pb-8">
                      <div className="flex items-center gap-2">
-                         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${project.isAnonymous ? 'bg-gray-800' : 'bg-white/10'}`}>
-                             {project.isAnonymous ? <EyeOff className="w-4 h-4" /> : <User className="w-4 h-4" />}
+                         <div className={`w-8 h-8 rounded-full flex items-center justify-center overflow-hidden ${project.isAnonymous ? 'bg-gray-800' : 'bg-white/10'}`}>
+                             {project.isAnonymous ? (
+                                 <EyeOff className="w-4 h-4" />
+                             ) : project.author?.avatar ? (
+                                 <img src={project.author.avatar} alt={project.author.username} className="w-full h-full object-cover" />
+                             ) : (
+                                 <User className="w-4 h-4" />
+                             )}
                          </div>
                          <span>{project.isAnonymous || !project.author ? 'Anonymous Inventor' : project.author.username}</span>
                      </div>

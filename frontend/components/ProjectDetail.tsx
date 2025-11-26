@@ -68,8 +68,12 @@ const CommentItem: React.FC<CommentItemProps> = ({
 
     return (
         <div className={`flex gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300 ${isReply ? 'ml-12 mt-4' : ''}`}>
-            <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center font-bold text-gray-400 flex-shrink-0">
-                {authorInitial}
+            <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center font-bold text-gray-400 flex-shrink-0 overflow-hidden">
+                {comment.author?.avatar ? (
+                    <img src={comment.author.avatar} alt={authorName} className="w-full h-full object-cover" />
+                ) : (
+                    authorInitial
+                )}
             </div>
             <div className="flex-grow">
                 <div className="flex items-center gap-2 mb-1">
