@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import { Project } from '../lib/types';
-import { MessageSquare, ThumbsUp, EyeOff, Lightbulb, Rocket, Tag } from 'lucide-react';
+import { MessageSquare, ThumbsUp, EyeOff, Lightbulb, Rocket } from 'lucide-react';
 import { useAppStore } from '../lib/store';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
@@ -50,10 +50,10 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   return (
     <div
       onClick={handleCardClick}
-      className={`backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-1 group cursor-pointer flex flex-col h-full shadow-[0_4px_20px_rgba(0,0,0,0.5)] relative z-10 ${
+      className={`border rounded-xl overflow-hidden transition-all duration-200 hover:-translate-y-0.5 group cursor-pointer flex flex-col h-full relative z-10 ${
         isIdea
-          ? 'bg-gradient-to-b from-[#1a1508] via-[#0d0a04] to-[#050505] hover:border-gold/50'
-          : 'bg-[#050505] hover:border-[#9945FF]/50'
+          ? 'bg-[#14151C] border-white/[0.06] hover:border-[#FFD700]/25 hover:shadow-[0_0_20px_rgba(255,215,0,0.08)]'
+          : 'bg-[#14151C] border-white/[0.06] hover:border-[#9945FF]/25 hover:shadow-[0_0_20px_rgba(153,69,255,0.08)]'
       }`}
     >
       {/* Visual Header - Only show large banner for Projects */}
@@ -86,22 +86,22 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
 
       {/* Idea Header (Compact) */}
       {isIdea && (
-          <div className="px-6 pt-6 pb-2 flex justify-between items-start">
-              <div className="w-10 h-10 rounded-full bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-gold shadow-[0_0_10px_rgba(255,215,0,0.1)] group-hover:shadow-[0_0_15px_rgba(255,215,0,0.2)] transition-shadow">
-                  <Lightbulb className="w-5 h-5" />
+          <div className="px-5 pt-5 pb-2 flex justify-between items-start">
+              <div className="w-8 h-8 rounded-full bg-yellow-500/5 border border-yellow-500/10 flex items-center justify-center text-gold/70 transition-colors duration-200">
+                  <Lightbulb className="w-4 h-4" />
               </div>
-              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider border border-yellow-500/30 text-gold bg-yellow-500/5">
+              <span className="px-2 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider border border-yellow-500/20 text-gold/80 bg-yellow-500/5">
                   {project.stage}
               </span>
           </div>
       )}
 
-      <div className={`p-6 flex flex-col flex-grow relative z-10 ${isIdea ? 'pt-2' : ''}`}>
-        <h3 className={`text-xl font-bold mb-2 transition-colors flex items-center justify-between ${isIdea ? 'group-hover:text-[#FFD700]' : 'group-hover:text-[#9945FF]'}`}>
+      <div className={`p-5 flex flex-col flex-grow relative z-10 ${isIdea ? 'pt-2' : ''}`}>
+        <h3 className={`text-lg font-bold mb-2 transition-colors duration-200 line-clamp-2 ${isIdea ? 'group-hover:text-[#FFD700]' : 'group-hover:text-[#9945FF]'}`}>
           {project.title}
         </h3>
-        
-        <p className={`text-gray-400 text-sm mb-6 line-clamp-3 flex-grow font-light ${isIdea ? 'text-gray-300' : ''}`}>
+
+        <p className="text-gray-400 text-sm mb-4 line-clamp-2 flex-grow">
             {project.description}
         </p>
 
@@ -112,22 +112,22 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
           </div>
         )}
 
-        <div className="flex flex-wrap gap-2 mb-6">
+        <div className="flex flex-wrap gap-1.5 mb-4">
           {project.tags.slice(0, 3).map(tag => (
-            <span key={tag} className="px-2 py-1 rounded bg-white/5 border border-white/10 text-[10px] font-mono text-gray-500 group-hover:border-white/20 transition-colors flex items-center gap-1">
-              <Tag className="w-3 h-3 opacity-50" /> {tag}
+            <span key={tag} className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[9px] font-mono text-gray-500 transition-colors duration-200">
+              {tag}
             </span>
           ))}
         </div>
 
         <div className="flex items-center justify-between pt-4 border-t border-white/10 mt-auto">
           <div className="flex gap-4">
-            <motion.button 
+            <motion.button
               onClick={handleVote}
-              className={`flex items-center gap-1.5 text-sm transition-colors relative ${isLiked ? 'text-[#ffd700]' : 'text-gray-400 hover:text-white'}`}
-              whileTap={{ scale: 0.8 }}
+              className={`flex items-center gap-1.5 text-sm transition-colors duration-200 relative ${isLiked ? 'text-[#ffd700]' : 'text-gray-400 hover:text-white'}`}
+              whileTap={{ scale: 0.9 }}
             >
-              <ThumbsUp className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+              <ThumbsUp className={`w-3.5 h-3.5 ${isLiked ? 'fill-current' : ''}`} />
               <AnimatePresence mode="wait">
                 <motion.span 
                     key={project.votes}
@@ -140,18 +140,17 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
                 
                 {showBurst && (
                    <>
-                     {[...Array(8)].map((_, i) => (
+                     {[...Array(5)].map((_, i) => (
                        <motion.div
                          key={`burst-${i}`}
-                         className="absolute top-1/2 left-0 w-1.5 h-1.5 rounded-full pointer-events-none"
-                         style={{ backgroundColor: i % 2 === 0 ? '#ffd700' : '#ffffff' }}
+                         className="absolute top-1/2 left-0 w-1 h-1 rounded-full pointer-events-none bg-[#ffd700]"
                          initial={{ scale: 0, x: 0, y: 0 }}
-                         animate={{ 
+                         animate={{
                            scale: [1, 0],
-                           x: Math.cos(i * 45 * (Math.PI / 180)) * 25,
-                           y: Math.sin(i * 45 * (Math.PI / 180)) * 25 - 12,
+                           x: Math.cos(i * 72 * (Math.PI / 180)) * 15,
+                           y: Math.sin(i * 72 * (Math.PI / 180)) * 15 - 8,
                          }}
-                         transition={{ duration: 0.6, ease: "easeOut" }}
+                         transition={{ duration: 0.4, ease: "easeOut" }}
                        />
                      ))}
                    </>
@@ -159,26 +158,26 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
             </motion.button>
             
             <div className="flex items-center gap-1.5 text-sm text-gray-400">
-              <MessageSquare className="w-4 h-4" />
+              <MessageSquare className="w-3.5 h-3.5" />
               <span>{project.feedbackCount}</span>
             </div>
           </div>
-          
-          <div 
-             onClick={handleAuthorClick} 
-             className={`flex items-center gap-2 text-xs text-gray-500 font-mono transition-colors z-20 ${project.isAnonymous ? 'cursor-default' : 'cursor-pointer hover:text-white'}`}
+
+          <div
+             onClick={handleAuthorClick}
+             className={`flex items-center gap-1.5 text-xs text-gray-500 font-mono transition-colors duration-200 z-20 ${project.isAnonymous ? 'cursor-default' : 'cursor-pointer hover:text-white'}`}
           >
              {project.isAnonymous ? (
                  <>
-                    <div className="w-4 h-4 rounded-full bg-gray-800 flex items-center justify-center border border-white/10">
-                        <EyeOff className="w-2.5 h-2.5 text-gray-400" />
+                    <div className="w-3.5 h-3.5 rounded-full bg-gray-800 flex items-center justify-center border border-white/10">
+                        <EyeOff className="w-2 h-2 text-gray-400" />
                     </div>
                     <span>Anonymous</span>
                  </>
              ) : (
                  <>
                     {project.author?.avatar && (
-                        <img src={project.author.avatar} alt="avatar" className="w-4 h-4 rounded-full border border-white/10" />
+                        <img src={project.author.avatar} alt="avatar" className="w-3.5 h-3.5 rounded-full border border-white/10" />
                     )}
                     <span>{project.author?.username || 'Anon'}</span>
                  </>

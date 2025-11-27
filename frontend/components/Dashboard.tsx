@@ -29,22 +29,8 @@ export default function Dashboard({ mode }: DashboardProps) {
   } = useAppStore();
   const router = useRouter();
   const [categoryFilter, setCategoryFilter] = useState('All');
-  const [stars, setStars] = useState<{ id: number; top: string; left: string; size: number; duration: string; opacity: number }[]>([]);
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [showComingSoon, setShowComingSoon] = useState(false);
-
-  // Generate stars on mount
-  useEffect(() => {
-    const newStars = Array.from({ length: 50 }).map((_, i) => ({
-      id: i,
-      top: `${Math.random() * 100}%`,
-      left: `${Math.random() * 100}%`,
-      size: Math.random() * 2 + 1,
-      duration: `${Math.random() * 3 + 2}s`,
-      opacity: Math.random()
-    }));
-    setStars(newStars);
-  }, []);
 
   // Show coming soon modal for projects mode
   useEffect(() => {
@@ -91,32 +77,12 @@ export default function Dashboard({ mode }: DashboardProps) {
       animate={{ opacity: 1 }}
       className="min-h-screen pb-20 relative"
     >
-      {/* Background with Animated Stars */}
-      <div className="fixed inset-0 z-[-1] pointer-events-none">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#0f111a] via-[#13131f] to-[#0f111a]" />
-          <div className={`absolute top-[-10%] left-[10%] w-[600px] h-[600px] ${mode === 'project' ? 'bg-purple-900/30' : 'bg-yellow-900/30'} rounded-full blur-[120px] mix-blend-screen`} />
-          <div className="absolute bottom-[10%] right-[10%] w-[500px] h-[500px] bg-blue-900/30 rounded-full blur-[120px] mix-blend-screen" />
-          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:100px_100px]" />
-
-          {/* Animated Stars */}
-          <div className="stars-container">
-            {stars.map((star) => (
-              <div
-                key={star.id}
-                className="star"
-                style={{
-                  top: star.top,
-                  left: star.left,
-                  width: `${star.size}px`,
-                  height: `${star.size}px`,
-                  '--duration': star.duration,
-                  '--opacity': star.opacity
-                } as React.CSSProperties}
-              />
-            ))}
-            <div className="shooting-star" style={{ top: '20%', left: '80%' }} />
-            <div className="shooting-star" style={{ top: '60%', left: '10%', animationDelay: '2s' }} />
-          </div>
+      {/* Premium Dark Background with Subtle Orbs */}
+      <div className="fixed inset-0 z-[-1] pointer-events-none bg-[#0A0A0A]">
+          {/* Large Subtle Orbs for Depth */}
+          <div className={`absolute top-[15%] left-[8%] w-[800px] h-[800px] ${mode === 'project' ? 'bg-purple-500' : 'bg-yellow-500'} opacity-[0.03] rounded-full blur-[150px]`} />
+          <div className="absolute bottom-[10%] right-[10%] w-[700px] h-[700px] bg-blue-500 opacity-[0.02] rounded-full blur-[140px]" />
+          <div className={`absolute top-[50%] right-[15%] w-[600px] h-[600px] ${mode === 'project' ? 'bg-indigo-500' : 'bg-amber-500'} opacity-[0.025] rounded-full blur-[130px]`} />
       </div>
 
       <div className="pt-32 px-6 max-w-7xl mx-auto">
@@ -167,7 +133,7 @@ export default function Dashboard({ mode }: DashboardProps) {
             </div>
         )}
 
-        <div className="flex overflow-x-auto gap-2 mb-8 pb-2 scrollbar-hide">
+        <div className="flex overflow-x-auto gap-2 mb-10 pb-2 scrollbar-hide">
           {categories.map(cat => (
             <button
               key={cat}
@@ -195,20 +161,18 @@ export default function Dashboard({ mode }: DashboardProps) {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 mt-10">
               {filteredProjects.map((project, index) => (
                 <motion.div
                   key={project.id}
                   layout
-                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
                   transition={{
-                    duration: 0.4,
-                    delay: index * 0.05, // Stagger effect
-                    type: "spring",
-                    stiffness: 100,
-                    damping: 15
+                    duration: 0.25,
+                    delay: index * 0.03,
+                    ease: "easeOut"
                   }}
                 >
                   <ProjectCard project={project} />
