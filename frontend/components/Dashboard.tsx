@@ -72,11 +72,13 @@ export default function Dashboard({ mode }: DashboardProps) {
   // Filter logic
   const filteredProjects = projects.filter(project => {
     const matchesType = project.type === mode;
-    const matchesCategory = categoryFilter === 'All' || project.category === categoryFilter;
-    const matchesSearch = searchQuery === '' || 
+    const matchesCategory = categoryFilter === 'All' ||
+      project.category === categoryFilter ||
+      project.tags.some(tag => tag === categoryFilter);
+    const matchesSearch = searchQuery === '' ||
         project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         project.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-    
+
     return matchesType && matchesCategory && matchesSearch;
   });
 

@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Sparkles, TrendingUp, Award } from 'lucide-react';
 import { useAppStore } from '../lib/store';
 import { Project } from '../lib/types';
+import { useRouter } from 'next/navigation';
 import axios from 'axios';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
@@ -12,7 +13,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 export const RecommendedIdeas = () => {
   const [recommendedIdeas, setRecommendedIdeas] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { navigateToProject } = useAppStore();
+  const router = useRouter();
 
   useEffect(() => {
     const fetchRecommended = async () => {
@@ -32,7 +33,7 @@ export const RecommendedIdeas = () => {
   }, []);
 
   const handleViewIdea = (id: string) => {
-    navigateToProject(id, 'idea');
+    router.push(`/idea/${id}`);
   };
 
   if (isLoading) {
