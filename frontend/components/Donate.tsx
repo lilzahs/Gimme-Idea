@@ -181,7 +181,7 @@ export const Donate = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
         >
-            <div className="bg-[#0F0F0F]/80 backdrop-blur-xl border border-blue-500/20 rounded-3xl p-8 relative overflow-hidden shadow-2xl shadow-blue-900/10 group flex flex-col justify-center">
+            <div className="bg-[#0F0F0F]/80 backdrop-blur-xl border border-blue-500/20 rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-2xl shadow-blue-900/10 group flex flex-col justify-center">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 pointer-events-none" />
                 
                 <AnimatePresence mode="wait">
@@ -260,8 +260,8 @@ export const Donate = () => {
                             exit={{ opacity: 0 }}
                         >
                              <div className="mb-6">
-                                                          <label className="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">Your support is our infrastructure. Thank you for fueling the mission.</label>
-                                                             <div className="grid grid-cols-4 gap-2 mb-4">
+                                                          <label className="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">Your support is our infrastructure.<br />Thank you for fueling the mission.</label>
+                                                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
                                                                  {['0.1', '0.5', '1', '2'].map((val) => (
                                                                      <button
                                                                          key={val}
@@ -293,7 +293,7 @@ export const Donate = () => {
                                                                      type="text"
                                                                      value={donorName}
                                                                      onChange={(e) => setDonorName(e.target.value)}
-                                                                     placeholder="Your Name (optional)"
+                                                                     placeholder="What should we call you? (optional)"
                                                                      className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 transition-colors group-hover/input:border-white/20"
                                                                  />
                                                              </div>
@@ -339,7 +339,7 @@ export const Donate = () => {
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-[#0F0F0F]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-8 overflow-hidden shadow-2xl"
+            className="bg-[#0F0F0F]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-6 sm:p-8 overflow-hidden shadow-2xl"
         >
             <div className="text-center mb-8">
                 <h2 className="text-3xl font-display font-bold mb-2">
@@ -428,7 +428,7 @@ export const Donate = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="flex gap-4 max-w-2xl mx-auto"
+            className="flex flex-col sm:flex-row gap-4 max-w-2xl mx-auto"
         >
             <a
                 href="https://twitter.com/intent/tweet?text=Just%20supported%20Gimme%20Idea!%20Check%20out%20the%20future%20of%20Solana%20building.&url=https://gimmeidea.com"
