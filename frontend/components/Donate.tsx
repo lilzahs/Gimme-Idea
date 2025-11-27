@@ -19,6 +19,7 @@ export const Donate = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [txHash, setTxHash] = useState('');
+  const [donorName, setDonorName] = useState('');
   const [stars, setStars] = useState<{ id: number; top: string; left: string; size: number; duration: string; opacity: number }[]>([]);
 
   // Generate stars on mount
@@ -259,65 +260,75 @@ export const Donate = () => {
                             exit={{ opacity: 0 }}
                         >
                              <div className="mb-6">
-                             <label className="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">Your support is our infrastructure. Thank you for fueling the mission.</label>
-                                <div className="grid grid-cols-4 gap-2 mb-4">
-                                    {['0.1', '0.5', '1', '2'].map((val) => (
-                                        <button
-                                            key={val}
-                                            onClick={() => setAmount(val)}
-                                            className={`py-3 rounded-xl font-mono font-bold transition-all border ${
-                                                amount === val
-                                                ? 'bg-blue-500/20 border-blue-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.3)]'
-                                                : 'bg-white/5 border-white/5 text-gray-400 hover:bg-white/10 hover:text-white hover:border-white/10'
-                                            }`}
-                                        >
-                                            {val} SOL
-                                        </button>
-                                    ))}
-                                </div>
-                                <div className="relative group/input">
-                                    <input
-                                        type="number"
-                                        value={amount}
-                                        onChange={(e) => setAmount(e.target.value)}
-                                        step="0.1"
-                                        className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-4 text-2xl font-bold text-white outline-none focus:border-blue-500 transition-colors pr-16 group-hover/input:border-white/20"
-                                    />
-                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-mono text-gray-500 pointer-events-none">
-                                        SOL
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="flex items-center gap-2 bg-black/40 border border-white/10 rounded-xl p-3 mb-6 relative group/copy transition-colors hover:border-white/20">
-                                <code className="text-sm text-gray-300 font-mono truncate w-full px-2">
-                                    {walletAddress}
-                                </code>
-                                <button 
-                                    onClick={handleCopy}
-                                    className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-white flex-shrink-0"
-                                >
-                                    {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-                                </button>
-                                <div className="absolute inset-x-0 -bottom-8 text-center opacity-0 group-hover/copy:opacity-100 transition-opacity pointer-events-none">
-                                    <span className="text-[10px] text-gray-500 bg-black/80 px-2 py-1 rounded border border-white/10">Click to copy address</span>
-                                </div>
-                            </div>
-
-                                                                                                                <button
-                                                            onClick={() => {
-                                                                const amountNum = Number(amount);
-                                                                if (isNaN(amountNum) || amountNum <= 0) {
-                                                                  toast.error('Please enter a valid amount');
-                                                                  return;
-                                                                }
-                                                                const solanaUrl = `solana:${walletAddress}?amount=${amountNum}&label=GimmeIdea%20Donation&message=Supporting%20GimmeIdea`;
-                                                                window.open(solanaUrl, '_blank');
-                                                            }}
-                                                            className="w-full py-4 bg-white/5 border border-white/10 rounded-xl font-bold text-white hover:bg-white/10 transition-colors shadow-lg shadow-white/5 flex items-center justify-center gap-2 text-lg mt-4"
-                                                        >
-                                                            <ExternalLink className="w-5 h-5" /> Donate via Wallet App
-                                                        </button>                        </motion.div>
+                                                          <label className="block text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">Your support is our infrastructure. Thank you for fueling the mission.</label>
+                                                             <div className="grid grid-cols-4 gap-2 mb-4">
+                                                                 {['0.1', '0.5', '1', '2'].map((val) => (
+                                                                     <button
+                                                                         key={val}
+                                                                         onClick={() => setAmount(val)}
+                                                                         className={`py-3 rounded-xl font-mono font-bold transition-all border ${
+                                                                             amount === val
+                                                                             ? 'bg-blue-500/20 border-blue-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.3)]'
+                                                                             : 'bg-white/5 border-white/5 text-gray-400 hover:bg-white/10 hover:text-white hover:border-white/10'
+                                                                         }`}
+                                                                     >
+                                                                         {val} SOL
+                                                                     </button>
+                                                                 ))}
+                                                             </div>
+                                                             <div className="relative group/input mb-4">
+                                                                 <input
+                                                                     type="number"
+                                                                     value={amount}
+                                                                     onChange={(e) => setAmount(e.target.value)}
+                                                                     step="0.1"
+                                                                     className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-4 text-2xl font-bold text-white outline-none focus:border-blue-500 transition-colors pr-16 group-hover/input:border-white/20"
+                                                                 />
+                                                                 <div className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-mono text-gray-500 pointer-events-none">
+                                                                     SOL
+                                                                 </div>
+                                                             </div>
+                                                             <div className="relative group/input">
+                                                                 <input
+                                                                     type="text"
+                                                                     value={donorName}
+                                                                     onChange={(e) => setDonorName(e.target.value)}
+                                                                     placeholder="Your Name (optional)"
+                                                                     className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-blue-500 transition-colors group-hover/input:border-white/20"
+                                                                 />
+                                                             </div>
+                                                         </div>
+                             
+                                                         <div className="flex items-center gap-2 bg-black/40 border border-white/10 rounded-xl p-3 mb-6 relative group/copy transition-colors hover:border-white/20">
+                                                             <code className="text-sm text-gray-300 font-mono truncate w-full px-2">
+                                                                 {walletAddress}
+                                                             </code>
+                                                             <button
+                                                                 onClick={handleCopy}
+                                                                 className="p-2 hover:bg-white/10 rounded-lg transition-colors text-gray-400 hover:text-white flex-shrink-0"
+                                                             >
+                                                                 {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                                                             </button>
+                                                             <div className="absolute inset-x-0 -bottom-8 text-center opacity-0 group-hover/copy:opacity-100 transition-opacity pointer-events-none">
+                                                                 <span className="text-[10px] text-gray-500 bg-black/80 px-2 py-1 rounded border border-white/10">Click to copy address</span>
+                                                             </div>
+                                                         </div>
+                             
+                                                                                                                                             <button
+                                                                                         onClick={() => {
+                                                                                             const amountNum = Number(amount);
+                                                                                             if (isNaN(amountNum) || amountNum <= 0) {
+                                                                                               toast.error('Please enter a valid amount');
+                                                                                               return;
+                                                                                             }
+                                                                                             const message = donorName ? `from ${donorName} with love` : 'Supporting GimmeIdea';
+                                                                                             const solanaUrl = `solana:${walletAddress}?amount=${amountNum}&label=GimmeIdea%20Donation&message=${encodeURIComponent(message)}`;
+                                                                                             window.open(solanaUrl, '_blank');
+                                                                                         }}
+                                                                                         className="w-full py-4 bg-white/5 border border-white/10 rounded-xl font-bold text-white hover:bg-white/10 transition-colors shadow-lg shadow-white/5 flex items-center justify-center gap-2 text-lg mt-4"
+                                                                                     >
+                                                                                         <ExternalLink className="w-5 h-5" /> Donate via Wallet App
+                                                                                     </button>                        </motion.div>
                     )}
                 </AnimatePresence>
             </div>
