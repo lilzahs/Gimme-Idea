@@ -304,17 +304,30 @@ export const Donate = () => {
                                 </div>
                             </div>
 
-                            <button 
-                                onClick={handleDonate}
-                                disabled={isProcessing}
-                                className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl font-bold text-white hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 text-lg disabled:opacity-50 disabled:cursor-not-allowed border border-white/10 relative overflow-hidden group/btn"
-                            >
-                                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300" />
-                                <span className="relative z-10 flex items-center gap-2">
-                                    {isProcessing ? "Processing..." : "Send Donation"} <Send className="w-5 h-5" />
-                                </span>
-                            </button>
-                        </motion.div>
+                                                        <button
+                                                            onClick={handleDonate}
+                                                            disabled={isProcessing}
+                                                            className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl font-bold text-white hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 text-lg disabled:opacity-50 disabled:cursor-not-allowed border border-white/10 relative overflow-hidden group/btn"
+                                                        >
+                                                            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300" />
+                                                            <span className="relative z-10 flex items-center gap-2">
+                                                                {isProcessing ? "Processing..." : "Send Donation"} <Send className="w-5 h-5" />
+                                                            </span>
+                                                        </button>
+                                                        <button
+                                                            onClick={() => {
+                                                                const amountNum = Number(amount);
+                                                                if (isNaN(amountNum) || amountNum <= 0) {
+                                                                  toast.error('Please enter a valid amount');
+                                                                  return;
+                                                                }
+                                                                const solanaUrl = `solana:${walletAddress}?amount=${amountNum}&label=GimmeIdea%20Donation&message=Thank%20you%20for%20supporting%20GimmeIdea!`;
+                                                                window.open(solanaUrl, '_blank');
+                                                            }}
+                                                            className="w-full py-4 bg-white/5 border border-white/10 rounded-xl font-bold text-white hover:bg-white/10 transition-colors shadow-lg shadow-white/5 flex items-center justify-center gap-2 text-lg mt-4"
+                                                        >
+                                                            <ExternalLink className="w-5 h-5" /> Donate via Wallet App
+                                                        </button>                        </motion.div>
                     )}
                 </AnimatePresence>
             </div>
