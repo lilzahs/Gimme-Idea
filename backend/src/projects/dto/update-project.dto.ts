@@ -47,14 +47,6 @@ export class UpdateProjectDto {
   @IsOptional()
   opportunity?: string;
 
-  @IsString()
-  @IsOptional()
-  goMarket?: string;
-
-  @IsString()
-  @IsOptional()
-  teamInfo?: string;
-
   @IsBoolean()
   @IsOptional()
   isAnonymous?: boolean;
