@@ -12,7 +12,7 @@ import { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } f
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 const RECIPIENT_WALLET = 'your_wallet_address_here'; // TODO: Replace with your wallet address
-const SOL_PRICE_USD = 200; // Approximate SOL price, should fetch from API in production
+const SOL_PRICE_USD = 150; // Approximate SOL price, should fetch from API in production
 
 interface Message {
   role: 'ai' | 'user';
@@ -382,6 +382,24 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
                   className="w-full bg-[#0F0F0F] border border-white/20 rounded-xl px-4 py-3 text-white font-mono text-lg outline-none focus:border-[#FFD700]/50 transition-colors"
                   placeholder="Enter amount"
                 />
+
+                {/* Quick Select Buttons */}
+                <div className="flex gap-2 mt-3">
+                  {[1, 2, 5, 10].map((val) => (
+                    <button
+                      key={val}
+                      onClick={() => setPaymentAmount(val)}
+                      className={`flex-1 py-2 rounded-lg text-sm font-medium border transition-all ${
+                        paymentAmount === val
+                          ? 'bg-[#FFD700]/20 border-[#FFD700] text-white'
+                          : 'bg-transparent border-white/10 text-gray-400 hover:bg-white/5'
+                      }`}
+                    >
+                      ${val}
+                    </button>
+                  ))}
+                </div>
+
                 <div className="mt-3 space-y-1">
                   <p className="text-sm text-gray-400 font-mono">
                     ≈ <span className="text-[#FFD700]">{(paymentAmount / SOL_PRICE_USD).toFixed(4)} SOL</span>
