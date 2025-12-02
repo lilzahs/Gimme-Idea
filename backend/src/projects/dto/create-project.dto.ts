@@ -13,8 +13,8 @@ export class CreateProjectDto {
   @IsNotEmpty()
   description: string;
 
-  @IsEnum(['DeFi', 'NFT', 'Gaming', 'Infrastructure', 'DAO', 'DePIN', 'Social', 'Mobile', 'Security'])
-  category: 'DeFi' | 'NFT' | 'Gaming' | 'Infrastructure' | 'DAO' | 'DePIN' | 'Social' | 'Mobile' | 'Security';
+  @IsEnum(['DeFi', 'NFT', 'Gaming', 'Infrastructure', 'DAO', 'DePIN', 'Social', 'Mobile', 'Security', 'Payment', 'Developer Tooling', 'ReFi', 'Content', 'Dapp', 'Blinks'])
+  category: 'DeFi' | 'NFT' | 'Gaming' | 'Infrastructure' | 'DAO' | 'DePIN' | 'Social' | 'Mobile' | 'Security' | 'Payment' | 'Developer Tooling' | 'ReFi' | 'Content' | 'Dapp' | 'Blinks';
 
   @IsEnum(['Idea', 'Prototype', 'Devnet', 'Mainnet'])
   stage: 'Idea' | 'Prototype' | 'Devnet' | 'Mainnet';

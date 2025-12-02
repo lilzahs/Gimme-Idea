@@ -383,4 +383,152 @@ Respond with valid JSON:
       throw new Error('Failed to track AI interaction');
     }
   }
+
+  /**
+   * Find matching ideas based on user interest and strengths
+   */
+  async findMatchingIdeas(
+    interest: string,
+    strengths: string,
+  ): Promise<{ ideas: any[]; reasoning: string }> {
+    this.logger.log(`Finding matching ideas for interest: ${interest}`);
+
+    const supabase = this.supabaseService.getAdminClient();
+
+    try {
+      // Fetch top ideas from database
+      const { data: ideas, error } = await supabase
+        .from('projects')
+        .select(`
+          *,
+          author:users!projects_author_id_fkey(
+            username,
+            wallet,
+            avatar
+          )
+        `)
+        .eq('type', 'idea')
+        .order('ai_score', { ascending: false, nullsFirst: false })
+        .limit(20);
+
+      if (error) throw error;
+
+      // Use AI to analyze and rank ideas based on user context
+      const prompt = `You are an expert startup advisor. A user wants to build something in this area:
+
+**User's Interest:** ${interest}
+
+**User's Strengths:** ${strengths}
+
+Here are some existing ideas in our database:
+${ideas.map((idea, idx) => `
+${idx + 1}. **${idea.title}** (Category: ${idea.category})
+   Problem: ${idea.problem}
+   Solution: ${idea.solution}
+   Votes: ${idea.votes || 0}
+`).join('\n')}
+
+Analyze which 3 ideas would be the BEST match for this user based on their interests and strengths.
+
+Return ONLY valid JSON in this exact format:
+{
+  "topIdeas": [<index1>, <index2>, <index3>],
+  "reasoning": "Brief explanation (3-4 sentences) of why these ideas match the user's interests and strengths, plus key challenges they should be aware of."
+}`;
+
+      const completion = await this.openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a helpful startup advisor. Respond with valid JSON only.',
+          },
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
+        temperature: 0.7,
+        max_tokens: 500,
+        response_format: { type: 'json_object' },
+      });
+
+      const response = JSON.parse(completion.choices[0].message.content);
+      const topIdeas = response.topIdeas.map((idx: number) => ideas[idx - 1]).filter(Boolean);
+
+      // Format ideas for frontend
+      const formattedIdeas = topIdeas.map((idea: any) => ({
+        id: idea.id,
+        title: idea.title,
+        problem: idea.problem,
+        solution: idea.solution,
+        category: idea.category,
+        votes: idea.votes || 0,
+        feedbackCount: idea.feedback_count || 0,
+        tags: idea.tags || [],
+        author: idea.is_anonymous ? null : {
+          username: idea.author?.username,
+          wallet: idea.author?.wallet,
+          avatar: idea.author?.avatar,
+        },
+        isAnonymous: idea.is_anonymous,
+      }));
+
+      return {
+        ideas: formattedIdeas,
+        reasoning: response.reasoning,
+      };
+    } catch (error) {
+      this.logger.error('Failed to find matching ideas:', error);
+      throw new Error('Failed to find matching ideas');
+    }
+  }
+
+  /**
+   * Continue conversation with AI
+   */
+  async continueConversation(
+    message: string,
+    context: { interest: string; strengths: string },
+    history: Array<{ role: string; content: string }>,
+  ): Promise<string> {
+    this.logger.log('Continuing AI conversation');
+
+    const systemPrompt = `You are a helpful startup advisor helping users find and refine business ideas.
+
+User Context:
+- Interest: ${context.interest}
+- Strengths: ${context.strengths}
+
+Answer the user's question concisely and helpfully. Keep responses to 2-3 sentences.`;
+
+    const messages = [
+      {
+        role: 'system',
+        content: systemPrompt,
+      },
+      ...history,
+      {
+        role: 'user',
+        content: message,
+      },
+    ];
+
+    try {
+      const completion = await this.openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: messages as any,
+        temperature: 0.7,
+        max_tokens: 200,
+      });
+
+      const reply = completion.choices[0].message.content;
+      this.logger.log('AI conversation continued successfully');
+
+      return reply;
+    } catch (error) {
+      this.logger.error('Failed to continue conversation:', error);
+      throw new Error('Failed to continue conversation');
+    }
+  }
 }

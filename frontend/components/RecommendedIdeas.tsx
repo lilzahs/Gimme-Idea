@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, TrendingUp } from 'lucide-react';
+import { Sparkles, TrendingUp, ChevronDown } from 'lucide-react';
 import { useAppStore } from '../lib/store';
 import { Project } from '../lib/types';
 import { useRouter } from 'next/navigation';
@@ -10,15 +10,24 @@ import axios from 'axios';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
+const categories = ['All', 'DeFi', 'NFT', 'Gaming', 'Infrastructure', 'DAO', 'DePIN', 'Social', 'Mobile', 'Security', 'Payment', 'Developer Tooling', 'ReFi', 'Content', 'Dapp', 'Blinks'];
+
 export const RecommendedIdeas = () => {
   const [recommendedIdeas, setRecommendedIdeas] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [showCategoryMenu, setShowCategoryMenu] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     const fetchRecommended = async () => {
+      setIsLoading(true);
       try {
-        const response = await axios.get(`${API_URL}/projects/recommended?limit=3`);
+        let url = `${API_URL}/projects?type=idea&sortBy=aiScore&sortOrder=desc&limit=3`;
+        if (selectedCategory !== 'All') {
+          url += `&category=${selectedCategory}`;
+        }
+        const response = await axios.get(url);
         if (response.data.success) {
           setRecommendedIdeas(response.data.data);
         }
@@ -30,7 +39,7 @@ export const RecommendedIdeas = () => {
     };
 
     fetchRecommended();
-  }, []);
+  }, [selectedCategory]);
 
   const handleViewIdea = (id: string) => {
     router.push(`/idea/${id}`);
@@ -39,9 +48,12 @@ export const RecommendedIdeas = () => {
   if (isLoading) {
     return (
       <div className="mb-12">
-        <div className="flex items-center gap-2 mb-6">
-          <Sparkles className="w-5 h-5 text-[#FFD700]" />
-          <h2 className="text-2xl font-bold text-white">AI Recommended Ideas</h2>
+        <div className="flex items-center gap-3 mb-6">
+          <Sparkles className="w-6 h-6 text-[#FFD700] animate-pulse" />
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-[#FFD700] to-[#FDB931] text-transparent bg-clip-text">
+            Top 3 of {selectedCategory}
+          </h2>
+          <TrendingUp className="w-5 h-5 text-[#FFD700]" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[1, 2, 3].map(i => (
@@ -68,11 +80,46 @@ export const RecommendedIdeas = () => {
 
   return (
     <div className="mb-12">
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-6 flex-wrap">
         <Sparkles className="w-6 h-6 text-[#FFD700] animate-pulse" />
         <h2 className="text-2xl font-bold bg-gradient-to-r from-[#FFD700] to-[#FDB931] text-transparent bg-clip-text">
-          AI Recommended Ideas
+          Top 3 of
         </h2>
+
+        {/* Category Selector */}
+        <div className="relative">
+          <button
+            onClick={() => setShowCategoryMenu(!showCategoryMenu)}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-[#FFD700] to-[#FDB931] text-black rounded-full font-bold text-lg hover:shadow-lg transition-all"
+          >
+            {selectedCategory}
+            <ChevronDown className="w-4 h-4" />
+          </button>
+
+          {showCategoryMenu && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="absolute top-full mt-2 left-0 bg-[#1A1A1A] border border-white/10 rounded-xl shadow-2xl z-50 min-w-[200px] max-h-[400px] overflow-y-auto"
+            >
+              {categories.map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => {
+                    setSelectedCategory(cat);
+                    setShowCategoryMenu(false);
+                  }}
+                  className={`w-full text-left px-4 py-2 hover:bg-white/10 transition-colors ${
+                    selectedCategory === cat ? 'bg-[#FFD700]/20 text-[#FFD700] font-bold' : 'text-white'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </motion.div>
+          )}
+        </div>
+
         <TrendingUp className="w-5 h-5 text-[#FFD700]" />
       </div>
 
