@@ -49,7 +49,7 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
     if (isOpen && messages.length === 0) {
       setMessages([{
         role: 'ai',
-        content: 'Bạn đang cần tôi giúp bạn ý tưởng về gì?'
+        content: 'Gm gm! What do you need ideas for? DeFi, NFTs, Gaming,or... anything else?'
       }]);
       setConversationStep(0);
     }
@@ -73,7 +73,7 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
           setTimeout(() => {
             setMessages(prev => [...prev, {
               role: 'ai',
-              content: `I need a bit more info to help you out — tell me your strengths and why you want to build in ${input.string()}?`
+              content: `I need a bit more info to help you out — tell me your strengths and why you want to build in ${input.toString()}?`
             }]);
             setIsLoading(false);
           }, 800);
@@ -81,7 +81,7 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
           setTimeout(() => {
             setMessages(prev => [...prev, {
               role: 'ai',
-              content: `What are your strengths and why do you want to build ${input.string()}?`
+              content: `What are your strengths and why do you want to build ${input.toString()}?`
             }]);
             setIsLoading(false);
           }, 800);
