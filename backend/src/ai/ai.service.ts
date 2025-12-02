@@ -7,8 +7,6 @@ export interface IdeaFeedbackRequest {
   problem: string;
   solution: string;
   opportunity?: string;
-  goMarket?: string;
-  teamInfo?: string;
 }
 
 export interface AIFeedback {
@@ -61,13 +59,7 @@ ${idea.problem}
 ${idea.solution}
 
 **Opportunity:**
-${idea.opportunity}
-
-**Go-to-Market Strategy:**
-${idea.goMarket || 'Not specified'}
-
-**Team Information:**
-${idea.teamInfo || 'Not specified'}
+${idea.opportunity || 'Not specified'}
 
 **SCORING CRITERIA (Total 100 points):**
 1. Problem & Solution Fit (30 pts)

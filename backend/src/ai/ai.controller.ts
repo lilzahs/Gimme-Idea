@@ -10,8 +10,6 @@ export interface GenerateFeedbackDto {
   problem: string;
   solution: string;
   opportunity?: string;
-  goMarket?: string;
-  teamInfo?: string;
 }
 
 export interface GenerateReplyDto {

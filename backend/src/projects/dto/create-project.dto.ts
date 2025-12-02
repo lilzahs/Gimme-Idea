@@ -48,14 +48,6 @@ export class CreateProjectDto {
   @IsOptional()
   opportunity?: string;
 
-  @IsString()
-  @IsOptional()
-  goMarket?: string; // Go-to-market strategy
-
-  @IsString()
-  @IsOptional()
-  teamInfo?: string;
-
   @IsBoolean()
   @IsOptional()
   isAnonymous?: boolean = false;

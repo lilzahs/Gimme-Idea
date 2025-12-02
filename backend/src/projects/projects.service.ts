@@ -107,8 +107,6 @@ export class ProjectsService {
       problem: p.problem,
       solution: p.solution,
       opportunity: p.opportunity,
-      goMarket: p.go_market,
-      teamInfo: p.team_info,
       isAnonymous: p.is_anonymous,
       createdAt: p.created_at,
     }));
@@ -165,8 +163,6 @@ export class ProjectsService {
       problem: p.problem,
       solution: p.solution,
       opportunity: p.opportunity,
-      goMarket: p.go_market,
-      teamInfo: p.team_info,
       isAnonymous: p.is_anonymous,
       createdAt: p.created_at,
     }));
@@ -285,8 +281,6 @@ export class ProjectsService {
       problem: createDto.problem,
       solution: createDto.solution,
       opportunity: createDto.opportunity,
-      go_market: createDto.goMarket,
-      team_info: createDto.teamInfo,
       is_anonymous: createDto.isAnonymous || false,
       votes: 0,
       feedback_count: 0,
@@ -345,8 +339,6 @@ export class ProjectsService {
         problem: project.problem,
         solution: project.solution,
         opportunity: project.opportunity,
-        goMarket: project.go_market,
-        teamInfo: project.team_info,
       }).catch(err => {
         this.logger.error(`Failed to generate AI feedback for project ${project.id}`, err);
       });
@@ -369,8 +361,6 @@ export class ProjectsService {
       problem: string;
       solution: string;
       opportunity?: string;
-      goMarket?: string;
-      teamInfo?: string;
     },
   ): Promise<void> {
     this.logger.log(`Generating AI feedback for project ${projectId}`);
@@ -500,8 +490,6 @@ export class ProjectsService {
     if (updateDto.problem !== undefined) updateData.problem = updateDto.problem;
     if (updateDto.solution !== undefined) updateData.solution = updateDto.solution;
     if (updateDto.opportunity !== undefined) updateData.opportunity = updateDto.opportunity;
-    if (updateDto.goMarket !== undefined) updateData.go_market = updateDto.goMarket;
-    if (updateDto.teamInfo !== undefined) updateData.team_info = updateDto.teamInfo;
     if (updateDto.isAnonymous !== undefined) updateData.is_anonymous = updateDto.isAnonymous;
 
     const { data: updated, error } = await supabase
