@@ -236,7 +236,7 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
           <div className="relative z-10 flex justify-between items-center">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden">
-                <img src="/assets/logo-gmi.png" alt="Gimme Sensei" className="w-full h-full object-cover" />
+                <img src="/logo-gmi.png" alt="Gimme Sensei" className="w-full h-full object-cover" />
               </div>
               <div>
                 <h2 className="text-2xl font-bold font-display text-white">AI Idea Finder</h2>
