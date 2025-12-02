@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Sparkles, TrendingUp, ChevronDown } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { useAppStore } from '../lib/store';
 import { Project } from '../lib/types';
 import { useRouter } from 'next/navigation';
@@ -46,7 +46,6 @@ export const RecommendedIdeas = () => {
       <div className="mb-12">
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-[#FFD700]" />
             <h2 className="text-2xl font-bold text-white">Top 3 of {selectedCategory}</h2>
           </div>
         </div>
@@ -77,11 +76,9 @@ export const RecommendedIdeas = () => {
     <div className="mb-12">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <Sparkles className="w-6 h-6 text-[#FFD700] animate-pulse" />
           <h2 className="text-2xl font-bold bg-gradient-to-r from-[#FFD700] to-[#FDB931] text-transparent bg-clip-text">
             Top 3 of {selectedCategory}
           </h2>
-          <TrendingUp className="w-5 h-5 text-[#FFD700]" />
         </div>
 
         {/* Category Selector */}

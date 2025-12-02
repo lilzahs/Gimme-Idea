@@ -6,7 +6,7 @@ import { ProjectCard } from './ProjectCard';
 import { RecommendedIdeas } from './RecommendedIdeas';
 import { useAppStore } from '../lib/store';
 import { useRouter } from 'next/navigation';
-import { Filter, Plus, TrendingUp, Activity, X, Lightbulb, Rocket, Sparkles } from 'lucide-react';
+import { Filter, Plus, TrendingUp, Activity, X, Lightbulb, Rocket } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRealtimeProjects } from '../hooks/useRealtimeProjects';
 import { ComingSoonModal } from './ComingSoonModal';
@@ -139,7 +139,7 @@ export default function Dashboard({ mode }: DashboardProps) {
                  onClick={() => setShowAIChat(true)}
                  className="px-4 py-2 border border-[#FFD700]/30 bg-[#FFD700]/10 rounded-full text-sm font-mono transition-colors flex items-center gap-2 hover:bg-[#FFD700]/20 text-white"
                >
-                 <Sparkles className="w-4 h-4 text-[#FFD700]" /> Find by AI
+                 Find by AI
                </button>
              )}
              <button

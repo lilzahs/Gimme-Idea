@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, Sparkles, Loader2, Coins } from 'lucide-react';
+import { X, Send, Loader2, Coins } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { Project } from '../lib/types';
@@ -235,12 +235,12 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
           <div className="absolute inset-0 bg-gradient-to-r from-[#FFD700] to-[#FDB931] opacity-10" />
           <div className="relative z-10 flex justify-between items-center">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br from-[#FFD700] to-[#FDB931] text-black shadow-lg">
-                <Sparkles className="w-6 h-6" />
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center overflow-hidden">
+                <img src="/assets/logo-gmi.png" alt="Gimme Sensei" className="w-full h-full object-cover" />
               </div>
               <div>
                 <h2 className="text-2xl font-bold font-display text-white">AI Idea Finder</h2>
-                <p className="text-sm text-gray-400">Tìm ý tưởng phù hợp với bạn</p>
+                <p className="text-sm text-gray-400">Let Gimme Sensei help you find some crazyyy idea !</p>
               </div>
             </div>
             <button

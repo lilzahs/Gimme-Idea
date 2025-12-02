@@ -406,26 +406,25 @@ Respond with valid JSON:
       if (error) throw error;
 
       // Use AI to analyze and rank ideas based on user context
-      const prompt = `You are a friendly and knowledgeable startup advisor helping developers find the right ideas to work on.
+      const prompt = `You're helping someone find ideas that match their skills and interests.
 
-**User's Interest:** ${interest}
+Their interest: ${interest}
+Their strengths: ${strengths}
 
-**User's Strengths:** ${strengths}
-
-Here are some existing ideas in our platform:
+Here are the available ideas:
 ${ideas.map((idea, idx) => `
-${idx + 1}. **${idea.title}** (Category: ${idea.category})
+${idx + 1}. ${idea.title} (${idea.category})
    Problem: ${idea.problem}
    Solution: ${idea.solution}
-   Community Interest: ${idea.votes || 0} votes
+   Votes: ${idea.votes || 0}
 `).join('\n')}
 
-Analyze which 3 ideas would be the BEST fit for this user based on their interests and strengths.
+Pick the 3 best matches for this person. Think about what would actually be a good fit for their skills and what they want to work on.
 
-Return ONLY valid JSON in this exact format:
+Return valid JSON:
 {
   "topIdeas": [<index1>, <index2>, <index3>],
-  "reasoning": "A friendly, conversational explanation (3-4 sentences in Vietnamese) of why these ideas are a great match for the user. Focus on the positive alignment with their interests and strengths, and mention any important considerations they should know. Use a warm, supportive tone - like talking to a friend."
+  "reasoning": "Explain why these are good matches in a natural, conversational way (3-4 sentences). Don't use a template or formulaic language - just talk naturally about why you think these ideas would work well for them."
 }`;
 
       const completion = await this.openai.chat.completions.create({
@@ -433,7 +432,7 @@ Return ONLY valid JSON in this exact format:
         messages: [
           {
             role: 'system',
-            content: 'You are a friendly and supportive startup advisor who speaks Vietnamese naturally. You help developers find ideas that match their skills and interests. Always respond with valid JSON only, and keep your reasoning warm and conversational.',
+            content: 'You help people find ideas that match their skills. Be conversational and natural - avoid rigid templates or formal language. Respond with valid JSON only.',
           },
           {
             role: 'user',
@@ -486,13 +485,13 @@ Return ONLY valid JSON in this exact format:
   ): Promise<string> {
     this.logger.log('Continuing AI conversation');
 
-    const systemPrompt = `Bạn là một người cố vấn startup thân thiện và nhiệt tình, giúp người dùng tìm kiếm và phát triển ý tưởng kinh doanh.
+    const systemPrompt = `You're a friendly startup advisor helping someone find and develop business ideas.
 
-Thông tin người dùng:
-- Quan tâm: ${context.interest}
-- Thế mạnh: ${context.strengths}
+About them:
+- Interest: ${context.interest}
+- Strengths: ${context.strengths}
 
-Hãy trả lời câu hỏi của người dùng một cách tự nhiên, lịch sự và hữu ích. Giữ câu trả lời ngắn gọn (2-3 câu) nhưng đầy đủ ý nghĩa. Nói chuyện như bạn đang trò chuyện với một người bạn, không quá trang trọng nhưng vẫn chuyên nghiệp.`;
+Be helpful and natural in your responses. Keep it conversational - like you're talking to a friend over coffee. No need to be overly formal or follow rigid templates. Keep responses concise (2-3 sentences) but meaningful.`;
 
     const messages = [
       {
