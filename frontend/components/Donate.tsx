@@ -165,13 +165,14 @@ export const Donate = () => {
         </motion.div>
 
         {/* Main Content Grid */}
-        <div className="grid lg:grid-cols-3 gap-6 mb-6">
+        <div className="flex flex-col lg:flex-row gap-6 mb-6">
 
         {/* Donation Card */}
         <motion.div
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
+            className="w-full lg:w-1/2"
         >
             <div className="bg-[#0F0F0F]/80 backdrop-blur-xl border border-blue-500/20 rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-2xl shadow-blue-900/10 group flex flex-col justify-center">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 pointer-events-none" />
@@ -311,7 +312,10 @@ export const Donate = () => {
                     )}
                 </AnimatePresence>
             </div>
-        </motion.div>
+        </motion.div> {/* Close Donation Card motion.div */}
+
+        {/* Group Builders Section and Social Links */}
+        <div className="w-full lg:w-1/2 flex flex-col gap-6">
 
         {/* Builders Section */}
         <motion.div
@@ -348,6 +352,8 @@ export const Donate = () => {
                         </div>
                         <div className="flex-grow">
                             <h3 className="text-xl font-bold text-white mb-1 flex flex-wrap sm:flex-nowrap items-center gap-2">
+                                ZAH
+                                <span className="px-2 py-0.5 bg-yellow-500/10 border border-yellow-500/30 rounded-full text-[10px] font-mono text-yellow-400">FOUNDER</span>
                             </h3>
                             <p className="text-sm text-gray-400 mb-1">President @ DUT Superteam University Club</p>
                             <p className="text-xs text-gray-500">Founder @ Gimme Idea</p>
@@ -396,38 +402,39 @@ export const Donate = () => {
                     💡 Built with <span className="text-red-400">❤️</span>, <span className="text-yellow-400">☕</span> coffee, and countless late nights
                 </p>
             </motion.div>
-        </motion.div>
+                    </motion.div>
+        
+                {/* Social Links */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="flex gap-4"
+                >
+                    <a
+                        href="https://twitter.com/intent/tweet?text=Just%20supported%20Gimme%20Idea!%20Check%20out%20the%20future%20of%20Solana%20building.&url=https://gimmeidea.com"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 bg-white/5 hover:bg-[#1DA1F2]/10 border border-white/10 hover:border-[#1DA1F2]/50 rounded-xl p-4 flex items-center justify-center gap-2 transition-all group"
+                    >
+                        <Twitter className="w-5 h-5 text-gray-400 group-hover:text-[#1DA1F2] transition-colors" />
+                        <span className="text-sm font-bold text-gray-300 group-hover:text-white">Tweet Support</span>
+                    </a>
+                    <a
+                        href="https://t.me/+s7KW91Nf4G1iZWVl"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 bg-white/5 hover:bg-[#0088cc]/10 border border-white/10 hover:border-[#0088cc]/50 rounded-xl p-4 flex items-center justify-center gap-2 transition-all group"
+                    >
+                        <Send className="w-5 h-5 text-gray-400 group-hover:text-[#0088cc]" />
+                        <span className="text-sm font-bold text-gray-300 group-hover:text-white">Join Telegram</span>
+                    </a>
+                </motion.div>
+        
+                </div> {/* Close new flex wrapper */}
 
-        </div>
 
-        {/* Social Links */}
-        <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="flex gap-4 max-w-2xl mx-auto"
-        >
-            <a
-                href="https://twitter.com/intent/tweet?text=Just%20supported%20Gimme%20Idea!%20Check%20out%20the%20future%20of%20Solana%20building.&url=https://gimmeidea.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 bg-white/5 hover:bg-[#1DA1F2]/10 border border-white/10 hover:border-[#1DA1F2]/50 rounded-xl p-4 flex items-center justify-center gap-2 transition-all group"
-            >
-                <Twitter className="w-5 h-5 text-gray-400 group-hover:text-[#1DA1F2] transition-colors" />
-                <span className="text-sm font-bold text-gray-300 group-hover:text-white">Tweet Support</span>
-            </a>
-            <a
-                href="https://t.me/+s7KW91Nf4G1iZWVl"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 bg-white/5 hover:bg-[#0088cc]/10 border border-white/10 hover:border-[#0088cc]/50 rounded-xl p-4 flex items-center justify-center gap-2 transition-all group"
-            >
-                <Send className="w-5 h-5 text-gray-400 group-hover:text-[#0088cc]" />
-                <span className="text-sm font-bold text-gray-300 group-hover:text-white">Join Telegram</span>
-            </a>
-        </motion.div>
-
-      </div>
-    </div>
+      </div> {/* Close max-w-6xl mx-auto w-full */}
+    </div> {/* Close min-h-screen pt-24 pb-12 px-6 relative overflow-hidden flex items-center */}
   );
 };
