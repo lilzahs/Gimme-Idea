@@ -3,15 +3,18 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { useAppStore } from '../lib/store';
+import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Camera, Edit2, Save, X, Github, Twitter, Facebook, Send, Pencil, Trash2, ArrowLeft } from 'lucide-react';
+import { Camera, Edit2, Save, X, Github, Twitter, Facebook, Send, Pencil, Trash2, ArrowLeft, Wallet, AlertCircle } from 'lucide-react';
 import { ProjectCard } from './ProjectCard';
+import { WalletReminderBadge } from './WalletReminderBadge';
 import toast from 'react-hot-toast';
 import { Project } from '../lib/types';
 
 export const Profile = () => {
   const { user, viewedUser, projects, updateUserProfile, updateProject, deleteProject, openSubmitModal } = useAppStore();
+  const { setShowWalletPopup } = useAuth();
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
@@ -185,6 +188,11 @@ export const Profile = () => {
         </div>
 
         <div className="max-w-5xl mx-auto px-6 relative -mt-20">
+            {/* Wallet Reminder Badge for users without wallet */}
+            {isOwnProfile && displayUser.needsWalletConnect && (
+              <WalletReminderBadge onConnect={() => setShowWalletPopup(true)} />
+            )}
+
             {/* Header / Info Card */}
             <div className="bg-[#0A0A0A]/90 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl relative">
                 <div className="flex flex-col md:flex-row gap-8 items-start">
@@ -240,7 +248,20 @@ export const Profile = () => {
                                 ) : (
                                     <>
                                         <h1 className="text-3xl font-bold font-display mb-2">{displayUser.username}</h1>
-                                        <p className="text-gray-400 font-mono text-sm mb-4 bg-white/5 inline-block px-2 py-1 rounded">{displayUser.wallet}</p>
+                                        {displayUser.email && (
+                                          <p className="text-gray-500 text-sm mb-2">{displayUser.email}</p>
+                                        )}
+                                        {displayUser.wallet ? (
+                                          <p className="text-gray-400 font-mono text-sm mb-4 bg-white/5 inline-block px-2 py-1 rounded">
+                                            <Wallet className="w-3 h-3 inline mr-1" />
+                                            {displayUser.wallet.slice(0, 8)}...{displayUser.wallet.slice(-6)}
+                                          </p>
+                                        ) : (
+                                          <p className="text-yellow-400 font-mono text-sm mb-4 bg-yellow-500/10 inline-block px-2 py-1 rounded">
+                                            <AlertCircle className="w-3 h-3 inline mr-1" />
+                                            No wallet connected
+                                          </p>
+                                        )}
                                         <p className="text-gray-300 leading-relaxed max-w-2xl mb-6">{displayUser.bio || "No bio yet."}</p>
                                     </>
                                 )}

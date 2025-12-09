@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React from "react";
 
 export interface Comment {
   id: string;
@@ -28,21 +27,30 @@ export interface Comment {
 
 export interface Project {
   id: string;
-  type: 'project' | 'idea'; // Distinguish between fully formed projects and raw ideas
+  type: "project" | "idea"; // Distinguish between fully formed projects and raw ideas
   title: string;
   description: string;
-  category: 'DeFi' | 'NFT' | 'Gaming' | 'Infrastructure' | 'DAO' | 'DePIN' | 'Social' | 'Mobile' | 'Security';
-  stage: 'Idea' | 'Prototype' | 'Devnet' | 'Mainnet';
+  category:
+    | "DeFi"
+    | "NFT"
+    | "Gaming"
+    | "Infrastructure"
+    | "DAO"
+    | "DePIN"
+    | "Social"
+    | "Mobile"
+    | "Security";
+  stage: "Idea" | "Prototype" | "Devnet" | "Mainnet";
   votes: number;
   feedbackCount: number;
   tags: string[];
   createdAt: string;
   comments?: Comment[];
-  
+
   // Project specific fields
-  image?: string; 
-  website?: string; 
-  bounty?: number; 
+  image?: string;
+  website?: string;
+  bounty?: number;
 
   // Idea specific fields (Long text)
   problem?: string;
@@ -74,12 +82,17 @@ export interface User {
     telegram?: string;
     facebook?: string;
   };
+  // Email auth fields
+  email?: string;
+  authProvider?: "wallet" | "google";
+  authId?: string;
+  needsWalletConnect?: boolean;
 }
 
 export interface Notification {
   id: string;
   message: string;
-  type: 'info' | 'success' | 'warning' | 'error';
+  type: "info" | "success" | "warning" | "error";
   read: boolean;
   timestamp: string;
 }
@@ -116,8 +129,8 @@ export interface MarketAssessment {
   strengths: string[];
   weaknesses: string[];
   recommendations: string[];
-  marketSize: 'small' | 'medium' | 'large';
-  competitionLevel: 'low' | 'medium' | 'high';
+  marketSize: "small" | "medium" | "large";
+  competitionLevel: "low" | "medium" | "high";
 }
 
 export interface AIQuota {

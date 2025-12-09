@@ -3,18 +3,17 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wallet, Bell, Search, Menu, X, LayoutGrid, Plus, Trophy, BarChart3, User as UserIcon, Lightbulb, Heart, Rocket } from 'lucide-react';
+import { Wallet, Bell, Search, Menu, X, LayoutGrid, Plus, Trophy, BarChart3, User as UserIcon, Lightbulb, Heart, Rocket, LogOut, AlertCircle } from 'lucide-react';
 import { useAppStore } from '../lib/store';
+import { useAuth } from '../contexts/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { LoginButton } from './LoginButton';
 
 const Navbar = () => {
   const {
-    walletConnected,
-    openWalletModal,
-    user,
-    disconnectWallet,
+    openConnectReminder,
     searchQuery,
     setSearchQuery,
     notifications,
@@ -23,6 +22,8 @@ const Navbar = () => {
     setView,
     setSelectedProject
   } = useAppStore();
+
+  const { user, signOut, setShowWalletPopup } = useAuth();
 
   const router = useRouter();
   const pathname = usePathname();
@@ -151,7 +152,7 @@ const Navbar = () => {
             {showSearch ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
           </button>
 
-          {walletConnected && user ? (
+        {user ? (
             <div className="flex items-center gap-3 relative">
               {/* Notifications */}
               <div className="relative" ref={notificationRef}>
@@ -222,36 +223,49 @@ const Navbar = () => {
                           />
                         )}
                     </div>
-                    <span className="text-sm font-mono font-medium hidden sm:block text-gray-300 group-hover:text-white max-w-[100px] truncate">{user.username}</span>
+                    <div className="hidden sm:flex flex-col items-start">
+                      <span className="text-sm font-mono font-medium text-gray-300 group-hover:text-white max-w-[100px] truncate">{user.username}</span>
+                      {user.needsWalletConnect && (
+                        <span className="text-[10px] text-yellow-400 flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" /> No wallet
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Dropdown Menu */}
                   {showUserMenu && (
-                     <div className="absolute top-full right-0 mt-2 w-48 bg-[#0F0F0F] border border-white/10 rounded-xl shadow-xl overflow-hidden py-1 z-50">
+                     <div className="absolute top-full right-0 mt-2 w-56 bg-[#0F0F0F] border border-white/10 rounded-xl shadow-xl overflow-hidden py-1 z-50">
+                        <div className="px-4 py-3 border-b border-white/5">
+                          <p className="text-sm font-medium text-white truncate">{user.username}</p>
+                          <p className="text-xs text-gray-400 truncate">{user.email || user.wallet}</p>
+                        </div>
                         <button
                              onClick={() => { router.push('/profile'); setShowUserMenu(false); }}
                              className="w-full text-left px-4 py-3 text-sm text-gray-300 hover:bg-white/5 hover:text-white flex items-center gap-2"
                         >
                             <UserIcon className="w-4 h-4" /> My Profile
                         </button>
+                        {user.needsWalletConnect && (
+                          <button
+                               onClick={() => { setShowWalletPopup(true); setShowUserMenu(false); }}
+                               className="w-full text-left px-4 py-3 text-sm text-yellow-400 hover:bg-yellow-500/10 flex items-center gap-2"
+                          >
+                              <Wallet className="w-4 h-4" /> Connect Wallet
+                          </button>
+                        )}
                         <button
-                             onClick={() => { disconnectWallet(); setShowUserMenu(false); router.push('/home'); }}
+                             onClick={() => { signOut(); setShowUserMenu(false); router.push('/home'); }}
                              className="w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2 border-t border-white/5"
                         >
-                            Log Out
+                            <LogOut className="w-4 h-4" /> Log Out
                         </button>
                      </div>
                   )}
               </div>
             </div>
           ) : (
-            <button 
-              onClick={() => openWalletModal()}
-              className="flex items-center gap-2 px-6 py-2.5 bg-white text-black rounded-full font-bold text-sm hover:bg-accent hover:scale-105 transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.2)] whitespace-nowrap"
-            >
-              <Wallet className="w-4 h-4" />
-              Connect
-            </button>
+            <LoginButton />
           )}
 
           {/* Mobile Menu Toggle */}

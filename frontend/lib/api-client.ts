@@ -3,7 +3,7 @@
  * Handles all HTTP requests to the NestJS backend
  */
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api";
 
 interface ApiResponse<T = any> {
   success: boolean;
@@ -19,15 +19,16 @@ async function apiFetch<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
 
   const headers: HeadersInit = {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
     ...options.headers,
   };
 
   if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+    headers["Authorization"] = `Bearer ${token}`;
   }
 
   try {
@@ -40,15 +41,15 @@ async function apiFetch<T>(
 
     // If response contains token, save it
     if (data.data?.token) {
-      localStorage.setItem('auth_token', data.data.token);
+      localStorage.setItem("auth_token", data.data.token);
     }
 
     return data;
   } catch (error: any) {
-    console.error('API fetch error:', error);
+    console.error("API fetch error:", error);
     return {
       success: false,
-      error: error.message || 'Network error',
+      error: error.message || "Network error",
     };
   }
 }
@@ -66,14 +67,14 @@ export interface LoginParams {
 export const apiClient = {
   // Auth
   login: (params: LoginParams) =>
-    apiFetch<{ token: string; user: any }>('/auth/login', {
-      method: 'POST',
+    apiFetch<{ token: string; user: any }>("/auth/login", {
+      method: "POST",
       body: JSON.stringify(params),
     }),
 
-  getCurrentUser: () => apiFetch<any>('/auth/me'),
+  getCurrentUser: () => apiFetch<any>("/auth/me"),
 
-  healthCheck: () => apiFetch('/auth/health'),
+  healthCheck: () => apiFetch("/auth/health"),
 
   // Projects
   getProjects: (params?: {
@@ -85,7 +86,7 @@ export const apiClient = {
     const query = new URLSearchParams(
       params as Record<string, string>
     ).toString();
-    return apiFetch<any[]>(`/projects${query ? `?${query}` : ''}`);
+    return apiFetch<any[]>(`/projects${query ? `?${query}` : ""}`);
   },
 
   getProject: (id: string) => apiFetch<any>(`/projects/${id}`),
@@ -99,69 +100,75 @@ export const apiClient = {
     image?: string;
     website?: string;
   }) =>
-    apiFetch<any>('/projects', {
-      method: 'POST',
+    apiFetch<any>("/projects", {
+      method: "POST",
       body: JSON.stringify(data),
     }),
 
   updateProject: (id: string, data: any) =>
     apiFetch<any>(`/projects/${id}`, {
-      method: 'PATCH',
+      method: "PATCH",
       body: JSON.stringify(data),
     }),
 
   deleteProject: (id: string) =>
     apiFetch<void>(`/projects/${id}`, {
-      method: 'DELETE',
+      method: "DELETE",
     }),
 
   voteProject: (id: string) =>
     apiFetch<{ votes: number }>(`/projects/${id}/vote`, {
-      method: 'POST',
+      method: "POST",
     }),
 
   // Comments
   getProjectComments: (projectId: string) =>
     apiFetch<any[]>(`/comments/project/${projectId}`),
 
-  createComment: (data: { projectId: string; content: string; parentCommentId?: string; isAnonymous?: boolean }) =>
-    apiFetch<any>('/comments', {
-      method: 'POST',
+  createComment: (data: {
+    projectId: string;
+    content: string;
+    parentCommentId?: string;
+    isAnonymous?: boolean;
+  }) =>
+    apiFetch<any>("/comments", {
+      method: "POST",
       body: JSON.stringify(data),
     }),
 
   likeComment: (commentId: string) =>
     apiFetch<{ likes: number }>(`/comments/${commentId}/like`, {
-      method: 'POST',
+      method: "POST",
     }),
 
   dislikeComment: (commentId: string) =>
     apiFetch<{ dislikes: number }>(`/comments/${commentId}/dislike`, {
-      method: 'POST',
+      method: "POST",
     }),
 
   // Payments
   verifyTransaction: (data: {
     signature: string;
-    type: 'tip' | 'bounty' | 'reward';
+    type: "tip" | "bounty" | "reward";
     amount: number;
     commentId?: string;
     projectId?: string;
   }) =>
-    apiFetch<any>('/payments/verify', {
-      method: 'POST',
+    apiFetch<any>("/payments/verify", {
+      method: "POST",
       body: JSON.stringify(data),
     }),
 
   getTopDonators: (limit?: number) =>
-    apiFetch<any[]>(`/payments/top-donators${limit ? `?limit=${limit}` : ''}`),
+    apiFetch<any[]>(`/payments/top-donators${limit ? `?limit=${limit}` : ""}`),
 
   getRecentDonations: (limit?: number) =>
-    apiFetch<any[]>(`/payments/recent-donations${limit ? `?limit=${limit}` : ''}`),
+    apiFetch<any[]>(
+      `/payments/recent-donations${limit ? `?limit=${limit}` : ""}`
+    ),
 
   // Users
-  getUserByUsername: (username: string) =>
-    apiFetch<any>(`/users/${username}`),
+  getUserByUsername: (username: string) => apiFetch<any>(`/users/${username}`),
 
   getUserProjects: (username: string) =>
     apiFetch<any[]>(`/users/${username}/projects`),
@@ -172,8 +179,8 @@ export const apiClient = {
     avatar?: string;
     socialLinks?: any;
   }) =>
-    apiFetch<any>('/users/profile', {
-      method: 'PATCH',
+    apiFetch<any>("/users/profile", {
+      method: "PATCH",
       body: JSON.stringify(data),
     }),
 
@@ -190,8 +197,8 @@ export const apiClient = {
     goMarket?: string;
     teamInfo?: string;
   }) =>
-    apiFetch<any>('/ai/feedback', {
-      method: 'POST',
+    apiFetch<any>("/ai/feedback", {
+      method: "POST",
       body: JSON.stringify(data),
     }),
 
@@ -205,8 +212,8 @@ export const apiClient = {
       solution: string;
     };
   }) =>
-    apiFetch<{ reply: string }>('/ai/reply', {
-      method: 'POST',
+    apiFetch<{ reply: string }>("/ai/reply", {
+      method: "POST",
       body: JSON.stringify(data),
     }),
 
@@ -217,11 +224,34 @@ export const apiClient = {
     solution: string;
     opportunity?: string;
   }) =>
-    apiFetch<any>('/ai/market-assessment', {
-      method: 'POST',
+    apiFetch<any>("/ai/market-assessment", {
+      method: "POST",
       body: JSON.stringify(data),
     }),
 
-  checkAIQuota: (projectId: string) =>
-    apiFetch<any>(`/ai/quota/${projectId}`),
+  checkAIQuota: (projectId: string) => apiFetch<any>(`/ai/quota/${projectId}`),
+
+  // Email Auth
+  loginWithEmail: (params: {
+    email: string;
+    authId: string;
+    username?: string;
+  }) =>
+    apiFetch<{ token: string; user: any; isNewUser: boolean }>(
+      "/auth/login-email",
+      {
+        method: "POST",
+        body: JSON.stringify(params),
+      }
+    ),
+
+  linkWallet: (params: {
+    walletAddress: string;
+    signature: string;
+    message: string;
+  }) =>
+    apiFetch<{ user: any; merged: boolean }>("/auth/link-wallet", {
+      method: "POST",
+      body: JSON.stringify(params),
+    }),
 };

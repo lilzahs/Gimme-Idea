@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -7,19 +6,26 @@ import Hero from './components/Hero';
 import StatsDashboard from './components/StatsDashboard';
 import JourneyMap from './components/JourneyMap';
 import { useAppStore } from './lib/store';
+import { useAuth } from './contexts/AuthContext';
 import Dashboard from './components/Dashboard';
 import { ProjectDetail } from './components/ProjectDetail';
 import { IdeaDetail } from './components/IdeaDetail';
-import { WalletModal } from './components/WalletModal';
 import { SubmissionModal } from './components/SubmissionModal';
 import { Donate } from './components/Donate';
 import { LoadingLightbulb } from './components/LoadingLightbulb';
 import { Profile } from './components/Profile';
 import { ConnectReminderModal } from './components/ConnectReminderModal';
+import { ConnectWalletPopup } from './components/ConnectWalletPopup';
 
 function App() {
-  const { currentView, isNavigating, openSubmitModal } = useAppStore();
+  const { currentView, isNavigating, openSubmitModal, setUser } = useAppStore();
+  const { user: authUser, isLoading: authLoading } = useAuth();
   const [stars, setStars] = useState<{ id: number; top: string; left: string; size: number; duration: string; opacity: number }[]>([]);
+
+  // Sync AuthContext user with Store
+  useEffect(() => {
+    setUser(authUser);
+  }, [authUser, setUser]);
 
   useEffect(() => {
     const newStars = Array.from({ length: 50 }).map((_, i) => ({
@@ -90,9 +96,9 @@ function App() {
 
   return (
     <div className="min-h-screen text-white selection:bg-gold/30 selection:text-gold relative overflow-hidden">
-      {isNavigating && (
+      {(isNavigating || authLoading) && (
         <div className="fixed inset-0 z-[200] bg-black/90 backdrop-blur-lg flex items-center justify-center">
-          <LoadingLightbulb text="Accessing Protocol..." />
+          <LoadingLightbulb text={authLoading ? "Loading..." : "Accessing Protocol..."} />
         </div>
       )}
 
@@ -120,7 +126,7 @@ function App() {
       </div>
 
       <Navbar />
-      <WalletModal />
+      <ConnectWalletPopup />
       <ConnectReminderModal />
       <SubmissionModal />
       

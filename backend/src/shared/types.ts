@@ -3,13 +3,22 @@
 
 export interface Project {
   id: string;
-  type?: 'project' | 'idea';
+  type?: "project" | "idea";
   title: string;
   description: string;
-  category: 'DeFi' | 'NFT' | 'Gaming' | 'Infrastructure' | 'DAO' | 'DePIN' | 'Social' | 'Mobile' | 'Security';
+  category:
+    | "DeFi"
+    | "NFT"
+    | "Gaming"
+    | "Infrastructure"
+    | "DAO"
+    | "DePIN"
+    | "Social"
+    | "Mobile"
+    | "Security";
   votes: number;
   feedbackCount: number;
-  stage: 'Idea' | 'Prototype' | 'Devnet' | 'Mainnet';
+  stage: "Idea" | "Prototype" | "Devnet" | "Mainnet";
   tags: string[];
   website?: string;
   author?: {
@@ -60,6 +69,11 @@ export interface User {
   lastLoginAt?: string;
   loginCount?: number;
   createdAt: string;
+  // Email auth fields
+  email?: string;
+  authProvider?: "wallet" | "google";
+  authId?: string;
+  needsWalletConnect?: boolean;
 }
 
 export interface Transaction {
@@ -68,10 +82,10 @@ export interface Transaction {
   from: string;
   to: string;
   amount: number;
-  type: 'tip' | 'bounty' | 'reward';
+  type: "tip" | "bounty" | "reward";
   projectId?: string;
   commentId?: string;
-  status: 'pending' | 'confirmed' | 'failed';
+  status: "pending" | "confirmed" | "failed";
   createdAt: string;
 }
 

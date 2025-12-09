@@ -10,7 +10,7 @@ import { Project } from '../lib/types';
 import { LoadingLightbulb, LoadingStatus } from './LoadingLightbulb';
 
 export const UploadProject = () => {
-  const { addProject, user, openWalletModal } = useAppStore();
+  const { addProject, user, openConnectReminder } = useAppStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState<LoadingStatus>('loading');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -64,10 +64,10 @@ export const UploadProject = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // 1. Check Wallet Connection
+    // 1. Check User Login
     if (!user) {
-        toast.error('Connect wallet to launch project!');
-        openWalletModal();
+        toast.error('Sign in to launch project!');
+        openConnectReminder();
         return;
     }
 

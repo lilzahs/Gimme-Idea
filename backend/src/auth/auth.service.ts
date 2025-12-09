@@ -1,37 +1,45 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import * as jwt from 'jsonwebtoken';
-import { SolanaService } from '../shared/solana.service';
-import { SupabaseService } from '../shared/supabase.service';
-import { LoginDto } from './dto/login.dto';
-import { ApiResponse, User } from '../shared/types';
+import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import * as jwt from "jsonwebtoken";
+import { SolanaService } from "../shared/solana.service";
+import { SupabaseService } from "../shared/supabase.service";
+import { LoginDto } from "./dto/login.dto";
+import { EmailLoginDto } from "./dto/email-login.dto";
+import { LinkWalletDto } from "./dto/link-wallet.dto";
+import { ApiResponse, User } from "../shared/types";
 
 @Injectable()
 export class AuthService {
   constructor(
     private solanaService: SolanaService,
     private supabaseService: SupabaseService,
-    private configService: ConfigService,
+    private configService: ConfigService
   ) {}
 
   /**
    * Login with Solana wallet signature (SIWS - Sign In With Solana)
    */
-  async login(loginDto: LoginDto): Promise<ApiResponse<{ token: string; user: User }>> {
+  async login(
+    loginDto: LoginDto
+  ): Promise<ApiResponse<{ token: string; user: User }>> {
     const { publicKey, signature, message } = loginDto;
 
     // 1. Verify Solana signature
-    const isValid = this.solanaService.verifySignature(publicKey, signature, message);
+    const isValid = this.solanaService.verifySignature(
+      publicKey,
+      signature,
+      message
+    );
     if (!isValid) {
-      throw new UnauthorizedException('Invalid signature');
+      throw new UnauthorizedException("Invalid signature");
     }
 
     // 2. Check if user exists in database
     const supabase = this.supabaseService.getAdminClient();
     let { data: user, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('wallet', publicKey)
+      .from("users")
+      .select("*")
+      .eq("wallet", publicKey)
       .single();
 
     // 3. If user doesn't exist, create new user
@@ -46,7 +54,7 @@ export class AuthService {
       };
 
       const { data: createdUser, error: createError } = await supabase
-        .from('users')
+        .from("users")
         .insert(newUser)
         .select()
         .single();
@@ -58,20 +66,23 @@ export class AuthService {
       user = createdUser;
     } else {
       // 3b. If user exists, update last login time and increment login count
-      const { error: updateError } = await supabase.rpc('increment_login_count', {
-        user_id: user.id,
-      });
+      const { error: updateError } = await supabase.rpc(
+        "increment_login_count",
+        {
+          user_id: user.id,
+        }
+      );
 
       if (updateError) {
-        console.warn('Failed to update login info:', updateError.message);
+        console.warn("Failed to update login info:", updateError.message);
         // Don't throw error, just log warning and continue
       }
 
       // Fetch updated user data
       const { data: updatedUser } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', user.id)
+        .from("users")
+        .select("*")
+        .eq("id", user.id)
         .single();
 
       if (updatedUser) {
@@ -80,8 +91,8 @@ export class AuthService {
     }
 
     // 4. Generate JWT token
-    const jwtSecret = this.configService.get<string>('JWT_SECRET');
-    const jwtExpires = this.configService.get<string>('JWT_EXPIRES_IN') || '7d';
+    const jwtSecret = this.configService.get<string>("JWT_SECRET");
+    const jwtExpires = this.configService.get<string>("JWT_EXPIRES_IN") || "7d";
 
     const token = jwt.sign(
       {
@@ -105,6 +116,10 @@ export class AuthService {
       lastLoginAt: user.last_login_at,
       loginCount: user.login_count || 0,
       createdAt: user.created_at,
+      email: user.email,
+      authProvider: user.auth_provider || "wallet",
+      authId: user.auth_id,
+      needsWalletConnect: user.needs_wallet_connect || false,
     };
 
     return {
@@ -113,23 +128,152 @@ export class AuthService {
         token,
         user: userResponse,
       },
-      message: 'Login successful',
+      message: "Login successful",
     };
   }
 
   /**
-   * Get current authenticated user
+   * Login with Email (Google OAuth)
    */
-  async getCurrentUser(userId: string): Promise<ApiResponse<User>> {
+  async loginWithEmail(
+    emailLoginDto: EmailLoginDto
+  ): Promise<ApiResponse<{ token: string; user: User; isNewUser: boolean }>> {
+    const { email, authId, username } = emailLoginDto;
+
     const supabase = this.supabaseService.getAdminClient();
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('*')
-      .eq('id', userId)
+
+    // Use the database function to find or create user
+    const { data: result, error: rpcError } = await supabase.rpc(
+      "find_or_create_user_by_email",
+      {
+        p_email: email,
+        p_auth_id: authId,
+        p_username: username || null,
+      }
+    );
+
+    if (rpcError) {
+      console.error("RPC error:", rpcError);
+      throw new Error(`Failed to process email login: ${rpcError.message}`);
+    }
+
+    const { user_id, is_new_user, needs_wallet } = result[0];
+
+    // Fetch full user data
+    const { data: user, error: fetchError } = await supabase
+      .from("users")
+      .select("*")
+      .eq("id", user_id)
       .single();
 
-    if (error || !user) {
-      throw new UnauthorizedException('User not found');
+    if (fetchError || !user) {
+      throw new Error("Failed to fetch user data");
+    }
+
+    // Update last login
+    await supabase
+      .from("users")
+      .update({
+        last_login_at: new Date().toISOString(),
+        login_count: (user.login_count || 0) + 1,
+      })
+      .eq("id", user_id);
+
+    // Generate JWT token
+    const jwtSecret = this.configService.get<string>("JWT_SECRET");
+    const jwtExpires = this.configService.get<string>("JWT_EXPIRES_IN") || "7d";
+
+    const token = jwt.sign(
+      {
+        userId: user.id,
+        wallet: user.wallet,
+        username: user.username,
+        email: user.email,
+      },
+      jwtSecret,
+      { expiresIn: jwtExpires }
+    );
+
+    const userResponse: User = {
+      id: user.id,
+      wallet: user.wallet || "",
+      username: user.username,
+      bio: user.bio,
+      avatar: user.avatar,
+      reputationScore: user.reputation_score || 0,
+      socialLinks: user.social_links,
+      lastLoginAt: new Date().toISOString(),
+      loginCount: (user.login_count || 0) + 1,
+      createdAt: user.created_at,
+      email: user.email,
+      authProvider: user.auth_provider || "google",
+      authId: user.auth_id,
+      needsWalletConnect: needs_wallet,
+    };
+
+    return {
+      success: true,
+      data: {
+        token,
+        user: userResponse,
+        isNewUser: is_new_user,
+      },
+      message: is_new_user
+        ? "Account created successfully"
+        : "Login successful",
+    };
+  }
+
+  /**
+   * Link wallet to user account
+   */
+  async linkWallet(
+    userId: string,
+    linkWalletDto: LinkWalletDto
+  ): Promise<ApiResponse<{ user: User; merged: boolean }>> {
+    const { walletAddress, signature, message } = linkWalletDto;
+
+    // 1. Verify Solana signature
+    const isValid = this.solanaService.verifySignature(
+      walletAddress,
+      signature,
+      message
+    );
+    if (!isValid) {
+      throw new UnauthorizedException("Invalid wallet signature");
+    }
+
+    const supabase = this.supabaseService.getAdminClient();
+
+    // 2. Use the database function to link wallet
+    const { data: result, error: rpcError } = await supabase.rpc(
+      "link_wallet_to_user",
+      {
+        p_user_id: userId,
+        p_wallet_address: walletAddress,
+      }
+    );
+
+    if (rpcError) {
+      console.error("RPC error:", rpcError);
+      throw new Error(`Failed to link wallet: ${rpcError.message}`);
+    }
+
+    const { success, message: resultMessage, merged_from_wallet } = result[0];
+
+    if (!success) {
+      throw new Error(resultMessage);
+    }
+
+    // 3. Fetch updated user data
+    const { data: user, error: fetchError } = await supabase
+      .from("users")
+      .select("*")
+      .eq("id", userId)
+      .single();
+
+    if (fetchError || !user) {
+      throw new Error("Failed to fetch updated user data");
     }
 
     const userResponse: User = {
@@ -143,6 +287,52 @@ export class AuthService {
       lastLoginAt: user.last_login_at,
       loginCount: user.login_count || 0,
       createdAt: user.created_at,
+      email: user.email,
+      authProvider: user.auth_provider,
+      authId: user.auth_id,
+      needsWalletConnect: false,
+    };
+
+    return {
+      success: true,
+      data: {
+        user: userResponse,
+        merged: merged_from_wallet,
+      },
+      message: resultMessage,
+    };
+  }
+
+  /**
+   * Get current authenticated user
+   */
+  async getCurrentUser(userId: string): Promise<ApiResponse<User>> {
+    const supabase = this.supabaseService.getAdminClient();
+    const { data: user, error } = await supabase
+      .from("users")
+      .select("*")
+      .eq("id", userId)
+      .single();
+
+    if (error || !user) {
+      throw new UnauthorizedException("User not found");
+    }
+
+    const userResponse: User = {
+      id: user.id,
+      wallet: user.wallet,
+      username: user.username,
+      bio: user.bio,
+      avatar: user.avatar,
+      reputationScore: user.reputation_score || 0,
+      socialLinks: user.social_links,
+      lastLoginAt: user.last_login_at,
+      loginCount: user.login_count || 0,
+      createdAt: user.created_at,
+      email: user.email,
+      authProvider: user.auth_provider || "wallet",
+      authId: user.auth_id,
+      needsWalletConnect: user.needs_wallet_connect || false,
     };
 
     return {

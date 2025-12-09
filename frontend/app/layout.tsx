@@ -4,9 +4,10 @@ import './globals.css';
 import { Inter, JetBrains_Mono, Space_Grotesk } from 'next/font/google';
 import { Toaster } from 'react-hot-toast';
 import { WalletProvider } from '../components/WalletProvider';
+import { AuthProvider } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
-import { WalletModal } from '../components/WalletModal';
 import { ConnectReminderModal } from '../components/ConnectReminderModal';
+import { ConnectWalletPopup } from '../components/ConnectWalletPopup';
 import { SubmissionModal } from '../components/SubmissionModal';
 import Script from 'next/script';
 import React from 'react';
@@ -38,27 +39,29 @@ export default function RootLayout({
         </Script>
 
         <WalletProvider>
-          <Navbar />
-          <WalletModal />
-          <ConnectReminderModal />
-          <SubmissionModal />
-          <Toaster
-            position="bottom-right"
-            toastOptions={{
-              style: {
-                background: '#1A1A1A',
-                color: '#fff',
-                border: '1px solid #333',
-              },
-              success: {
-                iconTheme: {
-                  primary: '#14F195',
-                  secondary: '#000',
+          <AuthProvider>
+            <Navbar />
+            <ConnectWalletPopup />
+            <ConnectReminderModal />
+            <SubmissionModal />
+            <Toaster
+              position="bottom-right"
+              toastOptions={{
+                style: {
+                  background: '#1A1A1A',
+                  color: '#fff',
+                  border: '1px solid #333',
                 },
-              },
-            }}
-          />
-          {children}
+                success: {
+                  iconTheme: {
+                    primary: '#14F195',
+                    secondary: '#000',
+                  },
+                },
+              }}
+            />
+            {children}
+          </AuthProvider>
         </WalletProvider>
       </body>
     </html>

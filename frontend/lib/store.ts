@@ -1,26 +1,30 @@
+import { create } from "zustand";
+import { Project, User, Comment, Notification } from "./types";
+import { apiClient } from "./api-client";
+import { buildCommentTree } from "./comment-utils";
 
-import { create } from 'zustand';
-import { Project, User, Comment, Notification } from './types';
-import { apiClient } from './api-client';
-import { buildCommentTree } from './comment-utils';
-
-type View = 'landing' | 'projects-dashboard' | 'ideas-dashboard' | 'project-detail' | 'idea-detail' | 'profile' | 'donate';
+type View =
+  | "landing"
+  | "projects-dashboard"
+  | "ideas-dashboard"
+  | "project-detail"
+  | "idea-detail"
+  | "profile"
+  | "donate";
 
 interface AppState {
   user: User | null;
   viewedUser: User | null;
-  walletConnected: boolean;
   projects: Project[];
   isLoading: boolean;
   isNavigating: boolean;
-  isWalletModalOpen: boolean;
 
-  // Connect Wallet Reminder State
+  // Connect Wallet Reminder State (for non-logged in users)
   isConnectReminderOpen: boolean;
 
   // Submission Modal State
   isSubmitModalOpen: boolean;
-  submitType: 'project' | 'idea';
+  submitType: "project" | "idea";
 
   // Navigation & Search State
   currentView: View;
@@ -28,28 +32,35 @@ interface AppState {
   selectedProject: Project | null;
   searchQuery: string;
   notifications: Notification[];
-  
-  // Actions
-  openWalletModal: () => void;
-  closeWalletModal: () => void;
 
+  // Actions
   openConnectReminder: () => void;
   closeConnectReminder: () => void;
 
-  openSubmitModal: (type: 'project' | 'idea') => void;
+  openSubmitModal: (type: "project" | "idea") => void;
   closeSubmitModal: () => void;
 
-  connectWallet: (walletType: string) => Promise<void>;
-  disconnectWallet: () => void;
-  setUser: (user: User) => void;
-  setWalletConnected: (connected: boolean) => void;
+  setUser: (user: User | null) => void;
   updateUserProfile: (data: Partial<User>) => Promise<void>;
 
-  openUserProfile: (author: { username: string; wallet: string; avatar?: string }) => Promise<void>;
+  openUserProfile: (author: {
+    username: string;
+    wallet: string;
+    avatar?: string;
+  }) => Promise<void>;
 
-  fetchProjects: (filters?: { type?: 'project' | 'idea'; category?: string; search?: string }) => Promise<void>;
+  fetchProjects: (filters?: {
+    type?: "project" | "idea";
+    category?: string;
+    search?: string;
+  }) => Promise<void>;
   fetchProjectById: (id: string) => Promise<Project | null>;
-  addProject: (project: Omit<Project, 'id' | 'votes' | 'feedbackCount' | 'createdAt' | 'author' | 'comments'>) => Promise<void>;
+  addProject: (
+    project: Omit<
+      Project,
+      "id" | "votes" | "feedbackCount" | "createdAt" | "author" | "comments"
+    >
+  ) => Promise<void>;
   updateProject: (data: Partial<Project> & { id: string }) => Promise<void>;
   deleteProject: (id: string) => Promise<void>;
   voteProject: (id: string) => Promise<void>;
@@ -64,14 +75,27 @@ interface AppState {
   handleRealtimeDeleteComment: (projectId: string, commentId: string) => void;
 
   // Comment Actions (Updated to support anonymous)
-  addComment: (projectId: string, content: string, isAnonymous?: boolean) => Promise<void>;
-  replyComment: (projectId: string, commentId: string, content: string, isAnonymous?: boolean) => Promise<void>;
+  addComment: (
+    projectId: string,
+    content: string,
+    isAnonymous?: boolean
+  ) => Promise<void>;
+  replyComment: (
+    projectId: string,
+    commentId: string,
+    content: string,
+    isAnonymous?: boolean
+  ) => Promise<void>;
   likeComment: (projectId: string, commentId: string) => Promise<void>;
   dislikeComment: (projectId: string, commentId: string) => Promise<void>;
-  tipComment: (projectId: string, commentId: string, amount: number) => Promise<void>;
-  
+  tipComment: (
+    projectId: string,
+    commentId: string,
+    amount: number
+  ) => Promise<void>;
+
   setView: (view: View) => void;
-  navigateToProject: (id: string, type: 'project' | 'idea') => Promise<void>;
+  navigateToProject: (id: string, type: "project" | "idea") => Promise<void>;
   setSearchQuery: (query: string) => void;
   markNotificationRead: (id: string) => void;
   clearNotifications: () => void;
@@ -80,22 +104,17 @@ interface AppState {
 export const useAppStore = create<AppState>((set, get) => ({
   user: null,
   viewedUser: null,
-  walletConnected: false,
   projects: [],
   isLoading: false,
   isNavigating: false,
-  isWalletModalOpen: false,
   isConnectReminderOpen: false,
   isSubmitModalOpen: false,
-  submitType: 'project',
-  currentView: 'landing',
+  submitType: "project",
+  currentView: "landing",
   selectedProjectId: null,
   selectedProject: null,
-  searchQuery: '',
+  searchQuery: "",
   notifications: [],
-
-  openWalletModal: () => set({ isWalletModalOpen: true }),
-  closeWalletModal: () => set({ isWalletModalOpen: false }),
 
   openConnectReminder: () => set({ isConnectReminderOpen: true }),
   closeConnectReminder: () => set({ isConnectReminderOpen: false }),
@@ -104,47 +123,15 @@ export const useAppStore = create<AppState>((set, get) => ({
     const { user } = get();
     // Gate submission: If no user, show reminder instead of form
     if (!user) {
-        set({ isConnectReminderOpen: true });
-        return;
+      set({ isConnectReminderOpen: true });
+      return;
     }
     set({ isSubmitModalOpen: true, submitType: type });
   },
   closeSubmitModal: () => set({ isSubmitModalOpen: false }),
 
-  connectWallet: async (walletType: string) => {
-    set({ isLoading: true });
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    set({
-      isLoading: false,
-      walletConnected: true,
-      isWalletModalOpen: false,
-      currentView: 'ideas-dashboard', // Auto-redirect to Ideas Dashboard after wallet connect
-      user: {
-        wallet: '8xF3...92a',
-        username: 'anon_builder',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=anon_builder',
-        bio: 'Solana developer building the future of DeFi. Rust enthusiast.',
-        reputation: 420,
-        balance: 1250.50,
-        projects: [],
-        socials: {
-            twitter: 'https://twitter.com/solana',
-            github: 'https://github.com/solana-labs'
-        }
-      }
-    });
-  },
-
-  disconnectWallet: () => {
-    set({ user: null, walletConnected: false, currentView: 'landing' });
-  },
-
   setUser: (user) => {
     set({ user });
-  },
-
-  setWalletConnected: (connected) => {
-    set({ walletConnected: connected });
   },
 
   updateUserProfile: async (data) => {
@@ -152,14 +139,20 @@ export const useAppStore = create<AppState>((set, get) => ({
       const response = await apiClient.updateUserProfile(data);
       if (response.success && response.data) {
         set((state) => {
-          const updatedUser = state.user ? { ...state.user, ...response.data } : null;
+          const updatedUser = state.user
+            ? { ...state.user, ...response.data }
+            : null;
 
           // Update author info in all projects authored by this user
-          const updatedProjects = state.projects.map(project => {
+          const updatedProjects = state.projects.map((project) => {
             let updatedProject = { ...project };
 
             // Update project author if it belongs to current user
-            if (project.author && state.user && project.author.wallet === state.user.wallet) {
+            if (
+              project.author &&
+              state.user &&
+              project.author.wallet === state.user.wallet
+            ) {
               updatedProject.author = {
                 ...project.author,
                 username: response.data.username || project.author.username,
@@ -169,15 +162,20 @@ export const useAppStore = create<AppState>((set, get) => ({
 
             // Update comment authors if they belong to current user
             if (project.comments && project.comments.length > 0) {
-              updatedProject.comments = project.comments.map(comment => {
-                if (comment.author && state.user && comment.author.wallet === state.user.wallet) {
+              updatedProject.comments = project.comments.map((comment) => {
+                if (
+                  comment.author &&
+                  state.user &&
+                  comment.author.wallet === state.user.wallet
+                ) {
                   return {
                     ...comment,
                     author: {
                       ...comment.author,
-                      username: response.data.username || comment.author.username,
+                      username:
+                        response.data.username || comment.author.username,
                       avatar: response.data.avatar || comment.author.avatar,
-                    }
+                    },
                   };
                 }
                 return comment;
@@ -193,42 +191,57 @@ export const useAppStore = create<AppState>((set, get) => ({
             updatedSelectedProject = { ...updatedSelectedProject };
 
             // Update project author if it belongs to current user
-            if (updatedSelectedProject.author && state.user &&
-                updatedSelectedProject.author.wallet === state.user.wallet) {
+            if (
+              updatedSelectedProject.author &&
+              state.user &&
+              updatedSelectedProject.author.wallet === state.user.wallet
+            ) {
               updatedSelectedProject.author = {
                 ...updatedSelectedProject.author,
-                username: response.data.username || updatedSelectedProject.author.username,
-                avatar: response.data.avatar || updatedSelectedProject.author.avatar,
+                username:
+                  response.data.username ||
+                  updatedSelectedProject.author.username,
+                avatar:
+                  response.data.avatar || updatedSelectedProject.author.avatar,
               };
             }
 
             // Update comment authors if they belong to current user
-            if (updatedSelectedProject.comments && updatedSelectedProject.comments.length > 0) {
-              updatedSelectedProject.comments = updatedSelectedProject.comments.map(comment => {
-                if (comment.author && state.user && comment.author.wallet === state.user.wallet) {
-                  return {
-                    ...comment,
-                    author: {
-                      ...comment.author,
-                      username: response.data.username || comment.author.username,
-                      avatar: response.data.avatar || comment.author.avatar,
-                    }
-                  };
-                }
-                return comment;
-              });
+            if (
+              updatedSelectedProject.comments &&
+              updatedSelectedProject.comments.length > 0
+            ) {
+              updatedSelectedProject.comments =
+                updatedSelectedProject.comments.map((comment) => {
+                  if (
+                    comment.author &&
+                    state.user &&
+                    comment.author.wallet === state.user.wallet
+                  ) {
+                    return {
+                      ...comment,
+                      author: {
+                        ...comment.author,
+                        username:
+                          response.data.username || comment.author.username,
+                        avatar: response.data.avatar || comment.author.avatar,
+                      },
+                    };
+                  }
+                  return comment;
+                });
             }
           }
 
           return {
             user: updatedUser,
             projects: updatedProjects,
-            selectedProject: updatedSelectedProject
+            selectedProject: updatedSelectedProject,
           };
         });
       }
     } catch (error) {
-      console.error('Failed to update profile:', error);
+      console.error("Failed to update profile:", error);
       throw error;
     }
   },
@@ -238,7 +251,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const isOwnProfile = state.user?.username === author.username;
 
     if (isOwnProfile && state.user) {
-      set({ viewedUser: state.user, currentView: 'profile' });
+      set({ viewedUser: state.user, currentView: "profile" });
       return;
     }
 
@@ -250,17 +263,23 @@ export const useAppStore = create<AppState>((set, get) => ({
         const displayedUser: User = {
           username: userData.username,
           wallet: userData.wallet,
-          avatar: userData.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.username}`,
+          avatar:
+            userData.avatar ||
+            `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.username}`,
           reputation: userData.reputationScore || 0,
           balance: userData.balance || 0,
           projects: [],
-          bio: userData.bio || 'Builder on Solana',
-          socials: userData.socialLinks || {}
+          bio: userData.bio || "Builder on Solana",
+          socials: userData.socialLinks || {},
         };
-        set({ viewedUser: displayedUser, currentView: 'profile', isLoading: false });
+        set({
+          viewedUser: displayedUser,
+          currentView: "profile",
+          isLoading: false,
+        });
       }
     } catch (error) {
-      console.error('Failed to fetch user profile:', error);
+      console.error("Failed to fetch user profile:", error);
       set({ isLoading: false });
     }
   },
@@ -271,14 +290,14 @@ export const useAppStore = create<AppState>((set, get) => ({
       const response = await apiClient.getProjects(filters);
       if (response.success && response.data) {
         // Map imageUrl to image for frontend compatibility
-        const projects = response.data.map(p => ({
+        const projects = response.data.map((p) => ({
           ...p,
-          image: p.imageUrl || p.image
+          image: p.imageUrl || p.image,
         }));
         set({ projects, isLoading: false });
       }
     } catch (error) {
-      console.error('Failed to fetch projects:', error);
+      console.error("Failed to fetch projects:", error);
       set({ isLoading: false });
     }
   },
@@ -286,10 +305,14 @@ export const useAppStore = create<AppState>((set, get) => ({
   fetchProjectById: async (id) => {
     try {
       const state = get();
-      const existingProject = state.projects.find(p => p.id === id);
+      const existingProject = state.projects.find((p) => p.id === id);
 
       // Return existing project if it has comments already loaded
-      if (existingProject && existingProject.comments && existingProject.comments.length > 0) {
+      if (
+        existingProject &&
+        existingProject.comments &&
+        existingProject.comments.length > 0
+      ) {
         return existingProject;
       }
 
@@ -299,7 +322,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         // Map imageUrl to image for frontend compatibility
         const project = {
           ...response.data,
-          image: response.data.imageUrl || response.data.image
+          image: response.data.imageUrl || response.data.image,
         };
         // Transform flat comments to nested structure
         if (project.comments && project.comments.length > 0) {
@@ -309,11 +332,11 @@ export const useAppStore = create<AppState>((set, get) => ({
         // Update or add project to store
         if (existingProject) {
           set((state) => ({
-            projects: state.projects.map(p => p.id === id ? project : p)
+            projects: state.projects.map((p) => (p.id === id ? project : p)),
           }));
         } else {
           set((state) => ({
-            projects: [project, ...state.projects]
+            projects: [project, ...state.projects],
           }));
         }
 
@@ -321,7 +344,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       }
       return null;
     } catch (error) {
-      console.error('Failed to fetch project by ID:', error);
+      console.error("Failed to fetch project by ID:", error);
       return null;
     }
   },
@@ -338,25 +361,25 @@ export const useAppStore = create<AppState>((set, get) => ({
         // Map imageUrl to image for frontend compatibility
         const newProject = {
           ...response.data,
-          image: response.data.imageUrl || response.data.image
+          image: response.data.imageUrl || response.data.image,
         };
-        
+
         set((state) => {
           // Check for duplicates (prevent race condition with realtime)
-          if (state.projects.some(p => p.id === newProject.id)) {
+          if (state.projects.some((p) => p.id === newProject.id)) {
             return { isLoading: false };
           }
-          
+
           return {
             projects: [newProject, ...state.projects],
-            isLoading: false
+            isLoading: false,
             // Note: isSubmitModalOpen is controlled by SubmissionModal to show success animation
             // Routing is handled by SubmissionModal using Next.js router
           };
         });
       }
     } catch (error) {
-      console.error('Failed to create project:', error);
+      console.error("Failed to create project:", error);
       set({ isLoading: false });
       throw error;
     }
@@ -367,11 +390,13 @@ export const useAppStore = create<AppState>((set, get) => ({
       const response = await apiClient.updateProject(data.id, data);
       if (response.success && response.data) {
         set((state) => ({
-          projects: state.projects.map(p => p.id === data.id ? response.data : p)
+          projects: state.projects.map((p) =>
+            p.id === data.id ? response.data : p
+          ),
         }));
       }
     } catch (error) {
-      console.error('Failed to update project:', error);
+      console.error("Failed to update project:", error);
       throw error;
     }
   },
@@ -380,10 +405,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       await apiClient.deleteProject(id);
       set((state) => ({
-        projects: state.projects.filter(p => p.id !== id)
+        projects: state.projects.filter((p) => p.id !== id),
       }));
     } catch (error) {
-      console.error('Failed to delete project:', error);
+      console.error("Failed to delete project:", error);
       throw error;
     }
   },
@@ -393,13 +418,13 @@ export const useAppStore = create<AppState>((set, get) => ({
       const response = await apiClient.voteProject(id);
       if (response.success && response.data) {
         set((state) => ({
-          projects: state.projects.map(p =>
+          projects: state.projects.map((p) =>
             p.id === id ? { ...p, votes: response.data.votes } : p
-          )
+          ),
         }));
       }
     } catch (error) {
-      console.error('Failed to vote on project:', error);
+      console.error("Failed to vote on project:", error);
       throw error;
     }
   },
@@ -408,7 +433,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   handleRealtimeNewProject: (projectData) => {
     const newProject: Project = {
       id: projectData.id,
-      type: projectData.type || 'project',
+      type: projectData.type || "project",
       title: projectData.title,
       description: projectData.description,
       category: projectData.category,
@@ -417,7 +442,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       stage: projectData.stage,
       tags: projectData.tags || [],
       website: projectData.website,
-      author: projectData.is_anonymous ? null : (projectData.author || null),
+      author: projectData.is_anonymous ? null : projectData.author || null,
       bounty: projectData.bounty,
       image: projectData.image_url,
       problem: projectData.problem,
@@ -432,18 +457,20 @@ export const useAppStore = create<AppState>((set, get) => ({
 
     set((state) => {
       // Check if project already exists (avoid duplicates)
-      const exists = state.projects.some(p => p.id === newProject.id);
+      const exists = state.projects.some((p) => p.id === newProject.id);
       if (exists) return state;
 
       return {
-        projects: [newProject, ...state.projects]
+        projects: [newProject, ...state.projects],
       };
     });
   },
 
   handleRealtimeUpdateProject: (projectData) => {
     set((state) => {
-      const existingProject = state.projects.find(p => p.id === projectData.id);
+      const existingProject = state.projects.find(
+        (p) => p.id === projectData.id
+      );
       if (!existingProject) return state;
 
       const updatedProject: Project = {
@@ -468,14 +495,16 @@ export const useAppStore = create<AppState>((set, get) => ({
       };
 
       return {
-        projects: state.projects.map(p => p.id === projectData.id ? updatedProject : p)
+        projects: state.projects.map((p) =>
+          p.id === projectData.id ? updatedProject : p
+        ),
       };
     });
   },
 
   handleRealtimeDeleteProject: (projectId) => {
     set((state) => ({
-      projects: state.projects.filter(p => p.id !== projectId)
+      projects: state.projects.filter((p) => p.id !== projectId),
     }));
   },
 
@@ -486,12 +515,15 @@ export const useAppStore = create<AppState>((set, get) => ({
     // (they're already added via optimistic update in addComment)
     // This prevents duplicates with mismatched anonymous status
     if (state.user && commentData.user_id === state.user.id) {
-      console.log('⏭️ Skipping realtime update for own comment:', commentData.id);
+      console.log(
+        "⏭️ Skipping realtime update for own comment:",
+        commentData.id
+      );
       return;
     }
 
     set((state) => {
-      const project = state.projects.find(p => p.id === projectId);
+      const project = state.projects.find((p) => p.id === projectId);
       if (!project) return state;
 
       const newComment: Comment = {
@@ -512,21 +544,23 @@ export const useAppStore = create<AppState>((set, get) => ({
       if (newComment.parentCommentId) {
         // It's a reply - add it to the parent comment
         const addReplyToParent = (comments: Comment[]): Comment[] => {
-          return comments.map(comment => {
+          return comments.map((comment) => {
             if (comment.id === newComment.parentCommentId) {
               // Check if reply already exists (avoid duplicates)
-              const replyExists = comment.replies?.some(r => r.id === newComment.id);
+              const replyExists = comment.replies?.some(
+                (r) => r.id === newComment.id
+              );
               if (replyExists) return comment;
 
               return {
                 ...comment,
-                replies: [...(comment.replies || []), newComment]
+                replies: [...(comment.replies || []), newComment],
               };
             }
             if (comment.replies && comment.replies.length > 0) {
               return {
                 ...comment,
-                replies: addReplyToParent(comment.replies)
+                replies: addReplyToParent(comment.replies),
               };
             }
             return comment;
@@ -536,34 +570,51 @@ export const useAppStore = create<AppState>((set, get) => ({
         const updatedProject = {
           ...project,
           comments: addReplyToParent(project.comments || []),
-          feedbackCount: (project.feedbackCount || 0) + 1
+          feedbackCount: (project.feedbackCount || 0) + 1,
         };
 
         return {
-          projects: state.projects.map(p => p.id === projectId ? updatedProject : p),
+          projects: state.projects.map((p) =>
+            p.id === projectId ? updatedProject : p
+          ),
           // Also update selectedProject if it's the same project
-          selectedProject: state.selectedProject?.id === projectId ? updatedProject : state.selectedProject
+          selectedProject:
+            state.selectedProject?.id === projectId
+              ? updatedProject
+              : state.selectedProject,
         };
       } else {
         // It's a top-level comment - check if it already exists in EITHER projects or selectedProject
-        const commentExistsInProjects = project.comments?.some(c => c.id === newComment.id);
-        const commentExistsInSelected = state.selectedProject?.comments?.some(c => c.id === newComment.id);
+        const commentExistsInProjects = project.comments?.some(
+          (c) => c.id === newComment.id
+        );
+        const commentExistsInSelected = state.selectedProject?.comments?.some(
+          (c) => c.id === newComment.id
+        );
 
         if (commentExistsInProjects || commentExistsInSelected) {
-          console.log('⏭️ Comment already exists (preventing duplicate):', newComment.id);
+          console.log(
+            "⏭️ Comment already exists (preventing duplicate):",
+            newComment.id
+          );
           return state;
         }
 
         const updatedProject = {
           ...project,
           comments: [...(project.comments || []), newComment],
-          feedbackCount: (project.feedbackCount || 0) + 1
+          feedbackCount: (project.feedbackCount || 0) + 1,
         };
 
         return {
-          projects: state.projects.map(p => p.id === projectId ? updatedProject : p),
+          projects: state.projects.map((p) =>
+            p.id === projectId ? updatedProject : p
+          ),
           // Also update selectedProject if it's the same project
-          selectedProject: state.selectedProject?.id === projectId ? updatedProject : state.selectedProject
+          selectedProject:
+            state.selectedProject?.id === projectId
+              ? updatedProject
+              : state.selectedProject,
         };
       }
     });
@@ -571,11 +622,11 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   handleRealtimeUpdateComment: (projectId, commentData) => {
     set((state) => {
-      const project = state.projects.find(p => p.id === projectId);
+      const project = state.projects.find((p) => p.id === projectId);
       if (!project || !project.comments) return state;
 
       const updateComment = (comments: Comment[]): Comment[] => {
-        return comments.map(comment => {
+        return comments.map((comment) => {
           if (comment.id === commentData.id) {
             return {
               ...comment,
@@ -588,7 +639,7 @@ export const useAppStore = create<AppState>((set, get) => ({
           if (comment.replies && comment.replies.length > 0) {
             return {
               ...comment,
-              replies: updateComment(comment.replies)
+              replies: updateComment(comment.replies),
             };
           }
           return comment;
@@ -597,30 +648,35 @@ export const useAppStore = create<AppState>((set, get) => ({
 
       const updatedProject = {
         ...project,
-        comments: updateComment(project.comments)
+        comments: updateComment(project.comments),
       };
 
       return {
-        projects: state.projects.map(p => p.id === projectId ? updatedProject : p),
+        projects: state.projects.map((p) =>
+          p.id === projectId ? updatedProject : p
+        ),
         // Also update selectedProject if it's the same project
-        selectedProject: state.selectedProject?.id === projectId ? updatedProject : state.selectedProject
+        selectedProject:
+          state.selectedProject?.id === projectId
+            ? updatedProject
+            : state.selectedProject,
       };
     });
   },
 
   handleRealtimeDeleteComment: (projectId, commentId) => {
     set((state) => {
-      const project = state.projects.find(p => p.id === projectId);
+      const project = state.projects.find((p) => p.id === projectId);
       if (!project || !project.comments) return state;
 
       const removeComment = (comments: Comment[]): Comment[] => {
         return comments
-          .filter(c => c.id !== commentId)
-          .map(comment => {
+          .filter((c) => c.id !== commentId)
+          .map((comment) => {
             if (comment.replies && comment.replies.length > 0) {
               return {
                 ...comment,
-                replies: removeComment(comment.replies)
+                replies: removeComment(comment.replies),
               };
             }
             return comment;
@@ -628,18 +684,26 @@ export const useAppStore = create<AppState>((set, get) => ({
       };
 
       const updatedComments = removeComment(project.comments);
-      const commentCountDiff = (project.comments.length - updatedComments.length);
+      const commentCountDiff = project.comments.length - updatedComments.length;
 
       const updatedProject = {
         ...project,
         comments: updatedComments,
-        feedbackCount: Math.max(0, (project.feedbackCount || 0) - commentCountDiff)
+        feedbackCount: Math.max(
+          0,
+          (project.feedbackCount || 0) - commentCountDiff
+        ),
       };
 
       return {
-        projects: state.projects.map(p => p.id === projectId ? updatedProject : p),
+        projects: state.projects.map((p) =>
+          p.id === projectId ? updatedProject : p
+        ),
         // Also update selectedProject if it's the same project
-        selectedProject: state.selectedProject?.id === projectId ? updatedProject : state.selectedProject
+        selectedProject:
+          state.selectedProject?.id === projectId
+            ? updatedProject
+            : state.selectedProject,
       };
     });
   },
@@ -649,30 +713,35 @@ export const useAppStore = create<AppState>((set, get) => ({
       const response = await apiClient.createComment({
         projectId,
         content,
-        isAnonymous
+        isAnonymous,
       });
       if (response.success && response.data) {
         // Optimistic update: Add comment immediately without refetching
         const newComment = response.data;
         set((state) => {
-          const project = state.projects.find(p => p.id === projectId);
+          const project = state.projects.find((p) => p.id === projectId);
           if (!project) return state;
 
           const updatedProject = {
             ...project,
             comments: [...(project.comments || []), newComment],
-            feedbackCount: (project.feedbackCount || 0) + 1
+            feedbackCount: (project.feedbackCount || 0) + 1,
           };
 
           return {
-            projects: state.projects.map(p => p.id === projectId ? updatedProject : p),
+            projects: state.projects.map((p) =>
+              p.id === projectId ? updatedProject : p
+            ),
             // Also update selectedProject if it matches
-            selectedProject: state.selectedProject?.id === projectId ? updatedProject : state.selectedProject
+            selectedProject:
+              state.selectedProject?.id === projectId
+                ? updatedProject
+                : state.selectedProject,
           };
         });
       }
     } catch (error) {
-      console.error('Failed to add comment:', error);
+      console.error("Failed to add comment:", error);
       throw error;
     }
   },
@@ -683,28 +752,28 @@ export const useAppStore = create<AppState>((set, get) => ({
         projectId,
         content,
         parentCommentId: commentId,
-        isAnonymous
+        isAnonymous,
       });
       if (response.success && response.data) {
         // Optimistic update: Add reply immediately
         const newReply = response.data;
         set((state) => {
-          const project = state.projects.find(p => p.id === projectId);
+          const project = state.projects.find((p) => p.id === projectId);
           if (!project || !project.comments) return state;
 
           // Add reply to parent comment
           const updateCommentsWithReply = (comments: Comment[]): Comment[] => {
-            return comments.map(comment => {
+            return comments.map((comment) => {
               if (comment.id === commentId) {
                 return {
                   ...comment,
-                  replies: [...(comment.replies || []), newReply]
+                  replies: [...(comment.replies || []), newReply],
                 };
               }
               if (comment.replies && comment.replies.length > 0) {
                 return {
                   ...comment,
-                  replies: updateCommentsWithReply(comment.replies)
+                  replies: updateCommentsWithReply(comment.replies),
                 };
               }
               return comment;
@@ -714,18 +783,23 @@ export const useAppStore = create<AppState>((set, get) => ({
           const updatedProject = {
             ...project,
             comments: updateCommentsWithReply(project.comments),
-            feedbackCount: (project.feedbackCount || 0) + 1
+            feedbackCount: (project.feedbackCount || 0) + 1,
           };
 
           return {
-            projects: state.projects.map(p => p.id === projectId ? updatedProject : p),
+            projects: state.projects.map((p) =>
+              p.id === projectId ? updatedProject : p
+            ),
             // Also update selectedProject if it matches
-            selectedProject: state.selectedProject?.id === projectId ? updatedProject : state.selectedProject
+            selectedProject:
+              state.selectedProject?.id === projectId
+                ? updatedProject
+                : state.selectedProject,
           };
         });
       }
     } catch (error) {
-      console.error('Failed to add reply:', error);
+      console.error("Failed to add reply:", error);
       throw error;
     }
   },
@@ -737,15 +811,22 @@ export const useAppStore = create<AppState>((set, get) => ({
       const projectResponse = await apiClient.getProject(projectId);
       if (projectResponse.success && projectResponse.data) {
         // Transform flat comments to nested structure
-        if (projectResponse.data.comments && projectResponse.data.comments.length > 0) {
-          projectResponse.data.comments = buildCommentTree(projectResponse.data.comments);
+        if (
+          projectResponse.data.comments &&
+          projectResponse.data.comments.length > 0
+        ) {
+          projectResponse.data.comments = buildCommentTree(
+            projectResponse.data.comments
+          );
         }
         set((state) => ({
-          projects: state.projects.map(p => p.id === projectId ? projectResponse.data : p)
+          projects: state.projects.map((p) =>
+            p.id === projectId ? projectResponse.data : p
+          ),
         }));
       }
     } catch (error) {
-      console.error('Failed to like comment:', error);
+      console.error("Failed to like comment:", error);
       throw error;
     }
   },
@@ -757,15 +838,22 @@ export const useAppStore = create<AppState>((set, get) => ({
       const projectResponse = await apiClient.getProject(projectId);
       if (projectResponse.success && projectResponse.data) {
         // Transform flat comments to nested structure
-        if (projectResponse.data.comments && projectResponse.data.comments.length > 0) {
-          projectResponse.data.comments = buildCommentTree(projectResponse.data.comments);
+        if (
+          projectResponse.data.comments &&
+          projectResponse.data.comments.length > 0
+        ) {
+          projectResponse.data.comments = buildCommentTree(
+            projectResponse.data.comments
+          );
         }
         set((state) => ({
-          projects: state.projects.map(p => p.id === projectId ? projectResponse.data : p)
+          projects: state.projects.map((p) =>
+            p.id === projectId ? projectResponse.data : p
+          ),
         }));
       }
     } catch (error) {
-      console.error('Failed to dislike comment:', error);
+      console.error("Failed to dislike comment:", error);
       throw error;
     }
   },
@@ -774,32 +862,37 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       // This would require payment verification flow with Solana transaction
       // For now, just update optimistically
-      console.log('Tip comment functionality requires Solana payment integration');
+      console.log(
+        "Tip comment functionality requires Solana payment integration"
+      );
       // After payment is verified, the backend would update the tips_amount
       // and we would refresh the project data
     } catch (error) {
-      console.error('Failed to tip comment:', error);
+      console.error("Failed to tip comment:", error);
       throw error;
     }
   },
 
   setView: (view) => {
     set({ currentView: view });
-    if (view !== 'profile') {
-        set({ viewedUser: null });
+    if (view !== "profile") {
+      set({ viewedUser: null });
     } else if (!get().viewedUser && get().user) {
-        set({ viewedUser: get().user });
+      set({ viewedUser: get().user });
     }
   },
-  
+
   navigateToProject: async (id, type) => {
     set({ isNavigating: true });
 
     try {
       // Fetch project details if not already in store OR if it doesn't have comments
       const state = get();
-      const existingProject = state.projects.find(p => p.id === id);
-      const needsFetch = !existingProject || !existingProject.comments || existingProject.comments.length === 0;
+      const existingProject = state.projects.find((p) => p.id === id);
+      const needsFetch =
+        !existingProject ||
+        !existingProject.comments ||
+        existingProject.comments.length === 0;
 
       if (needsFetch) {
         // Fetch full project data with comments
@@ -808,7 +901,7 @@ export const useAppStore = create<AppState>((set, get) => ({
           // Map imageUrl to image for frontend compatibility
           const project = {
             ...response.data,
-            image: response.data.imageUrl || response.data.image
+            image: response.data.imageUrl || response.data.image,
           };
           // Transform flat comments to nested structure
           if (project.comments && project.comments.length > 0) {
@@ -818,45 +911,52 @@ export const useAppStore = create<AppState>((set, get) => ({
           if (existingProject) {
             // Update existing project with full data
             set((state) => ({
-              projects: state.projects.map(p => p.id === id ? project : p)
+              projects: state.projects.map((p) => (p.id === id ? project : p)),
             }));
           } else {
             // Add new project to store
             set((state) => ({
-              projects: [project, ...state.projects]
+              projects: [project, ...state.projects],
             }));
           }
         }
       } else {
         // Transform existing project's comments if not already transformed
-        const hasNestedReplies = existingProject.comments.some(c => c.replies && c.replies.length > 0);
+        const hasNestedReplies = existingProject.comments.some(
+          (c) => c.replies && c.replies.length > 0
+        );
         if (!hasNestedReplies) {
           const transformedProject = {
             ...existingProject,
-            comments: buildCommentTree(existingProject.comments)
+            comments: buildCommentTree(existingProject.comments),
           };
           set((state) => ({
-            projects: state.projects.map(p => p.id === id ? transformedProject : p)
+            projects: state.projects.map((p) =>
+              p.id === id ? transformedProject : p
+            ),
           }));
         }
       }
 
       set({
-        currentView: type === 'project' ? 'project-detail' : 'idea-detail',
+        currentView: type === "project" ? "project-detail" : "idea-detail",
         selectedProjectId: id,
-        isNavigating: false
+        isNavigating: false,
       });
     } catch (error) {
-      console.error('Failed to navigate to project:', error);
+      console.error("Failed to navigate to project:", error);
       set({ isNavigating: false });
     }
   },
 
   setSearchQuery: (query) => set({ searchQuery: query }),
-  
-  markNotificationRead: (id) => set((state) => ({
-    notifications: state.notifications.map(n => n.id === id ? { ...n, read: true } : n)
-  })),
 
-  clearNotifications: () => set({ notifications: [] })
+  markNotificationRead: (id) =>
+    set((state) => ({
+      notifications: state.notifications.map((n) =>
+        n.id === id ? { ...n, read: true } : n
+      ),
+    })),
+
+  clearNotifications: () => set({ notifications: [] }),
 }));

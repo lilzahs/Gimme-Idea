@@ -188,7 +188,7 @@ export const IdeaDetail = () => {
     voteProject,
     addComment,
     user,
-    openWalletModal,
+    openConnectReminder,
     tipComment,
     handleRealtimeNewComment,
     handleRealtimeUpdateComment,
@@ -256,7 +256,7 @@ export const IdeaDetail = () => {
   const handleComment = async (e: React.FormEvent) => {
       e.preventDefault();
       if (!user) {
-          openWalletModal();
+          openConnectReminder();
           return;
       }
       if (isSubmitting || !commentText.trim()) return; // Prevent double submit
@@ -372,8 +372,8 @@ export const IdeaDetail = () => {
                 <div className="bg-[#0A0A0A] p-6 rounded-2xl border border-white/5 mb-10">
                     {!user ? (
                          <div className="text-center py-4">
-                             <p className="text-gray-400 mb-2">Connect wallet to join the discussion</p>
-                             <button onClick={() => openWalletModal()} className="text-[#FFD700] underline">Connect</button>
+                             <p className="text-gray-400 mb-2">Sign in to join the discussion</p>
+                             <button onClick={() => openConnectReminder()} className="text-[#FFD700] underline">Sign in</button>
                          </div>
                     ) : (
                         <form onSubmit={handleComment}>
