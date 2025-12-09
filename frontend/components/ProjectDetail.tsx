@@ -195,7 +195,7 @@ export const ProjectDetail = () => {
     voteProject,
     addComment,
     user,
-    connectWallet,
+    openConnectReminder,
     tipComment,
     openUserProfile,
     handleRealtimeNewComment,
@@ -409,8 +409,8 @@ export const ProjectDetail = () => {
         <div className="mb-8 bg-[#0A0A0A] p-4 rounded-xl border border-white/5">
             {!user ? (
                 <div className="text-center py-4">
-                    <p className="text-gray-400 mb-2">Connect wallet to join the discussion</p>
-                    <button onClick={() => connectWallet('Phantom')} className="text-accent hover:underline">Connect Wallet</button>
+                    <p className="text-gray-400 mb-2">Sign in to join the discussion</p>
+                    <button onClick={() => openConnectReminder()} className="text-accent hover:underline">Sign In</button>
                 </div>
             ) : (
                 <form onSubmit={handleComment} className="flex gap-4">
