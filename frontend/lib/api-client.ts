@@ -269,4 +269,7 @@ export const apiClient = {
     apiFetch<{ exists: boolean; userId?: string }>(
       `/auth/check-wallet/${walletAddress}`
     ),
+
+  // Settings
+  getMenuConfig: () => apiFetch<any[]>("/settings/menu-config"),
 };

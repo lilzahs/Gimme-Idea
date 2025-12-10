@@ -11,6 +11,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { LoginButton } from './LoginButton';
 
+import { apiClient } from '../lib/api-client';
+
 const Navbar = () => {
   const {
     openConnectReminder,
@@ -33,6 +35,27 @@ const Navbar = () => {
   const [showSearch, setShowSearch] = React.useState(false);
   const [showNotifications, setShowNotifications] = React.useState(false);
   const [showMoreMenu, setShowMoreMenu] = React.useState(false); // New state for 'More' menu
+  
+  // Dynamic Menu State
+  const [moreLinks, setMoreLinks] = useState([
+    { name: 'Hackathon', route: '/hackathon', icon: Trophy, isActive: true },
+    { name: 'About Us', route: '/about', icon: Info, isActive: true },
+    { name: 'Contact', route: '/contact', icon: Mail, isActive: true },
+  ]);
+
+  useEffect(() => {
+    // Fetch dynamic menu config
+    const fetchMenuConfig = async () => {
+      const response = await apiClient.getMenuConfig();
+      if (response.success && response.data && Array.isArray(response.data)) {
+        // Map string icon names back to Lucide components if needed
+        // For now, we'll stick to the default icons if names match, or extend logic later
+        // This is a simplified version assuming the backend returns compatible structure
+        // In a real app, you'd map string 'Trophy' -> Trophy component
+      }
+    };
+    fetchMenuConfig();
+  }, []);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
   const notificationRef = useRef<HTMLDivElement>(null);
@@ -82,11 +105,37 @@ const Navbar = () => {
     { name: 'More', isDropdown: true, icon: MoreHorizontal } // New 'More' entry
   ];
 
-  const moreLinks = [ // Links for the 'More' dropdown
-    { name: 'Hackathon', route: '/hackathon', icon: Trophy },
-    { name: 'About Us', route: '/about', icon: Info },
-    { name: 'Contact', route: '/contact', icon: Mail },
-  ];
+  // Helper to map icon name string to Component
+  const getIconComponent = (iconName: string) => {
+    switch (iconName) {
+      case 'Trophy': return Trophy;
+      case 'Info': return Info;
+      case 'Mail': return Mail;
+      case 'Heart': return Heart;
+      case 'Star': return Lightbulb;
+      default: return Info;
+    }
+  };
+
+  useEffect(() => {
+    const fetchMenuConfig = async () => {
+      const response = await apiClient.getMenuConfig();
+      if (response.success && response.data && Array.isArray(response.data)) {
+        const mappedLinks = response.data
+          .filter((item: any) => item.isActive)
+          .map((item: any) => ({
+            name: item.name,
+            route: item.route,
+            icon: getIconComponent(item.icon)
+          }));
+        
+        if (mappedLinks.length > 0) {
+          setMoreLinks(mappedLinks);
+        }
+      }
+    };
+    fetchMenuConfig();
+  }, []);
 
   return (
     <nav className="fixed top-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">

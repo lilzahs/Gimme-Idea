@@ -8,20 +8,21 @@ import { ProjectsModule } from './projects/projects.module';
 import { CommentsModule } from './comments/comments.module';
 import { UsersModule } from './users/users.module';
 import { PaymentsModule } from './payments/payments.module';
+import { SettingsModule } from './settings/settings.module';
 import { AIModule } from './ai/ai.module';
+import { SupabaseService } from './shared/supabase.service';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: '.env',
-    }),
+    ConfigModule.forRoot({ isGlobal: true }),
     AuthModule,
+    UsersModule,
     ProjectsModule,
     CommentsModule,
-    UsersModule,
     PaymentsModule,
+    SettingsModule,
     AIModule,
+    SupabaseModule,
   ],
   controllers: [AppController],
   providers: [SupabaseService, SolanaService],
