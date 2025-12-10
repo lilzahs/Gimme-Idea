@@ -87,6 +87,7 @@ export interface User {
   authProvider?: "wallet" | "google";
   authId?: string;
   needsWalletConnect?: boolean;
+  role?: "user" | "admin" | "moderator";
 }
 
 export interface Notification {
