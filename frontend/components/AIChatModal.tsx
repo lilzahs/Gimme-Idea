@@ -8,6 +8,7 @@ import axios from 'axios';
 import { Project } from '../lib/types';
 import toast from 'react-hot-toast';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { Connection, PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { createUniqueSlug } from '../lib/slug-utils';
 
@@ -53,6 +54,7 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const { publicKey, sendTransaction, connected } = useWallet();
+  const { setVisible: setWalletModalVisible } = useWalletModal();
 
   // Load sessions from localStorage
   useEffect(() => {
@@ -437,8 +439,8 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
                 <History className="w-5 h-5" />
               </button>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FFD700] to-[#FDB931] flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-black" />
+                <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center bg-[#0d0d12]">
+                  <img src="/logo-gmi.png" alt="Gimme Idea" className="w-full h-full object-cover" />
                 </div>
                 <div>
                   <h2 className="text-lg font-bold text-white">Gimme Sensei</h2>
@@ -461,8 +463,13 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
                 key={msg.id}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
+                {msg.role === 'ai' && (
+                  <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 mt-1">
+                    <img src="/logo-gmi.png" alt="AI" className="w-full h-full object-cover" />
+                  </div>
+                )}
                 <div
                   className={`max-w-[75%] rounded-2xl px-5 py-3 ${
                     msg.role === 'user'
@@ -516,7 +523,10 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
             ))}
 
             {isLoading && (
-              <div className="flex justify-start">
+              <div className="flex gap-3 justify-start">
+                <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 mt-1">
+                  <img src="/logo-gmi.png" alt="AI" className="w-full h-full object-cover" />
+                </div>
                 <div className="bg-[#1a1a22] border border-white/5 rounded-2xl px-5 py-3">
                   <div className="flex items-center gap-2">
                     <Loader2 className="w-4 h-4 animate-spin text-[#FFD700]" />
@@ -620,22 +630,33 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
               </div>
 
               <div className="flex gap-3">
-                <button
-                  onClick={handleDonation}
-                  disabled={isProcessingPayment || !connected}
-                  className="flex-1 py-3 bg-[#FFD700] text-black rounded-xl font-bold hover:bg-[#FFD700]/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {isProcessingPayment ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Verifying...
-                    </>
-                  ) : !connected ? (
-                    'Connect Wallet First'
-                  ) : (
-                    `Donate $${donationAmount}`
-                  )}
-                </button>
+                {!connected ? (
+                  <button
+                    onClick={() => setWalletModalVisible(true)}
+                    className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-bold hover:from-purple-500 hover:to-blue-500 transition-all flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/>
+                      <path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>
+                    </svg>
+                    Connect Wallet
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleDonation}
+                    disabled={isProcessingPayment}
+                    className="flex-1 py-3 bg-[#FFD700] text-black rounded-xl font-bold hover:bg-[#FFD700]/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {isProcessingPayment ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Verifying...
+                      </>
+                    ) : (
+                      `Donate $${donationAmount}`
+                    )}
+                  </button>
+                )}
                 <button
                   onClick={() => setShowDonateModal(false)}
                   className="px-4 py-3 bg-white/5 text-gray-400 rounded-xl hover:bg-white/10 transition-colors"

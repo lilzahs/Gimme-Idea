@@ -65,8 +65,13 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
       transition={{ type: "spring", stiffness: 400, damping: 25 }}
       className="relative rounded-2xl overflow-hidden cursor-pointer flex flex-col h-full group"
     >
-      {/* Card background with subtle pattern */}
-      <div className="absolute inset-0 bg-[#12131a]" />
+      {/* Card background - semi-transparent with subtle golden tint */}
+      <div className="absolute inset-0 bg-[#12131a]/90" />
+      
+      {/* Subtle golden glow background for Ideas */}
+      {isIdea && (
+        <div className="absolute inset-0 bg-gradient-to-br from-[#FFD700]/[0.02] via-transparent to-[#FFD700]/[0.01]" />
+      )}
       
       {/* Subtle geometric pattern overlay for Ideas */}
       {isIdea && (
@@ -84,35 +89,38 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
         />
       )}
       
-      {/* Border */}
-      <div className="absolute inset-0 rounded-2xl border border-white/[0.06] group-hover:border-white/20 transition-all duration-500" />
+      {/* Border with subtle golden tint for ideas */}
+      <div className={`absolute inset-0 rounded-2xl border transition-all duration-500 ${
+        isIdea 
+          ? 'border-[#FFD700]/[0.08] group-hover:border-[#FFD700]/25' 
+          : 'border-white/[0.06] group-hover:border-white/20'
+      }`} />
       
-      {/* Glow effect on hover */}
+      {/* Subtle glow effect on hover */}
       <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
         style={{
           boxShadow: isIdea 
-            ? 'inset 0 0 40px rgba(255, 215, 0, 0.05), 0 0 20px rgba(255, 215, 0, 0.1)'
-            : 'inset 0 0 40px rgba(153, 69, 255, 0.05), 0 0 20px rgba(153, 69, 255, 0.1)'
+            ? 'inset 0 0 30px rgba(255, 215, 0, 0.03), 0 0 15px rgba(255, 215, 0, 0.05)'
+            : 'inset 0 0 30px rgba(153, 69, 255, 0.03), 0 0 15px rgba(153, 69, 255, 0.05)'
         }}
       />
 
-      {/* One-time shimmer effect on hover */}
+      {/* Diagonal white shimmer effect on hover - subtle and realistic */}
       {hasShimmered && (
         <motion.div
           className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl z-20"
           initial={{ opacity: 1 }}
           animate={{ opacity: 0 }}
-          transition={{ duration: 0.8, delay: 0.5 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
         >
           <motion.div
-            className="absolute inset-0"
-            initial={{ x: '-100%' }}
-            animate={{ x: '200%' }}
-            transition={{ duration: 0.8, ease: "easeInOut" }}
+            className="absolute w-[200%] h-full"
+            initial={{ x: '-100%', rotate: -20 }}
+            animate={{ x: '100%' }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
             style={{
-              background: isIdea
-                ? 'linear-gradient(90deg, transparent, rgba(255,215,0,0.15), rgba(255,215,0,0.05), transparent)'
-                : 'linear-gradient(90deg, transparent, rgba(153,69,255,0.15), rgba(153,69,255,0.05), transparent)',
+              background: 'linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.08) 45%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.08) 55%, transparent 70%)',
+              transformOrigin: 'center center',
             }}
           />
         </motion.div>
