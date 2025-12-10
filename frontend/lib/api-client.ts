@@ -170,6 +170,16 @@ export const apiClient = {
   // Users
   getUserByUsername: (username: string) => apiFetch<any>(`/users/${username}`),
 
+  getUserStats: (username: string) =>
+    apiFetch<{
+      reputation: number;
+      ideasCount: number;
+      projectsCount: number;
+      feedbackCount: number;
+      tipsReceived: number;
+      likesReceived: number;
+    }>(`/users/${username}/stats`),
+
   getUserProjects: (username: string) =>
     apiFetch<any[]>(`/users/${username}/projects`),
 

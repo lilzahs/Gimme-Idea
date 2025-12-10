@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Wallet, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { useWallet } from '@solana/wallet-adapter-react';
@@ -16,27 +16,18 @@ export const ConnectWalletPopup = () => {
   const [step, setStep] = useState<Step>('initial');
   const { showWalletPopup, setShowWalletPopup, setIsNewUser, user, setUser, refreshUser } = useAuth();
   const { wallets, select, connect, publicKey, signMessage, connected, disconnect } = useWallet();
-  
-  // Flag to prevent multiple API calls
-  const isLinkingRef = useRef(false);
 
   // Reset step when popup opens
   useEffect(() => {
     if (showWalletPopup) {
       setStep('initial');
-      isLinkingRef.current = false;
     }
   }, [showWalletPopup]);
 
   // Handle wallet connection and linking
   useEffect(() => {
     const linkWalletToAccount = async () => {
-      // Prevent multiple calls
-      if (isLinkingRef.current) return;
-      
       if (step === 'connecting' && connected && publicKey && signMessage && user) {
-        isLinkingRef.current = true;
-        
         try {
           // Create message for signing
           const timestamp = new Date().toISOString();
@@ -84,8 +75,7 @@ export const ConnectWalletPopup = () => {
             toast.error(error.message || 'Failed to link wallet');
           }
           
-          // Reset flag and disconnect
-          isLinkingRef.current = false;
+          // Disconnect and reset
           await disconnect();
           setStep('select-wallet');
         }
@@ -110,14 +100,6 @@ export const ConnectWalletPopup = () => {
       select(selectedWallet.adapter.name);
       await connect();
     } catch (error: any) {
-      // Ignore errors from other wallet extensions (like MetaMask)
-      if (error.message?.includes('MetaMask') || 
-          error.message?.includes('Ethereum') ||
-          error.name === 'WalletNotSelectedError') {
-        console.log('Ignoring non-Solana wallet error:', error.message);
-        return;
-      }
-      
       console.error('Wallet connection error:', error);
       
       if (error.message?.includes('User rejected') || error.message?.includes('canceled')) {

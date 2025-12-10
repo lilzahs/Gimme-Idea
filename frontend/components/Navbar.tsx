@@ -75,10 +75,10 @@ const Navbar = () => {
   };
 
   const navLinks = [
+    { name: 'HOME', route: '/home', icon: LayoutGrid },
     { name: 'IDEA', route: '/idea', icon: Lightbulb },
     { name: 'PROJECT', route: '/projects', icon: Rocket },
     { name: 'Donate me', route: '/donate', icon: Heart },
-    { name: 'Leaderboard', route: '/home', icon: BarChart3 },
     { name: 'More', isDropdown: true, icon: MoreHorizontal } // New 'More' entry
   ];
 

@@ -5,19 +5,34 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useAppStore } from '../lib/store';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
+import { useWallet } from '@solana/wallet-adapter-react';
 import { motion } from 'framer-motion';
-import { Camera, Edit2, Save, X, Github, Twitter, Facebook, Send, Pencil, Trash2, ArrowLeft, Wallet, AlertCircle } from 'lucide-react';
+import { Camera, Edit2, Save, X, Github, Twitter, Facebook, Send, Pencil, Trash2, ArrowLeft, Wallet, AlertCircle, RefreshCw, Check } from 'lucide-react';
 import { ProjectCard } from './ProjectCard';
 import { WalletReminderBadge } from './WalletReminderBadge';
 import toast from 'react-hot-toast';
 import { Project } from '../lib/types';
+import { apiClient } from '../lib/api-client';
+
+interface UserStats {
+  reputation: number;
+  ideasCount: number;
+  projectsCount: number;
+  feedbackCount: number;
+  tipsReceived: number;
+  likesReceived: number;
+}
 
 export const Profile = () => {
   const { user, viewedUser, projects, updateUserProfile, updateProject, deleteProject, openSubmitModal } = useAppStore();
-  const { setShowWalletPopup } = useAuth();
+  const { setShowWalletPopup, refreshUser } = useAuth();
   const router = useRouter();
+  const { connected, publicKey, connect, select, wallets, disconnect } = useWallet();
   const [isEditing, setIsEditing] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [isReconnecting, setIsReconnecting] = useState(false);
+  const [userStats, setUserStats] = useState<UserStats | null>(null);
+  const [isLoadingStats, setIsLoadingStats] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Determine which profile to show: the viewedUser (from clicking an author) or the logged-in user
@@ -57,6 +72,71 @@ export const Profile = () => {
           });
       }
   }, [displayUser]);
+
+  // Fetch user stats when displayUser changes
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (!displayUser?.username) return;
+      
+      setIsLoadingStats(true);
+      try {
+        const response = await apiClient.getUserStats(displayUser.username);
+        if (response.success && response.data) {
+          setUserStats(response.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch user stats:', error);
+      } finally {
+        setIsLoadingStats(false);
+      }
+    };
+
+    fetchStats();
+  }, [displayUser?.username]);
+
+  // Check if wallet is connected and matches user's wallet
+  const isWalletConnected = connected && publicKey && displayUser?.wallet && 
+    publicKey.toBase58() === displayUser.wallet;
+
+  // Handle reconnect wallet
+  const handleReconnectWallet = async () => {
+    if (!displayUser?.wallet) {
+      setShowWalletPopup(true);
+      return;
+    }
+
+    setIsReconnecting(true);
+    try {
+      // Find the wallet that matches user's saved wallet
+      // Try to connect to any available wallet
+      const availableWallet = wallets.find(w => 
+        w.readyState === 'Installed' || w.readyState === 'Loadable'
+      );
+      
+      if (!availableWallet) {
+        toast.error('No wallet extension found. Please install Phantom or Solflare.');
+        return;
+      }
+
+      select(availableWallet.adapter.name);
+      await connect();
+      
+      // Check if connected wallet matches
+      if (publicKey && publicKey.toBase58() === displayUser.wallet) {
+        toast.success('Wallet reconnected successfully!');
+      } else if (publicKey) {
+        toast.error('Connected wallet does not match your profile. Please use the correct wallet.');
+        await disconnect();
+      }
+    } catch (error: any) {
+      console.error('Reconnect wallet error:', error);
+      if (!error.message?.includes('User rejected')) {
+        toast.error('Failed to reconnect wallet');
+      }
+    } finally {
+      setIsReconnecting(false);
+    }
+  };
 
   if (!displayUser) {
       return (
@@ -112,6 +192,10 @@ export const Profile = () => {
                   facebook: editForm.facebook
               }
           } as any); // Type assertion needed due to API/User type mismatch
+          
+          // Refresh user from AuthContext to sync state
+          await refreshUser();
+          
           setIsEditing(false);
           toast.success("Profile Updated!");
       } catch (error) {
@@ -252,10 +336,28 @@ export const Profile = () => {
                                           <p className="text-gray-500 text-sm mb-2">{displayUser.email}</p>
                                         )}
                                         {displayUser.wallet ? (
-                                          <p className="text-gray-400 font-mono text-sm mb-4 bg-white/5 inline-block px-2 py-1 rounded">
-                                            <Wallet className="w-3 h-3 inline mr-1" />
-                                            {displayUser.wallet.slice(0, 8)}...{displayUser.wallet.slice(-6)}
-                                          </p>
+                                          <div className="flex items-center gap-2 mb-4">
+                                            <p className="text-gray-400 font-mono text-sm bg-white/5 inline-block px-2 py-1 rounded">
+                                              <Wallet className="w-3 h-3 inline mr-1" />
+                                              {displayUser.wallet.slice(0, 8)}...{displayUser.wallet.slice(-6)}
+                                            </p>
+                                            {isOwnProfile && (
+                                              isWalletConnected ? (
+                                                <span className="text-green-400 text-xs flex items-center gap-1 bg-green-500/10 px-2 py-1 rounded">
+                                                  <Check className="w-3 h-3" /> Connected
+                                                </span>
+                                              ) : (
+                                                <button
+                                                  onClick={handleReconnectWallet}
+                                                  disabled={isReconnecting}
+                                                  className="text-purple-400 text-xs flex items-center gap-1 bg-purple-500/10 hover:bg-purple-500/20 px-2 py-1 rounded transition-colors disabled:opacity-50"
+                                                >
+                                                  <RefreshCw className={`w-3 h-3 ${isReconnecting ? 'animate-spin' : ''}`} />
+                                                  {isReconnecting ? 'Connecting...' : 'Reconnect'}
+                                                </button>
+                                              )
+                                            )}
+                                          </div>
                                         ) : (
                                           <p className="text-yellow-400 font-mono text-sm mb-4 bg-yellow-500/10 inline-block px-2 py-1 rounded">
                                             <AlertCircle className="w-3 h-3 inline mr-1" />
@@ -367,20 +469,28 @@ export const Profile = () => {
                 {/* Stats Row */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-10 pt-8 border-t border-white/5">
                     <div className="text-center">
-                        <div className="text-2xl font-bold text-white">{displayUser.reputation}</div>
+                        <div className="text-2xl font-bold text-white">
+                          {isLoadingStats ? '...' : (userStats?.reputation ?? 0)}
+                        </div>
                         <div className="text-xs text-gray-500 uppercase">Reputation</div>
                     </div>
                     <div className="text-center">
-                        <div className="text-2xl font-bold text-gold">${displayUser.balance}</div>
-                        <div className="text-xs text-gray-500 uppercase">Balance</div>
+                        <div className="text-2xl font-bold text-purple-400">
+                          {isLoadingStats ? '...' : (userStats?.ideasCount ?? 0)}
+                        </div>
+                        <div className="text-xs text-gray-500 uppercase">Ideas</div>
                     </div>
                     <div className="text-center">
-                        <div className="text-2xl font-bold text-white">{userProjects.length}</div>
+                        <div className="text-2xl font-bold text-gold">
+                          {isLoadingStats ? '...' : (userStats?.projectsCount ?? 0)}
+                        </div>
                         <div className="text-xs text-gray-500 uppercase">Projects</div>
                     </div>
                     <div className="text-center">
-                        <div className="text-2xl font-bold text-white">12</div>
-                        <div className="text-xs text-gray-500 uppercase">Contributions</div>
+                        <div className="text-2xl font-bold text-green-400">
+                          {isLoadingStats ? '...' : (userStats?.feedbackCount ?? 0)}
+                        </div>
+                        <div className="text-xs text-gray-500 uppercase">Feedback</div>
                     </div>
                 </div>
             </div>

@@ -139,8 +139,14 @@ export const useAppStore = create<AppState>((set, get) => ({
       const response = await apiClient.updateUserProfile(data);
       if (response.success && response.data) {
         set((state) => {
+          // Map socialLinks from API response to socials in User type
+          const { socialLinks, ...restData } = response.data;
           const updatedUser = state.user
-            ? { ...state.user, ...response.data }
+            ? {
+                ...state.user,
+                ...restData,
+                socials: socialLinks || state.user.socials,
+              }
             : null;
 
           // Update author info in all projects authored by this user
