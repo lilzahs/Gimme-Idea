@@ -11,6 +11,7 @@ import { Camera, Edit2, Save, X, Github, Twitter, Facebook, Send, Pencil, Trash2
 import { ProjectCard } from './ProjectCard';
 import { WalletReminderBadge } from './WalletReminderBadge';
 import { WalletRequiredModal } from './WalletRequiredModal';
+import { EditProjectModal } from './EditProjectModal';
 import toast from 'react-hot-toast';
 import { Project } from '../lib/types';
 import { apiClient } from '../lib/api-client';
@@ -52,14 +53,6 @@ export const Profile = () => {
       telegram: '',
       facebook: '',
       avatar: ''
-  });
-
-  // Project Edit Form State
-  const [projectForm, setProjectForm] = useState({
-      title: '',
-      description: '',
-      website: '',
-      bounty: ''
   });
 
   // Initialize form when displayUser changes
@@ -231,32 +224,12 @@ export const Profile = () => {
 
   const startEditingProject = (project: Project) => {
       setEditingProject(project);
-      setProjectForm({
-          title: project.title,
-          description: project.description,
-          website: project.website || '',
-          bounty: project.bounty?.toString() || ''
-      });
   };
 
   const handleDeleteProject = (id: string) => {
       if (window.confirm("Are you sure you want to delete this project? This action cannot be undone.")) {
           deleteProject(id);
           toast.success("Project deleted");
-      }
-  };
-
-  const saveProject = () => {
-      if (editingProject) {
-          updateProject({
-              id: editingProject.id,
-              title: projectForm.title,
-              description: projectForm.description,
-              website: projectForm.website,
-              bounty: projectForm.bounty ? Number(projectForm.bounty) : undefined
-          });
-          setEditingProject(null);
-          toast.success("Project Updated!");
       }
   };
 
@@ -585,74 +558,21 @@ export const Profile = () => {
             </div>
         </div>
 
-        {/* Edit Project Modal */}
-        {editingProject && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-                <motion.div 
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    className="bg-[#0F0F0F] w-full max-w-lg border border-white/10 rounded-2xl p-6 shadow-2xl relative"
-                >
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-xl font-bold text-white">Edit Project</h2>
-                        <button onClick={() => setEditingProject(null)} className="text-gray-400 hover:text-white">
-                            <X className="w-5 h-5" />
-                        </button>
-                    </div>
-
-                    <div className="space-y-4">
-                        <div>
-                            <label className="block text-xs font-medium text-gray-400 mb-1">Project Title</label>
-                            <input 
-                                value={projectForm.title}
-                                onChange={e => setProjectForm({...projectForm, title: e.target.value})}
-                                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white outline-none focus:border-accent"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-medium text-gray-400 mb-1">Description</label>
-                            <textarea 
-                                value={projectForm.description}
-                                onChange={e => setProjectForm({...projectForm, description: e.target.value})}
-                                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white outline-none focus:border-accent h-32 resize-none"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-medium text-gray-400 mb-1">Website URL</label>
-                            <input 
-                                value={projectForm.website}
-                                onChange={e => setProjectForm({...projectForm, website: e.target.value})}
-                                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white outline-none focus:border-accent"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-xs font-medium text-gray-400 mb-1">Bounty (USDC)</label>
-                            <input 
-                                type="number"
-                                value={projectForm.bounty}
-                                onChange={e => setProjectForm({...projectForm, bounty: e.target.value})}
-                                className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2 text-white outline-none focus:border-accent"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="flex gap-3 mt-8">
-                        <button 
-                            onClick={saveProject}
-                            className="flex-1 py-3 bg-white text-black font-bold rounded-xl hover:bg-accent transition-colors"
-                        >
-                            Save Changes
-                        </button>
-                        <button 
-                            onClick={() => setEditingProject(null)}
-                            className="px-6 py-3 border border-white/10 rounded-xl hover:bg-white/5 text-gray-300 transition-colors"
-                        >
-                            Cancel
-                        </button>
-                    </div>
-                </motion.div>
-            </div>
-        )}
+        {/* Edit Project Modal - Full Featured */}
+        <EditProjectModal
+          project={editingProject}
+          isOpen={!!editingProject}
+          onClose={() => setEditingProject(null)}
+          onSave={(updatedData) => {
+            if (editingProject) {
+              updateProject({
+                id: editingProject.id,
+                ...updatedData
+              });
+              setEditingProject(null);
+            }
+          }}
+        />
 
         {/* Wallet Required Modal */}
         <WalletRequiredModal
