@@ -1,10 +1,11 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ProjectsService } from './projects.service';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { QueryProjectsDto } from './dto/query-projects.dto';
 import { AuthGuard } from '../common/guards/auth.guard';
 import { CurrentUser } from '../common/decorators/user.decorator';
+import { CacheControlInterceptor } from '../common/interceptors/cache-control.interceptor';
 import { ApiResponse, Project } from '../shared/types';
 
 @Controller('projects')
@@ -14,8 +15,10 @@ export class ProjectsController {
   /**
    * GET /api/projects
    * Get all projects with filters
+   * Cached for 2 minutes at edge
    */
   @Get()
+  @UseInterceptors(new CacheControlInterceptor(120, 60)) // 2 min cache, 1 min stale
   async findAll(@Query() query: QueryProjectsDto): Promise<ApiResponse<Project[]>> {
     return this.projectsService.findAll(query);
   }
@@ -23,8 +26,10 @@ export class ProjectsController {
   /**
    * GET /api/projects/recommended
    * Get top recommended ideas based on AI score
+   * Cached for 5 minutes at edge
    */
   @Get('recommended')
+  @UseInterceptors(new CacheControlInterceptor(300, 60)) // 5 min cache, 1 min stale
   async getRecommended(
     @Query('limit') limit?: number,
     @Query('category') category?: string
@@ -35,8 +40,10 @@ export class ProjectsController {
   /**
    * GET /api/projects/:id
    * Get single project by ID
+   * Cached for 1 minute at edge
    */
   @Get(':id')
+  @UseInterceptors(new CacheControlInterceptor(60, 30)) // 1 min cache, 30s stale
   async findOne(@Param('id') id: string): Promise<ApiResponse<Project>> {
     return this.projectsService.findOne(id);
   }

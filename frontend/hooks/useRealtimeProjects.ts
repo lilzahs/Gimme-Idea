@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
-import { supabase } from '../lib/supabase';
-import { RealtimeChannel } from '@supabase/supabase-js';
+import { useEffect, useRef } from "react";
+import { supabase } from "../lib/supabase";
+import { RealtimeChannel } from "@supabase/supabase-js";
 
 interface UseRealtimeProjectsProps {
   onNewProject?: (project: any) => void;
@@ -35,54 +35,54 @@ export function useRealtimeProjects({
     const setupRealtimeSubscription = async () => {
       // Subscribe to projects table changes
       channel = supabase
-        .channel('projects-realtime')
+        .channel("projects-realtime")
         .on(
-          'postgres_changes',
+          "postgres_changes",
           {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'projects',
+            event: "INSERT",
+            schema: "public",
+            table: "projects",
           },
           (payload) => {
-            console.log('🆕 New project created:', payload.new);
+            console.log("🆕 New project created:", payload.new);
             if (onNewProjectRef.current) {
               onNewProjectRef.current(payload.new);
             }
           }
         )
         .on(
-          'postgres_changes',
+          "postgres_changes",
           {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'projects',
+            event: "UPDATE",
+            schema: "public",
+            table: "projects",
           },
           (payload) => {
-            console.log('📝 Project updated:', payload.new);
+            console.log("📝 Project updated:", payload.new);
             if (onUpdateProjectRef.current) {
               onUpdateProjectRef.current(payload.new);
             }
           }
         )
         .on(
-          'postgres_changes',
+          "postgres_changes",
           {
-            event: 'DELETE',
-            schema: 'public',
-            table: 'projects',
+            event: "DELETE",
+            schema: "public",
+            table: "projects",
           },
           (payload) => {
-            console.log('🗑️ Project deleted:', payload.old.id);
+            console.log("🗑️ Project deleted:", payload.old.id);
             if (onDeleteProjectRef.current) {
               onDeleteProjectRef.current(payload.old.id);
             }
           }
         )
         .subscribe((status) => {
-          if (status === 'SUBSCRIBED') {
-            console.log('✅ Subscribed to projects realtime updates');
-          } else if (status === 'CHANNEL_ERROR') {
-            console.error('❌ Failed to subscribe to projects');
+          if (status === "SUBSCRIBED") {
+            console.log("✅ Subscribed to projects realtime updates");
+          } else if (status === "CHANNEL_ERROR") {
+            console.error("❌ Failed to subscribe to projects");
           }
         });
     };
@@ -92,7 +92,7 @@ export function useRealtimeProjects({
     // Cleanup subscription on unmount
     return () => {
       if (channel) {
-        console.log('🔌 Unsubscribing from projects realtime');
+        console.log("🔌 Unsubscribing from projects realtime");
         supabase.removeChannel(channel);
       }
     };

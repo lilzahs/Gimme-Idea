@@ -19,7 +19,12 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
   realtime: {
     params: {
-      eventsPerSecond: 10, // Limit realtime events for performance
+      eventsPerSecond: 2, // Reduced from 10 to minimize egress
+    },
+  },
+  global: {
+    headers: {
+      'x-client-info': 'gimme-idea-web', // Helps identify client in logs
     },
   },
 });

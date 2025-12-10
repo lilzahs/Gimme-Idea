@@ -1,6 +1,6 @@
-import { useEffect, useRef } from 'react';
-import { supabase } from '../lib/supabase';
-import { RealtimeChannel } from '@supabase/supabase-js';
+import { useEffect, useRef } from "react";
+import { supabase } from "../lib/supabase";
+import { RealtimeChannel } from "@supabase/supabase-js";
 
 interface UseRealtimeCommentsProps {
   projectId: string;
@@ -41,55 +41,57 @@ export function useRealtimeComments({
       channel = supabase
         .channel(`comments-${projectId}`)
         .on(
-          'postgres_changes',
+          "postgres_changes",
           {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'comments',
+            event: "INSERT",
+            schema: "public",
+            table: "comments",
             filter: `project_id=eq.${projectId}`,
           },
           (payload) => {
-            console.log('💬 New comment:', payload.new);
+            console.log("💬 New comment:", payload.new);
             if (onNewCommentRef.current) {
               onNewCommentRef.current(payload.new);
             }
           }
         )
         .on(
-          'postgres_changes',
+          "postgres_changes",
           {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'comments',
+            event: "UPDATE",
+            schema: "public",
+            table: "comments",
             filter: `project_id=eq.${projectId}`,
           },
           (payload) => {
-            console.log('✏️ Comment updated:', payload.new);
+            console.log("✏️ Comment updated:", payload.new);
             if (onUpdateCommentRef.current) {
               onUpdateCommentRef.current(payload.new);
             }
           }
         )
         .on(
-          'postgres_changes',
+          "postgres_changes",
           {
-            event: 'DELETE',
-            schema: 'public',
-            table: 'comments',
+            event: "DELETE",
+            schema: "public",
+            table: "comments",
             filter: `project_id=eq.${projectId}`,
           },
           (payload) => {
-            console.log('🗑️ Comment deleted:', payload.old.id);
+            console.log("🗑️ Comment deleted:", payload.old.id);
             if (onDeleteCommentRef.current) {
               onDeleteCommentRef.current(payload.old.id);
             }
           }
         )
         .subscribe((status) => {
-          if (status === 'SUBSCRIBED') {
+          if (status === "SUBSCRIBED") {
             console.log(`✅ Subscribed to comments for project ${projectId}`);
-          } else if (status === 'CHANNEL_ERROR') {
-            console.error(`❌ Failed to subscribe to comments for project ${projectId}`);
+          } else if (status === "CHANNEL_ERROR") {
+            console.error(
+              `❌ Failed to subscribe to comments for project ${projectId}`
+            );
           }
         });
     };
