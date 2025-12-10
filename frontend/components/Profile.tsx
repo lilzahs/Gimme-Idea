@@ -7,13 +7,14 @@ import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { motion } from 'framer-motion';
-import { Camera, Edit2, Save, X, Github, Twitter, Facebook, Send, Pencil, Trash2, ArrowLeft, Wallet, AlertCircle, RefreshCw, Check, Repeat } from 'lucide-react';
+import { Camera, Edit2, Save, X, Github, Twitter, Facebook, Send, Pencil, Trash2, ArrowLeft, Wallet, AlertCircle, RefreshCw, Check, Repeat, Loader2 } from 'lucide-react';
 import { ProjectCard } from './ProjectCard';
 import { WalletReminderBadge } from './WalletReminderBadge';
 import { WalletRequiredModal } from './WalletRequiredModal';
 import toast from 'react-hot-toast';
 import { Project } from '../lib/types';
 import { apiClient } from '../lib/api-client';
+import { uploadAvatar } from '../lib/imgbb';
 
 interface UserStats {
   reputation: number;
@@ -154,29 +155,37 @@ export const Profile = () => {
 
   const userProjects = projects.filter(p => p.author.username === displayUser.username);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-        // Check file size (max 2MB)
-        const maxSize = 2 * 1024 * 1024; // 2MB in bytes
-        if (file.size > maxSize) {
-            toast.error('Image size must be less than 2MB');
-            return;
-        }
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            const result = reader.result as string;
-            // Check if base64 string is too large (max ~2MB after encoding)
-            // Base64 encoding increases size by ~37%, so 2MB file becomes ~2.7MB as base64
-            if (result.length > 2800000) {
-                toast.error('Avatar image is too large after encoding. Please use a smaller image.');
-                return;
-            }
-            setEditForm({ ...editForm, avatar: result });
-            toast.success('Avatar uploaded! Remember to save your profile.');
-        };
-        reader.readAsDataURL(file);
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+        toast.error('Please upload JPEG, PNG, GIF, or WebP image.');
+        return;
+    }
+
+    // Check file size (max 2MB)
+    const maxSize = 2 * 1024 * 1024;
+    if (file.size > maxSize) {
+        toast.error('Image size must be less than 2MB');
+        return;
+    }
+
+    setIsUploadingAvatar(true);
+    try {
+        // Upload to imgBB instead of storing base64
+        const imageUrl = await uploadAvatar(file);
+        setEditForm({ ...editForm, avatar: imageUrl });
+        toast.success('Avatar uploaded! Remember to save your profile.');
+    } catch (error: any) {
+        console.error('Avatar upload error:', error);
+        toast.error(error.message || 'Failed to upload avatar. Please try again.');
+    } finally {
+        setIsUploadingAvatar(false);
     }
   };
 
@@ -297,14 +306,20 @@ export const Profile = () => {
                             className="hidden" 
                             accept="image/*" 
                             onChange={handleImageUpload} 
+                            disabled={isUploadingAvatar}
                         />
 
                         {isEditing && (
                             <button 
-                                onClick={() => fileInputRef.current?.click()}
-                                className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                onClick={() => !isUploadingAvatar && fileInputRef.current?.click()}
+                                disabled={isUploadingAvatar}
+                                className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer disabled:cursor-not-allowed"
                             >
-                                <Camera className="w-8 h-8 text-white" />
+                                {isUploadingAvatar ? (
+                                    <Loader2 className="w-8 h-8 text-white animate-spin" />
+                                ) : (
+                                    <Camera className="w-8 h-8 text-white" />
+                                )}
                             </button>
                         )}
                     </div>

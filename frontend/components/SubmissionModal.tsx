@@ -4,12 +4,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAppStore } from '../lib/store';
 import { useRouter } from 'next/navigation';
-import { Upload, Rocket, X, Image as ImageIcon, Lightbulb, Box, Layers, EyeOff, Eye } from 'lucide-react';
+import { Upload, Rocket, X, Image as ImageIcon, Lightbulb, Box, Layers, EyeOff, Eye, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { Project } from '../lib/types';
 import { LoadingLightbulb, LoadingStatus } from './LoadingLightbulb';
 import { MarkdownGuide } from './MarkdownGuide';
+import { uploadProjectImage } from '../lib/imgbb';
 
 export const SubmissionModal = () => {
   const { isSubmitModalOpen, submitType, closeSubmitModal, addProject, user, openConnectReminder } = useAppStore();
@@ -36,6 +37,7 @@ export const SubmissionModal = () => {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   // Reset form on open
   useEffect(() => {
@@ -47,6 +49,7 @@ export const SubmissionModal = () => {
         setTags([]);
         setImagePreview(null);
         setIsSubmitting(false);
+        setIsUploadingImage(false);
     }
   }, [isSubmitModalOpen]);
 
@@ -55,28 +58,28 @@ export const SubmissionModal = () => {
     'Payment', 'Developer Tooling', 'ReFi', 'Content', 'Dapp', 'Blinks'
   ];
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-        // Check file size (max 2MB)
-        const maxSize = 2 * 1024 * 1024; // 2MB in bytes
-        if (file.size > maxSize) {
-            toast.error('Image size must be less than 2MB');
-            return;
-        }
+      // Check file size (max 5MB for imgBB)
+      const maxSize = 5 * 1024 * 1024;
+      if (file.size > maxSize) {
+        toast.error('Image size must be less than 5MB');
+        return;
+      }
 
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            const result = reader.result as string;
-            // Check if base64 string is too large (max ~2MB after encoding)
-            // Base64 encoding increases size by ~37%, so 2MB file becomes ~2.7MB as base64
-            if (result.length > 2800000) {
-                toast.error('Image is too large after encoding. Please use a smaller image or provide an image URL instead.');
-                return;
-            }
-            setImagePreview(result);
-        };
-        reader.readAsDataURL(file);
+      setIsUploadingImage(true);
+      try {
+        // Upload to imgBB
+        const imageUrl = await uploadProjectImage(file);
+        setImagePreview(imageUrl);
+        toast.success('Image uploaded!');
+      } catch (error) {
+        console.error('Image upload error:', error);
+        toast.error('Failed to upload image. Please try again.');
+      } finally {
+        setIsUploadingImage(false);
+      }
     }
   };
 
@@ -386,11 +389,18 @@ export const SubmissionModal = () => {
                                 <div className="space-y-2">
                                     <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Project Banner</label>
                                     <div 
-                                        onClick={() => fileInputRef.current?.click()}
-                                        className="border-2 border-dashed border-white/10 rounded-xl p-8 text-center cursor-pointer hover:bg-white/5 hover:border-white/20 transition-all relative h-48 flex flex-col items-center justify-center overflow-hidden group/upload bg-[#1A1A1A]"
+                                        onClick={() => !isUploadingImage && fileInputRef.current?.click()}
+                                        className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all relative h-48 flex flex-col items-center justify-center overflow-hidden group/upload bg-[#1A1A1A] ${
+                                            isUploadingImage ? 'border-accent/50 cursor-wait' : 'border-white/10 hover:bg-white/5 hover:border-white/20'
+                                        }`}
                                     >
-                                        <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
-                                        {imagePreview ? (
+                                        <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} disabled={isUploadingImage} />
+                                        {isUploadingImage ? (
+                                            <div className="flex flex-col items-center justify-center">
+                                                <Loader2 className="w-10 h-10 text-accent animate-spin mb-3" />
+                                                <p className="text-gray-300 font-bold text-sm">Uploading image...</p>
+                                            </div>
+                                        ) : imagePreview ? (
                                             <>
                                                 <img src={imagePreview} alt="Preview" className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover/upload:opacity-40 transition-opacity" />
                                                 <div className="relative z-10 bg-black/60 px-4 py-2 rounded-full backdrop-blur-md opacity-0 group-hover/upload:opacity-100 transition-opacity">
@@ -403,7 +413,7 @@ export const SubmissionModal = () => {
                                                     <ImageIcon className="w-6 h-6" />
                                                 </div>
                                                 <p className="text-gray-300 font-bold text-sm">Click to upload banner</p>
-                                                <p className="text-gray-600 text-xs mt-1">Recommended: 1200x600px</p>
+                                                <p className="text-gray-600 text-xs mt-1">Max 5MB • Recommended: 1200x600px</p>
                                             </>
                                         )}
                                     </div>

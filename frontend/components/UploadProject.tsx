@@ -3,11 +3,12 @@
 
 import React, { useState, useRef } from 'react';
 import { useAppStore } from '../lib/store';
-import { Upload, Rocket, CheckCircle2, X, Image as ImageIcon, Tag, Zap, Box, Layers } from 'lucide-react';
+import { Upload, Rocket, CheckCircle2, X, Image as ImageIcon, Tag, Zap, Box, Layers, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { Project } from '../lib/types';
 import { LoadingLightbulb, LoadingStatus } from './LoadingLightbulb';
+import { uploadProjectImage } from '../lib/imgbb';
 
 export const UploadProject = () => {
   const { addProject, user, openConnectReminder } = useAppStore();
@@ -28,6 +29,7 @@ export const UploadProject = () => {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   const categories = [
     'DeFi', 'NFT', 'Gaming', 'Infrastructure', 'DAO', 'DePIN', 'Social', 'Mobile', 'Security'
@@ -35,14 +37,28 @@ export const UploadProject = () => {
 
   const stages = ['Idea', 'Prototype', 'Devnet', 'Mainnet'];
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            setImagePreview(reader.result as string);
-        };
-        reader.readAsDataURL(file);
+      // Check file size (max 5MB for imgBB)
+      const maxSize = 5 * 1024 * 1024;
+      if (file.size > maxSize) {
+        toast.error('Image size must be less than 5MB');
+        return;
+      }
+
+      setIsUploadingImage(true);
+      try {
+        // Upload to imgBB
+        const imageUrl = await uploadProjectImage(file);
+        setImagePreview(imageUrl);
+        toast.success('Image uploaded!');
+      } catch (error) {
+        console.error('Image upload error:', error);
+        toast.error('Failed to upload image. Please try again.');
+      } finally {
+        setIsUploadingImage(false);
+      }
     }
   };
 
@@ -384,16 +400,23 @@ export const UploadProject = () => {
                     className="hidden" 
                     accept="image/*" 
                     onChange={handleImageUpload} 
+                    disabled={isUploadingImage}
                 />
                 
                 <div 
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={() => !isUploadingImage && fileInputRef.current?.click()}
                     className={`relative border-2 border-dashed rounded-xl p-10 text-center transition-all cursor-pointer overflow-hidden group/upload ${
+                        isUploadingImage ? 'border-accent/50 bg-black/40 cursor-wait' :
                         imagePreview ? 'border-accent/50 bg-black/60' : 'border-white/10 hover:border-white/30 hover:bg-white/10 bg-black/20'
                     }`}
                     style={{ height: '220px' }}
                 >
-                    {imagePreview ? (
+                    {isUploadingImage ? (
+                        <div className="h-full flex flex-col items-center justify-center">
+                            <Loader2 className="w-10 h-10 text-accent animate-spin mb-3" />
+                            <p className="text-sm text-gray-300 font-bold">Uploading image...</p>
+                        </div>
+                    ) : imagePreview ? (
                         <img src={imagePreview} alt="Preview" className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover/upload:opacity-40 transition-opacity" />
                     ) : (
                         <div className="h-full flex flex-col items-center justify-center relative z-10">
@@ -401,13 +424,15 @@ export const UploadProject = () => {
                                 <ImageIcon className="w-7 h-7" />
                             </div>
                             <p className="text-sm text-gray-300 font-bold mb-1">Click to upload banner</p>
-                            <p className="text-xs text-gray-500">SVG, PNG, JPG or GIF (Max 800x400px)</p>
+                            <p className="text-xs text-gray-500">SVG, PNG, JPG or GIF (Max 5MB)</p>
                         </div>
                     )}
                     
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/upload:opacity-100 transition-opacity z-20">
-                         {imagePreview && <p className="text-white font-bold bg-black/60 px-4 py-2 rounded-full border border-white/20 backdrop-blur-md">Change Image</p>}
-                    </div>
+                    {!isUploadingImage && (
+                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/upload:opacity-100 transition-opacity z-20">
+                             {imagePreview && <p className="text-white font-bold bg-black/60 px-4 py-2 rounded-full border border-white/20 backdrop-blur-md">Change Image</p>}
+                        </div>
+                    )}
                 </div>
             </div>
 
