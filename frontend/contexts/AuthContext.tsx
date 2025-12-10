@@ -31,7 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isNewUser, setIsNewUser] = useState(false);
   const [showWalletPopup, setShowWalletPopup] = useState(false);
 
-  const processEmailLogin = useCallback(async (supabaseUser: SupabaseUser) => {
+  const processEmailLogin = useCallback(async (supabaseUser: SupabaseUser, isNewLogin: boolean = false) => {
     try {
       const response = await apiClient.loginWithEmail({
         email: supabaseUser.email || '',
@@ -59,8 +59,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(userData);
         setIsNewUser(response.data.isNewUser);
 
-        // Show wallet popup if user is new or needs wallet
-        if (response.data.isNewUser || response.data.user.needsWalletConnect) {
+        // Only show wallet popup on NEW login (not session restore)
+        // And only if user needs wallet connect
+        if (isNewLogin && (response.data.isNewUser || response.data.user.needsWalletConnect)) {
           setShowWalletPopup(true);
         }
 
@@ -134,7 +135,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSupabaseUser(session?.user ?? null);
       
       if (session?.user) {
-        processEmailLogin(session.user).finally(() => {
+        // Session restore - NOT a new login, don't show popup
+        processEmailLogin(session.user, false).finally(() => {
           setIsLoading(false);
         });
       } else {
@@ -152,7 +154,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (event === 'SIGNED_IN' && session?.user) {
           setIsLoading(true);
-          await processEmailLogin(session.user);
+          // This is a NEW login - show popup if needed
+          await processEmailLogin(session.user, true);
           setIsLoading(false);
         } else if (event === 'SIGNED_OUT') {
           setUser(null);

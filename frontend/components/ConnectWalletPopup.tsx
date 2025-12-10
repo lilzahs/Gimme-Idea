@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Wallet, AlertTriangle, ArrowLeft } from 'lucide-react';
+import { X, Wallet, AlertTriangle, ArrowLeft, ChevronUp } from 'lucide-react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/lib/api-client';
@@ -12,13 +12,30 @@ import bs58 from 'bs58';
 
 type Step = 'initial' | 'warning' | 'select-wallet' | 'connecting';
 
+// Key to track if user has dismissed the popup before
+const WALLET_POPUP_DISMISSED_KEY = 'gimme_wallet_popup_dismissed';
+
 export const ConnectWalletPopup = () => {
   const [step, setStep] = useState<Step>('initial');
+  const [isMinimized, setIsMinimized] = useState(false);
   const { showWalletPopup, setShowWalletPopup, setIsNewUser, user, setUser, refreshUser } = useAuth();
   const { wallets, select, connect, publicKey, signMessage, connected, disconnect } = useWallet();
   
   // Flag to prevent multiple API calls
   const isLinkingRef = useRef(false);
+
+  // Check if user has dismissed popup before
+  useEffect(() => {
+    if (showWalletPopup && typeof window !== 'undefined') {
+      const dismissed = localStorage.getItem(WALLET_POPUP_DISMISSED_KEY);
+      if (dismissed === 'true') {
+        // Show minimized version instead
+        setIsMinimized(true);
+      } else {
+        setIsMinimized(false);
+      }
+    }
+  }, [showWalletPopup]);
 
   // Reset step when popup opens
   useEffect(() => {
@@ -135,8 +152,21 @@ export const ConnectWalletPopup = () => {
   };
 
   const handleUnderstood = () => {
+    // Mark as dismissed so next time shows minimized version
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(WALLET_POPUP_DISMISSED_KEY, 'true');
+    }
     setIsNewUser(false);
     setShowWalletPopup(false);
+  };
+
+  const handleDismissMinimized = () => {
+    setShowWalletPopup(false);
+  };
+
+  const handleExpandFromMinimized = () => {
+    setIsMinimized(false);
+    setStep('select-wallet');
   };
 
   const walletOptions = [
@@ -154,6 +184,51 @@ export const ConnectWalletPopup = () => {
 
   if (!showWalletPopup) return null;
 
+  // Minimized version - small toast at bottom right
+  if (isMinimized) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 50, scale: 0.9 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 50, scale: 0.9 }}
+        className="fixed bottom-6 right-6 z-[100] max-w-sm"
+      >
+        <div className="bg-[#1A1A1A] border border-white/10 rounded-2xl p-4 shadow-2xl shadow-purple-900/20">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 bg-purple-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+              <Wallet className="w-5 h-5 text-purple-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-bold text-white mb-1">Connect Wallet?</h3>
+              <p className="text-xs text-gray-400 mb-3">Receive tips from the community</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleExpandFromMinimized}
+                  className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-full transition-all"
+                >
+                  Connect
+                </button>
+                <button
+                  onClick={handleDismissMinimized}
+                  className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-gray-400 text-xs rounded-full transition-all"
+                >
+                  Later
+                </button>
+              </div>
+            </div>
+            <button
+              onClick={handleDismissMinimized}
+              className="p-1 text-gray-500 hover:text-white transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  // Full popup version
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
       {/* Backdrop */}

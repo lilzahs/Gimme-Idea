@@ -4,13 +4,20 @@
 -- Run this in Supabase SQL Editor
 
 -- =============================================
+-- Step 0: Allow NULL in wallet column
+-- =============================================
+
+-- First, drop the NOT NULL constraint on wallet column
+ALTER TABLE users ALTER COLUMN wallet DROP NOT NULL;
+
+-- =============================================
 -- Step 1: Fix existing data
 -- =============================================
 
 -- Update all empty wallets to NULL
 UPDATE users 
 SET wallet = NULL 
-WHERE wallet = '' OR wallet IS NULL;
+WHERE wallet = '';
 
 -- =============================================
 -- Step 2: Update the find_or_create_user_by_email function
