@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { X, Rocket, Lightbulb, Image as ImageIcon, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { Project } from '../lib/types';
 import { uploadProjectImage } from '../lib/imgbb';
@@ -20,7 +20,6 @@ export const EditProjectModal = ({ project, isOpen, onClose, onSave }: EditProje
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Form state
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -43,7 +42,6 @@ export const EditProjectModal = ({ project, isOpen, onClose, onSave }: EditProje
     'Payment', 'Developer Tooling', 'ReFi', 'Content', 'Dapp', 'Blinks'
   ];
 
-  // Initialize form when project changes
   useEffect(() => {
     if (project && isOpen) {
       setFormData({
@@ -171,9 +169,6 @@ export const EditProjectModal = ({ project, isOpen, onClose, onSave }: EditProje
 
   if (!isOpen || !project) return null;
 
-  const themeColor = isIdea ? 'from-[#FFD700] to-[#FDB931]' : 'from-[#9945FF] to-[#7c3aed]';
-  const themeColorRGB = isIdea ? '255, 215, 0' : '153, 69, 255';
-
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
       <motion.div 
@@ -188,38 +183,17 @@ export const EditProjectModal = ({ project, isOpen, onClose, onSave }: EditProje
         exit={{ scale: 0.95, opacity: 0, y: 20 }}
         className="relative w-full max-w-4xl max-h-[90vh] flex flex-col"
       >
-        {/* Outer Glow */}
-        <div className={`absolute inset-0 rounded-3xl bg-gradient-to-br ${themeColor} opacity-20 blur-xl`} />
-        
-        {/* Main Container */}
-        <div className="relative bg-[#0D0D12] border border-white/10 rounded-3xl overflow-hidden flex flex-col max-h-[90vh]">
-          {/* Animated Border */}
-          <div 
-            className="absolute inset-0 rounded-3xl p-[1px] pointer-events-none"
-            style={{
-              background: `linear-gradient(135deg, rgba(${themeColorRGB},0.3), transparent 40%, transparent 60%, rgba(${themeColorRGB},0.3))`,
-            }}
-          />
+        <div className="relative bg-[#0D0D12] border border-white/10 rounded-2xl overflow-hidden flex flex-col max-h-[90vh]">
           
           {/* Header */}
-          <div className="relative px-8 py-6 border-b border-white/10 overflow-hidden flex-shrink-0">
-            <div className={`absolute inset-0 bg-gradient-to-r ${themeColor} opacity-5`} />
-            <div 
-              className="absolute top-0 right-0 w-80 h-80 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/4"
-              style={{ background: `rgba(${themeColorRGB}, 0.15)` }}
-            />
-            
+          <div className="relative px-8 py-6 border-b border-white/10 flex-shrink-0">
             <div className="relative z-10 flex justify-between items-center">
               <div className="flex items-center gap-4">
-                <motion.div 
-                  className={`w-14 h-14 rounded-2xl flex items-center justify-center bg-gradient-to-br ${themeColor} text-white shadow-2xl`}
-                  whileHover={{ scale: 1.05, rotate: 5 }}
-                  style={{ boxShadow: `0 0 30px rgba(${themeColorRGB}, 0.4)` }}
-                >
-                  {isIdea ? <Lightbulb className="w-7 h-7" /> : <Rocket className="w-7 h-7" />}
-                </motion.div>
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white ${isIdea ? 'bg-[#FFD700]' : 'bg-[#9945FF]'}`}>
+                  {isIdea ? <Lightbulb className="w-6 h-6" /> : <Rocket className="w-6 h-6" />}
+                </div>
                 <div>
-                  <h2 className="text-2xl font-bold font-display text-white tracking-tight">
+                  <h2 className="text-xl font-bold text-white">
                     Edit {isIdea ? 'Idea' : 'Project'}
                   </h2>
                   <p className="text-sm text-gray-400 mt-0.5">
@@ -227,14 +201,12 @@ export const EditProjectModal = ({ project, isOpen, onClose, onSave }: EditProje
                   </p>
                 </div>
               </div>
-              <motion.button 
+              <button 
                 onClick={onClose} 
                 className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all text-gray-400 hover:text-white border border-white/10 hover:border-white/20"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
               >
                 <X className="w-5 h-5" />
-              </motion.button>
+              </button>
             </div>
           </div>
 
@@ -243,239 +215,219 @@ export const EditProjectModal = ({ project, isOpen, onClose, onSave }: EditProje
             <form onSubmit={handleSubmit} className="space-y-8">
               
               {/* Title */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1 flex items-center gap-2">
-                {isIdea ? 'Idea Name' : 'Project Name'}
-                <span className="text-red-400">*</span>
-              </label>
-              <input 
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="w-full bg-[#141419] border border-white/10 rounded-xl px-5 py-4 outline-none focus:border-white/30 text-white placeholder:text-gray-600 transition-all font-medium hover:border-white/20 focus:shadow-[0_0_20px_rgba(255,255,255,0.05)]"
-                placeholder={isIdea ? "e.g. Decentralized Uber for Solana" : "e.g. SolStream Protocol"}
-              />
-            </div>
-
-            {/* Categories */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1 flex items-center gap-2">
-                Categories
-                <span className="text-red-400">*</span>
-                <span className="text-gray-600 font-normal text-[10px]">(Select up to 3)</span>
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {categories.map(cat => (
-                  <motion.button
-                    key={cat}
-                    type="button"
-                    onClick={() => toggleCategory(cat)}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
-                      formData.categories.includes(cat)
-                        ? isIdea
-                          ? 'bg-gradient-to-r from-[#FFD700] to-[#FDB931] text-black border border-[#FFD700]/50 shadow-lg shadow-yellow-500/25'
-                          : 'bg-gradient-to-r from-[#9945FF] to-[#7c3aed] text-white border border-[#9945FF]/50 shadow-lg shadow-purple-500/25'
-                        : 'bg-[#141419] text-gray-400 border border-white/10 hover:border-white/25 hover:text-white hover:bg-white/5'
-                    }`}
-                  >
-                    {cat}
-                  </motion.button>
-                ))}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1 flex items-center gap-2">
+                  {isIdea ? 'Idea Name' : 'Project Name'}
+                  <span className="text-red-400">*</span>
+                </label>
+                <input 
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="w-full bg-[#141419] border border-white/10 rounded-xl px-5 py-4 outline-none focus:border-white/30 text-white placeholder:text-gray-600 transition-all font-medium hover:border-white/20"
+                  placeholder={isIdea ? "e.g. Decentralized Uber for Solana" : "e.g. SolStream Protocol"}
+                />
               </div>
-            </div>
 
-            {/* Project Specific Fields */}
-            {!isIdea && (
-              <>
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Description *</label>
-                  <textarea 
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full bg-[#1A1A1A] border border-white/10 rounded-xl px-5 py-4 outline-none focus:border-white/30 text-white h-32 resize-none placeholder:text-gray-600"
-                    placeholder="Describe your project's value proposition..."
-                  />
+              {/* Categories */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1 flex items-center gap-2">
+                  Categories
+                  <span className="text-red-400">*</span>
+                  <span className="text-gray-600 font-normal text-[10px]">(Select up to 3)</span>
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {categories.map(cat => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => toggleCategory(cat)}
+                      className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
+                        formData.categories.includes(cat)
+                          ? isIdea
+                            ? 'bg-[#FFD700] text-black border border-[#FFD700]'
+                            : 'bg-[#9945FF] text-white border border-[#9945FF]'
+                          : 'bg-[#141419] text-gray-400 border border-white/10 hover:border-white/25 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
                 </div>
+              </div>
 
-                {/* Image Upload */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Project Banner</label>
-                  <div 
-                    onClick={() => !isUploadingImage && fileInputRef.current?.click()}
-                    className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all relative h-48 flex flex-col items-center justify-center overflow-hidden group/upload bg-[#1A1A1A] ${
-                      isUploadingImage ? 'border-accent/50 cursor-wait' : 'border-white/10 hover:bg-white/5 hover:border-white/20'
-                    }`}
-                  >
-                    <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} disabled={isUploadingImage} />
-                    {isUploadingImage ? (
-                      <div className="flex flex-col items-center justify-center">
-                        <Loader2 className="w-10 h-10 text-accent animate-spin mb-3" />
-                        <p className="text-gray-300 font-bold text-sm">Uploading image...</p>
-                      </div>
-                    ) : formData.imageUrl ? (
-                      <>
-                        <img src={formData.imageUrl} alt="Preview" className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover/upload:opacity-40 transition-opacity" />
-                        <div className="relative z-10 bg-black/60 px-4 py-2 rounded-full backdrop-blur-md opacity-0 group-hover/upload:opacity-100 transition-opacity">
-                          <span className="text-white font-bold text-sm">Change Image</span>
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-3 text-gray-500 group-hover/upload:text-white group-hover/upload:scale-110 transition-all">
-                          <ImageIcon className="w-6 h-6" />
-                        </div>
-                        <p className="text-gray-300 font-bold text-sm">Click to upload banner</p>
-                        <p className="text-gray-600 text-xs mt-1">Max 5MB</p>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {/* Website & Bounty */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Idea-specific fields */}
+              {isIdea && (
+                <>
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Website / Repo</label>
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1 flex items-center gap-2">
+                      Problem <span className="text-red-400">*</span>
+                      <MarkdownGuide />
+                    </label>
+                    <textarea 
+                      value={formData.problem}
+                      onChange={(e) => setFormData({ ...formData, problem: e.target.value })}
+                      className="w-full bg-[#141419] border border-white/10 rounded-xl px-5 py-4 outline-none focus:border-white/30 text-white h-32 resize-none placeholder:text-gray-600 leading-relaxed"
+                      placeholder="What problem does this idea solve?"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1 flex items-center gap-2">
+                      Opportunity
+                      <MarkdownGuide />
+                    </label>
+                    <textarea 
+                      value={formData.opportunity}
+                      onChange={(e) => setFormData({ ...formData, opportunity: e.target.value })}
+                      className="w-full bg-[#141419] border border-white/10 rounded-xl px-5 py-4 outline-none focus:border-white/30 text-white h-24 resize-none placeholder:text-gray-600 leading-relaxed"
+                      placeholder="Why is this a good opportunity? (Market size, timing, etc.)"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1 flex items-center gap-2">
+                      Solution <span className="text-red-400">*</span>
+                      <MarkdownGuide />
+                    </label>
+                    <textarea 
+                      value={formData.solution}
+                      onChange={(e) => setFormData({ ...formData, solution: e.target.value })}
+                      className="w-full bg-[#141419] border border-white/10 rounded-xl px-5 py-4 outline-none focus:border-white/30 text-white h-32 resize-none placeholder:text-gray-600 leading-relaxed"
+                      placeholder="How does your idea solve this problem?"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-3 p-4 bg-[#141419] rounded-xl border border-white/10">
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, isAnonymous: !formData.isAnonymous })}
+                      className={`w-12 h-6 rounded-full relative transition-all ${formData.isAnonymous ? 'bg-[#FFD700]' : 'bg-white/20'}`}
+                    >
+                      <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${formData.isAnonymous ? 'right-1' : 'left-1'}`} />
+                    </button>
+                    <div className="flex items-center gap-2">
+                      {formData.isAnonymous ? <EyeOff className="w-4 h-4 text-[#FFD700]" /> : <Eye className="w-4 h-4 text-gray-400" />}
+                      <span className="text-sm text-gray-300">Post Anonymously</span>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* Project-specific fields */}
+              {!isIdea && (
+                <>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1 flex items-center gap-2">
+                      Description <span className="text-red-400">*</span>
+                      <MarkdownGuide />
+                    </label>
+                    <textarea 
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      className="w-full bg-[#141419] border border-white/10 rounded-xl px-5 py-4 outline-none focus:border-white/30 text-white h-32 resize-none placeholder:text-gray-600 leading-relaxed"
+                      placeholder="Describe your project..."
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Website</label>
                     <input 
                       value={formData.website}
                       onChange={(e) => setFormData({ ...formData, website: e.target.value })}
-                      className="w-full bg-[#1A1A1A] border border-white/10 rounded-xl px-5 py-4 outline-none focus:border-white/30 text-white placeholder:text-gray-600"
-                      placeholder="https://..."
+                      className="w-full bg-[#141419] border border-white/10 rounded-xl px-5 py-4 outline-none focus:border-white/30 text-white placeholder:text-gray-600 transition-all"
+                      placeholder="https://your-project.com"
                     />
                   </div>
+
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Bounty (USDC)</label>
-                    <div className="relative">
-                      <input 
-                        type="number"
-                        value={formData.bounty}
-                        onChange={(e) => setFormData({ ...formData, bounty: e.target.value })}
-                        className="w-full bg-[#1A1A1A] border border-white/10 rounded-xl px-5 py-4 outline-none focus:border-white/30 text-white placeholder:text-gray-600 pr-16"
-                        placeholder="0.00"
-                      />
-                      <span className="absolute right-5 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-500">USDC</span>
+                    <input 
+                      type="number"
+                      value={formData.bounty}
+                      onChange={(e) => setFormData({ ...formData, bounty: e.target.value })}
+                      className="w-full bg-[#141419] border border-white/10 rounded-xl px-5 py-4 outline-none focus:border-white/30 text-white placeholder:text-gray-600 transition-all"
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Project Banner</label>
+                    <div 
+                      onClick={() => !isUploadingImage && fileInputRef.current?.click()}
+                      className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all relative h-48 flex flex-col items-center justify-center overflow-hidden bg-[#141419] ${
+                        isUploadingImage ? 'border-purple-500/50 cursor-wait' : 'border-white/10 hover:bg-white/5 hover:border-white/20'
+                      }`}
+                    >
+                      <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} disabled={isUploadingImage} />
+                      {isUploadingImage ? (
+                        <div className="flex flex-col items-center justify-center">
+                          <Loader2 className="w-10 h-10 text-purple-500 animate-spin mb-3" />
+                          <p className="text-gray-300 font-bold text-sm">Uploading...</p>
+                        </div>
+                      ) : formData.imageUrl ? (
+                        <>
+                          <img src={formData.imageUrl} alt="Preview" className="absolute inset-0 w-full h-full object-cover opacity-60 hover:opacity-40 transition-opacity" />
+                          <div className="relative z-10 bg-black/60 px-4 py-2 rounded-full backdrop-blur-md">
+                            <span className="text-white font-bold text-sm">Change Image</span>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center mb-3 text-gray-500">
+                            <ImageIcon className="w-6 h-6" />
+                          </div>
+                          <p className="text-gray-400 text-sm">Click to upload image</p>
+                          <p className="text-gray-600 text-xs mt-1">Max 5MB</p>
+                        </>
+                      )}
                     </div>
                   </div>
-                </div>
-              </>
-            )}
-
-            {/* Idea Specific Fields */}
-            {isIdea && (
-              <div className="space-y-6">
-                <div className="flex items-center gap-3 mb-2">
-                  <p className="text-xs text-gray-400">✨ Markdown formatting supported</p>
-                  <MarkdownGuide />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">The Problem *</label>
-                  <textarea 
-                    value={formData.problem}
-                    onChange={(e) => setFormData({ ...formData, problem: e.target.value })}
-                    className="w-full bg-[#1A1A1A] border border-white/10 rounded-xl px-5 py-4 outline-none focus:border-white/30 text-white h-24 resize-none placeholder:text-gray-600"
-                    placeholder="What pain point are you solving?"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">The Solution *</label>
-                  <textarea 
-                    value={formData.solution}
-                    onChange={(e) => setFormData({ ...formData, solution: e.target.value })}
-                    className="w-full bg-[#1A1A1A] border border-white/10 rounded-xl px-5 py-4 outline-none focus:border-white/30 text-white h-24 resize-none placeholder:text-gray-600"
-                    placeholder="How does your idea solve this?"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Opportunity</label>
-                  <textarea
-                    value={formData.opportunity}
-                    onChange={(e) => setFormData({ ...formData, opportunity: e.target.value })}
-                    className="w-full bg-[#1A1A1A] border border-white/10 rounded-xl px-5 py-4 outline-none focus:border-white/30 text-white h-24 resize-none placeholder:text-gray-600"
-                    placeholder="Market size, timing, potential..."
-                  />
-                </div>
-
-                {/* Anonymous Toggle */}
-                <div className="flex items-center gap-4 bg-[#1A1A1A] p-4 rounded-xl border border-white/5">
-                  <div className={`p-3 rounded-xl ${formData.isAnonymous ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/20' : 'bg-white/5 text-gray-400'}`}>
-                    {formData.isAnonymous ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </div>
-                  <div className="flex-grow">
-                    <h4 className="font-bold text-sm text-white">Post Anonymously</h4>
-                    <p className="text-xs text-gray-500 mt-0.5">Hide your identity on this post.</p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" checked={formData.isAnonymous} onChange={e => setFormData({ ...formData, isAnonymous: e.target.checked })} className="sr-only peer" />
-                    <div className="w-12 h-7 bg-black/50 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-purple-600 border border-white/10"></div>
-                  </label>
-                </div>
-              </div>
-            )}
-
-            {/* Tags */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Tags</label>
-              <div className="w-full bg-[#1A1A1A] border border-white/10 rounded-xl px-4 py-3 flex flex-wrap gap-2 min-h-[56px] focus-within:border-white/30 transition-colors">
-                {tags.map(tag => (
-                  <span key={tag} className={`text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 font-bold ${isIdea ? 'bg-yellow-500/20 text-yellow-300' : 'bg-purple-500/20 text-purple-300'}`}>
-                    #{tag}
-                    <button type="button" onClick={() => removeTag(tag)} className="hover:text-white transition-colors"><X className="w-3 h-3" /></button>
-                  </span>
-                ))}
-                <input 
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onKeyDown={handleTagKeyDown}
-                  className="bg-transparent outline-none text-white flex-grow text-sm min-w-[100px] placeholder:text-gray-600 py-1"
-                  placeholder={tags.length === 0 ? "Add tags (press Enter)" : ""}
-                />
-              </div>
-            </div>
-
-          </form>
-        </div>
-
-        {/* Footer Action */}
-        <div className="p-6 border-t border-white/10 bg-[#0A0A0F] flex-shrink-0">
-          <div className="flex gap-4">
-            <motion.button 
-              onClick={handleSubmit}
-              disabled={isSaving}
-              whileHover={{ scale: 1.01 }}
-              whileTap={{ scale: 0.99 }}
-              className={`flex-1 py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 transition-all relative overflow-hidden group disabled:opacity-50 ${
-                isIdea 
-                  ? 'bg-gradient-to-r from-[#FFD700] to-[#FDB931] text-black shadow-lg shadow-yellow-500/30' 
-                  : 'bg-gradient-to-r from-[#9945FF] to-[#7c3aed] text-white shadow-lg shadow-purple-500/30'
-              }`}
-              style={{
-                boxShadow: isIdea 
-                  ? '0 0 30px rgba(255,215,0,0.3)' 
-                  : '0 0 30px rgba(153,69,255,0.3)',
-              }}
-            >
-              {/* Shimmer effect */}
-              <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-              
-              {isSaving ? (
-                <Loader2 className="w-5 h-5 animate-spin relative z-10" />
-              ) : (
-                <>
-                  {isIdea ? <Lightbulb className="w-5 h-5 relative z-10" /> : <Rocket className="w-5 h-5 relative z-10" />}
-                  <span className="relative z-10">Save Changes</span>
                 </>
               )}
-            </motion.button>
-            <motion.button 
-              onClick={onClose}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="px-8 py-4 border border-white/10 rounded-xl hover:bg-white/5 hover:border-white/20 text-gray-300 transition-all font-bold"
-            >
-              Cancel
-            </motion.button>
+
+              {/* Tags */}
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Tags</label>
+                <div className="bg-[#141419] border border-white/10 rounded-xl px-4 py-3 flex flex-wrap gap-2 items-center min-h-[52px]">
+                  {tags.map(tag => (
+                    <span key={tag} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 text-white text-sm">
+                      {tag}
+                      <button type="button" onClick={() => removeTag(tag)} className="text-gray-400 hover:text-white">
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  ))}
+                  <input
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={handleTagKeyDown}
+                    className="bg-transparent outline-none text-white flex-grow text-sm min-w-[100px] placeholder:text-gray-600 py-1"
+                    placeholder={tags.length === 0 ? "Add tags (press Enter)" : ""}
+                  />
+                </div>
+              </div>
+            </form>
           </div>
-        </div>
+
+          {/* Footer */}
+          <div className="p-6 border-t border-white/10 bg-[#0A0A0F] flex-shrink-0">
+            <button 
+              onClick={handleSubmit}
+              disabled={isSaving}
+              className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 transition-all hover:opacity-90 disabled:opacity-50 ${
+                isIdea ? 'bg-[#FFD700] text-black' : 'bg-[#9945FF] text-white'
+              }`}
+            >
+              {isSaving ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <>
+                  {isIdea ? <Lightbulb className="w-5 h-5" /> : <Rocket className="w-5 h-5" />}
+                  <span>Save Changes</span>
+                </>
+              )}
+            </button>
+          </div>
         </div>
       </motion.div>
     </div>

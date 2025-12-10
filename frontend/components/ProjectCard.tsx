@@ -19,7 +19,6 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   const router = useRouter();
   const [isLiked, setIsLiked] = useState(false);
   const [showBurst, setShowBurst] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
 
   const isIdea = project.type === 'idea';
 
@@ -44,103 +43,29 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
     router.push(route);
   };
 
-  const themeColor = isIdea ? '#FFD700' : '#9945FF';
-  const themeColorRGB = isIdea ? '255, 215, 0' : '153, 69, 255';
-
   return (
     <motion.div
       onClick={handleCardClick}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      whileHover={{ y: -4, scale: 1.01 }}
+      whileHover={{ y: -2 }}
       whileTap={{ scale: 0.99 }}
       transition={{ type: "spring", stiffness: 400, damping: 25 }}
-      className="relative rounded-2xl overflow-hidden cursor-pointer flex flex-col h-full group"
-      style={{
-        background: 'linear-gradient(180deg, rgba(20,21,28,1) 0%, rgba(13,13,18,1) 100%)',
-      }}
+      className="relative rounded-2xl overflow-hidden cursor-pointer flex flex-col h-full group bg-[#14151c] border border-white/8 hover:border-white/20 transition-all duration-300"
     >
-      {/* Animated Border Gradient */}
-      <div 
-        className="absolute inset-0 rounded-2xl p-[1px] opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-        style={{
-          background: `linear-gradient(135deg, ${themeColor}40, transparent 40%, transparent 60%, ${themeColor}40)`,
-        }}
-      />
-      
-      {/* Inner Border */}
-      <div 
-        className="absolute inset-[1px] rounded-2xl transition-all duration-300"
-        style={{
-          border: `1px solid rgba(${themeColorRGB}, ${isHovered ? 0.3 : 0.08})`,
-          boxShadow: isHovered ? `0 0 40px rgba(${themeColorRGB}, 0.15), inset 0 0 30px rgba(${themeColorRGB}, 0.03)` : 'none',
-        }}
-      />
-
-      {/* Shimmer Effect on Hover */}
-      <div 
-        className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none overflow-hidden rounded-2xl`}
-      >
-        <div 
-          className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out"
-          style={{
-            background: `linear-gradient(90deg, transparent, rgba(${themeColorRGB}, 0.08), transparent)`,
-          }}
-        />
-      </div>
-
-      {/* Floating Particles on Hover */}
-      <AnimatePresence>
-        {isHovered && (
-          <>
-            {[...Array(6)].map((_, i) => (
-              <motion.div
-                key={`particle-${i}`}
-                className="absolute w-1 h-1 rounded-full pointer-events-none"
-                style={{ 
-                  backgroundColor: themeColor,
-                  left: `${15 + i * 15}%`,
-                  bottom: '10%',
-                }}
-                initial={{ opacity: 0, y: 0 }}
-                animate={{ 
-                  opacity: [0, 1, 0],
-                  y: [-20, -60 - (i * 10)],
-                  x: [0, (i % 2 === 0 ? 10 : -10)],
-                }}
-                exit={{ opacity: 0 }}
-                transition={{ 
-                  duration: 1.5 + (i * 0.2),
-                  delay: i * 0.1,
-                  repeat: Infinity,
-                  repeatDelay: 0.5,
-                }}
-              />
-            ))}
-          </>
-        )}
-      </AnimatePresence>
-
       {/* Visual Header - Only show large banner for Projects */}
       {!isIdea && (
         <div className="h-32 w-full relative overflow-hidden bg-gradient-to-br from-[#0D0D12] to-[#1a1a24]">
           {project.image ? (
-            <motion.img 
+            <img 
               src={project.image} 
               alt={project.title} 
-              className="w-full h-full object-cover"
-              animate={{ 
-                scale: isHovered ? 1.08 : 1,
-                opacity: isHovered ? 1 : 0.7,
-              }}
-              transition={{ duration: 0.5 }}
+              className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
               <Rocket className="w-12 h-12 text-[#9945FF]/20" />
             </div>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0D0D12] via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#14151c] via-transparent to-transparent" />
           
           {/* Stage Badge */}
           <div className="absolute top-3 right-3 z-10">
@@ -158,30 +83,11 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
       {/* Idea Header (Compact) */}
       {isIdea && (
         <div className="relative px-5 pt-5 pb-2 flex justify-between items-start z-10">
-          <motion.div 
-            className="w-10 h-10 rounded-xl flex items-center justify-center relative"
-            style={{
-              background: `linear-gradient(135deg, rgba(${themeColorRGB}, 0.15), rgba(${themeColorRGB}, 0.05))`,
-              border: `1px solid rgba(${themeColorRGB}, 0.2)`,
-            }}
-            animate={{
-              boxShadow: isHovered 
-                ? `0 0 20px rgba(${themeColorRGB}, 0.3), inset 0 0 10px rgba(${themeColorRGB}, 0.1)` 
-                : `0 0 0px rgba(${themeColorRGB}, 0)`,
-            }}
+          <div 
+            className="w-10 h-10 rounded-xl flex items-center justify-center bg-[#FFD700]/10 border border-[#FFD700]/20 group-hover:bg-[#FFD700]/15 group-hover:border-[#FFD700]/30 transition-all duration-300"
           >
-            <Lightbulb className="w-5 h-5" style={{ color: themeColor }} />
-            {/* Glow ring on hover */}
-            <motion.div 
-              className="absolute inset-0 rounded-xl"
-              animate={{
-                boxShadow: isHovered 
-                  ? `0 0 15px rgba(${themeColorRGB}, 0.4)` 
-                  : `0 0 0px rgba(${themeColorRGB}, 0)`,
-              }}
-              transition={{ duration: 0.3 }}
-            />
-          </motion.div>
+            <Lightbulb className="w-5 h-5 text-[#FFD700]" />
+          </div>
           
           <div className="flex items-center gap-2">
             <span className={`px-2.5 py-1 rounded-lg text-[9px] font-mono font-bold uppercase tracking-wider border ${
@@ -196,16 +102,10 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
       )}
 
       <div className={`relative z-10 p-5 flex flex-col flex-grow ${isIdea ? 'pt-2' : ''}`}>
-        {/* Title with gradient on hover */}
-        <motion.h3 
-          className="text-lg font-bold mb-2 line-clamp-2 transition-all duration-300"
-          style={{
-            color: isHovered ? themeColor : 'white',
-            textShadow: isHovered ? `0 0 20px rgba(${themeColorRGB}, 0.3)` : 'none',
-          }}
-        >
+        {/* Title */}
+        <h3 className="text-lg font-bold mb-2 line-clamp-2 text-white group-hover:text-[#FFD700] transition-colors duration-300">
           {project.title}
-        </motion.h3>
+        </h3>
 
         <p className="text-gray-400 text-sm mb-4 line-clamp-2 flex-grow leading-relaxed">
           {project.description}
@@ -213,65 +113,38 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
 
         {/* Bounty Badge - Only show for projects (not ideas) with bounty > 0 */}
         {!isIdea && project.bounty && project.bounty > 0 && (
-          <motion.div 
-            className="mb-4 p-3 rounded-xl flex items-center justify-between relative overflow-hidden"
-            style={{
-              background: `linear-gradient(135deg, rgba(153, 69, 255, 0.1), rgba(153, 69, 255, 0.05))`,
-              border: '1px solid rgba(153, 69, 255, 0.2)',
-            }}
-            whileHover={{
-              boxShadow: '0 0 20px rgba(153, 69, 255, 0.2)',
-            }}
+          <div 
+            className="mb-4 p-3 rounded-xl flex items-center justify-between bg-[#9945FF]/10 border border-[#9945FF]/20"
           >
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-purple-400" />
               <span className="text-xs font-mono text-purple-400 font-bold">BOUNTY</span>
             </div>
             <span className="text-sm font-bold text-white">{project.bounty} USDC</span>
-          </motion.div>
+          </div>
         )}
 
         {/* Tags */}
         <div className="flex flex-wrap gap-1.5 mb-4">
-          {project.tags.slice(0, 3).map((tag, index) => (
-            <motion.span 
+          {project.tags.slice(0, 3).map((tag) => (
+            <span 
               key={tag} 
-              className="px-2.5 py-1 rounded-lg text-[10px] font-mono transition-all duration-300"
-              style={{
-                background: isHovered 
-                  ? `rgba(${themeColorRGB}, 0.1)` 
-                  : 'rgba(255,255,255,0.03)',
-                border: isHovered 
-                  ? `1px solid rgba(${themeColorRGB}, 0.2)` 
-                  : '1px solid rgba(255,255,255,0.08)',
-                color: isHovered ? themeColor : 'rgb(156, 163, 175)',
-              }}
-              initial={false}
-              animate={{
-                y: isHovered ? -2 : 0,
-                transition: { delay: index * 0.05 }
-              }}
+              className="px-2.5 py-1 rounded-lg text-[10px] font-mono bg-white/5 border border-white/10 text-gray-400 group-hover:bg-white/8 group-hover:text-gray-300 transition-all duration-300"
             >
               {tag}
-            </motion.span>
+            </span>
           ))}
         </div>
 
         {/* Footer */}
-        <div 
-          className="flex items-center justify-between pt-4 mt-auto relative"
-          style={{
-            borderTop: `1px solid rgba(${themeColorRGB}, ${isHovered ? 0.2 : 0.08})`,
-          }}
-        >
+        <div className="flex items-center justify-between pt-4 mt-auto border-t border-white/8 group-hover:border-white/15 transition-colors duration-300">
           <div className="flex gap-4">
             {/* Vote Button */}
             <motion.button
               onClick={handleVote}
-              className="flex items-center gap-1.5 text-sm relative"
-              style={{
-                color: isLiked ? themeColor : isHovered ? 'white' : 'rgb(156, 163, 175)',
-              }}
+              className={`flex items-center gap-1.5 text-sm transition-colors duration-300 ${
+                isLiked ? 'text-[#FFD700]' : 'text-gray-400 hover:text-white'
+              }`}
               whileTap={{ scale: 0.9 }}
             >
               <ThumbsUp className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
@@ -291,8 +164,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
                   {[...Array(8)].map((_, i) => (
                     <motion.div
                       key={`burst-${i}`}
-                      className="absolute top-1/2 left-2 w-1.5 h-1.5 rounded-full pointer-events-none"
-                      style={{ backgroundColor: themeColor }}
+                      className="absolute top-1/2 left-2 w-1.5 h-1.5 rounded-full pointer-events-none bg-[#FFD700]"
                       initial={{ scale: 0, x: 0, y: 0 }}
                       animate={{
                         scale: [1, 0],
@@ -307,10 +179,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
             </motion.button>
             
             {/* Comments */}
-            <div 
-              className="flex items-center gap-1.5 text-sm transition-colors duration-300"
-              style={{ color: isHovered ? 'white' : 'rgb(156, 163, 175)' }}
-            >
+            <div className="flex items-center gap-1.5 text-sm text-gray-400 group-hover:text-gray-300 transition-colors duration-300">
               <MessageSquare className="w-4 h-4" />
               <span>{project.feedbackCount}</span>
             </div>
@@ -322,7 +191,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
             isAnonymous={project.isAnonymous || !project.author}
             showAvatar={true}
             avatarSize="sm"
-            className="text-xs font-mono z-20 transition-colors duration-300"
+            className="text-xs font-mono z-20 text-gray-500 hover:text-white transition-colors duration-300"
           />
         </div>
       </div>

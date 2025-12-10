@@ -303,47 +303,20 @@ export const SubmissionModal = () => {
                 exit={{ scale: 0.95, opacity: 0, y: 20 }}
                 className="relative w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden"
             >
-                {/* Outer Glow Border */}
-                <div className={`absolute inset-0 rounded-3xl bg-gradient-to-br ${themeColor} opacity-20 blur-xl`} />
-                
                 {/* Main Container */}
-                <div className="relative bg-[#0D0D12] border border-white/10 rounded-3xl overflow-hidden flex flex-col max-h-[90vh]">
-                    {/* Animated Border Gradient */}
-                    <div 
-                        className="absolute inset-0 rounded-3xl p-[1px] pointer-events-none"
-                        style={{
-                            background: isProject 
-                                ? 'linear-gradient(135deg, rgba(153,69,255,0.3), transparent 40%, transparent 60%, rgba(153,69,255,0.3))'
-                                : 'linear-gradient(135deg, rgba(255,215,0,0.3), transparent 40%, transparent 60%, rgba(255,215,0,0.3))',
-                        }}
-                    />
+                <div className="relative bg-[#0D0D12] border border-white/10 rounded-2xl overflow-hidden flex flex-col max-h-[90vh]">
                     
                     {/* Header */}
-                    <div className="relative px-8 py-6 border-b border-white/10 overflow-hidden flex-shrink-0">
-                        {/* Background Effects */}
-                        <div className={`absolute inset-0 bg-gradient-to-r ${themeColor} opacity-5`} />
-                        <div className="absolute top-0 right-0 w-80 h-80 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/4"
-                            style={{ background: isProject ? 'rgba(153,69,255,0.15)' : 'rgba(255,215,0,0.15)' }}
-                        />
-                        <div className="absolute bottom-0 left-0 w-40 h-40 rounded-full blur-[60px] translate-y-1/2 -translate-x-1/4"
-                            style={{ background: isProject ? 'rgba(153,69,255,0.1)' : 'rgba(255,215,0,0.1)' }}
-                        />
-                        
+                    <div className="relative px-8 py-6 border-b border-white/10 flex-shrink-0">
                         <div className="relative z-10 flex justify-between items-center">
                             <div className="flex items-center gap-4">
-                                <motion.div 
-                                    className={`w-14 h-14 rounded-2xl flex items-center justify-center bg-gradient-to-br ${themeColor} text-white shadow-2xl relative`}
-                                    whileHover={{ scale: 1.05, rotate: 5 }}
-                                    style={{
-                                        boxShadow: isProject 
-                                            ? '0 0 30px rgba(153,69,255,0.4)' 
-                                            : '0 0 30px rgba(255,215,0,0.4)',
-                                    }}
+                                <div 
+                                    className={`w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br ${themeColor} text-white`}
                                 >
-                                    {isProject ? <Rocket className="w-7 h-7" /> : <Lightbulb className="w-7 h-7" />}
-                                </motion.div>
+                                    {isProject ? <Rocket className="w-6 h-6" /> : <Lightbulb className="w-6 h-6" />}
+                                </div>
                                 <div>
-                                    <h2 className="text-2xl font-bold font-display text-white tracking-tight">
+                                    <h2 className="text-xl font-bold text-white">
                                         {isProject ? 'Launch Project' : 'Share Your Idea'}
                                     </h2>
                                     <p className="text-sm text-gray-400 mt-0.5">
@@ -351,14 +324,12 @@ export const SubmissionModal = () => {
                                     </p>
                                 </div>
                             </div>
-                            <motion.button 
+                            <button 
                                 onClick={closeSubmitModal} 
                                 className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-all text-gray-400 hover:text-white border border-white/10 hover:border-white/20"
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
                             >
                                 <X className="w-5 h-5" />
-                            </motion.button>
+                            </button>
                         </div>
                     </div>
 
@@ -389,22 +360,20 @@ export const SubmissionModal = () => {
                                     </label>
                                     <div className="flex flex-wrap gap-2">
                                         {categories.map(cat => (
-                                            <motion.button
+                                            <button
                                                 key={cat}
                                                 type="button"
                                                 onClick={() => toggleCategory(cat)}
-                                                whileHover={{ scale: 1.02 }}
-                                                whileTap={{ scale: 0.98 }}
                                                 className={`px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                                                     formData.categories.includes(cat)
                                                         ? isProject
-                                                            ? 'bg-gradient-to-r from-[#9945FF] to-[#7c3aed] text-white border border-[#9945FF]/50 shadow-lg shadow-purple-500/25'
-                                                            : 'bg-gradient-to-r from-[#FFD700] to-[#FDB931] text-black border border-[#FFD700]/50 shadow-lg shadow-yellow-500/25'
+                                                            ? 'bg-[#9945FF] text-white border border-[#9945FF]'
+                                                            : 'bg-[#FFD700] text-black border border-[#FFD700]'
                                                         : 'bg-[#141419] text-gray-400 border border-white/10 hover:border-white/25 hover:text-white hover:bg-white/5'
                                                 }`}
                                             >
                                                 {cat}
-                                            </motion.button>
+                                            </button>
                                         ))}
                                     </div>
                                 </div>
@@ -560,27 +529,17 @@ export const SubmissionModal = () => {
 
                 {/* Footer Action */}
                 <div className="p-6 border-t border-white/10 bg-[#0A0A0F] flex-shrink-0">
-                    <motion.button 
+                    <button 
                         onClick={handleSubmit}
-                        whileHover={{ scale: 1.01 }}
-                        whileTap={{ scale: 0.99 }}
-                        className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 transition-all relative overflow-hidden group ${
+                        className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 transition-all hover:opacity-90 ${
                             isProject 
-                                ? 'bg-gradient-to-r from-[#9945FF] to-[#7c3aed] text-white shadow-lg shadow-purple-500/30' 
-                                : 'bg-gradient-to-r from-[#FFD700] to-[#FDB931] text-black shadow-lg shadow-yellow-500/30'
+                                ? 'bg-[#9945FF] text-white' 
+                                : 'bg-[#FFD700] text-black'
                         }`}
-                        style={{
-                            boxShadow: isProject 
-                                ? '0 0 30px rgba(153,69,255,0.3)' 
-                                : '0 0 30px rgba(255,215,0,0.3)',
-                        }}
                     >
-                        {/* Shimmer effect */}
-                        <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-                        
-                        {isProject ? <Rocket className="w-5 h-5 relative z-10" /> : <Lightbulb className="w-5 h-5 relative z-10" />}
-                        <span className="relative z-10">{isProject ? 'Launch Project' : 'Publish Idea'}</span>
-                    </motion.button>
+                        {isProject ? <Rocket className="w-5 h-5" /> : <Lightbulb className="w-5 h-5" />}
+                        <span>{isProject ? 'Launch Project' : 'Publish Idea'}</span>
+                    </button>
                 </div>
                 </div>
             </motion.div>
