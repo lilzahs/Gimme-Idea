@@ -54,6 +54,7 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
   const [userContext, setUserContext] = useState({ interest: '', context: '' });
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [walletModalMode, setWalletModalMode] = useState<'reconnect' | 'connect'>('connect');
+  const [pendingUnlock, setPendingUnlock] = useState(false); // Track if user wants to unlock after connecting
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const { publicKey, sendTransaction, connected } = useWallet();
@@ -89,8 +90,35 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [sessions, activeSessionId]);
 
+  // Auto open donate modal after wallet connected (if pending unlock)
+  useEffect(() => {
+    if (pendingUnlock && connected && publicKey) {
+      setPendingUnlock(false);
+      setShowDonateModal(true);
+    }
+  }, [connected, publicKey, pendingUnlock]);
+
   // Get active session
   const activeSession = sessions.find(s => s.id === activeSessionId);
+
+  // Handle Unlock Chat button click - check wallet first
+  const handleUnlockClick = () => {
+    if (connected && publicKey) {
+      // Wallet already connected, show donate modal directly
+      setShowDonateModal(true);
+    } else {
+      // Need to connect wallet first
+      setPendingUnlock(true);
+      if (user?.wallet) {
+        // User has wallet linked but not connected (needs reconnect)
+        setWalletModalMode('reconnect');
+      } else {
+        // User doesn't have wallet linked
+        setWalletModalMode('connect');
+      }
+      setShowWalletModal(true);
+    }
+  };
 
   // Create new session
   const createNewSession = () => {
@@ -375,15 +403,25 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
         exit={{ scale: 0.95, opacity: 0, y: 20 }}
         className="relative w-full max-w-5xl h-[90vh] sm:h-[85vh] bg-[#0a0a0f] border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col sm:flex-row mx-2"
       >
-        {/* Sidebar - History (hidden on mobile, shown as overlay) */}
+        {/* Sidebar - History (slide from left on mobile, fixed width on desktop) */}
         <AnimatePresence>
           {showHistory && (
-            <motion.div
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: '100%', opacity: 1 }}
-              exit={{ width: 0, opacity: 0 }}
-              className="absolute sm:relative inset-0 sm:inset-auto sm:w-[280px] z-10 border-r border-white/10 bg-[#0d0d12] flex flex-col overflow-hidden"
-            >
+            <>
+              {/* Mobile backdrop */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowHistory(false)}
+                className="sm:hidden absolute inset-0 bg-black/50 z-10"
+              />
+              <motion.div
+                initial={{ x: -280, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: -280, opacity: 0 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+                className="absolute sm:relative left-0 top-0 bottom-0 w-[280px] z-20 border-r border-white/10 bg-[#0d0d12] flex flex-col overflow-hidden"
+              >
               <div className="p-4 border-b border-white/10 flex items-center justify-between">
                 <button
                   onClick={createNewSession}
@@ -430,6 +468,7 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
                 ))}
               </div>
             </motion.div>
+            </>
           )}
         </AnimatePresence>
 
@@ -557,7 +596,7 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
                   </div>
                 </div>
                 <button
-                  onClick={() => setShowDonateModal(true)}
+                  onClick={handleUnlockClick}
                   className="w-full sm:w-auto px-4 py-2 bg-[#FFD700] text-black rounded-lg font-bold text-xs sm:text-sm hover:bg-[#FFD700]/90 transition-colors"
                 >
                   Unlock Chat
@@ -636,40 +675,23 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
               </div>
 
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                {!connected ? (
-                  <button
-                    onClick={() => {
-                      if (user?.wallet) {
-                        setWalletModalMode('reconnect');
-                      } else {
-                        setWalletModalMode('connect');
-                      }
-                      setShowWalletModal(true);
-                    }}
-                    className="flex-1 py-2.5 sm:py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-bold hover:from-purple-500 hover:to-blue-500 transition-all flex items-center justify-center gap-2 text-sm"
-                  >
-                    <svg className="w-4 h-4 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/>
-                      <path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>
-                    </svg>
-                    Connect Wallet
-                  </button>
-                ) : (
-                  <button
-                    onClick={handleDonation}
-                    disabled={isProcessingPayment}
-                    className="flex-1 py-2.5 sm:py-3 bg-[#FFD700] text-black rounded-xl font-bold hover:bg-[#FFD700]/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
-                  >
-                    {isProcessingPayment ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Verifying...
-                      </>
-                    ) : (
-                      `Donate $${donationAmount}`
-                    )}
-                  </button>
-                )}
+                <button
+                  onClick={handleDonation}
+                  disabled={isProcessingPayment}
+                  className="flex-1 py-2.5 sm:py-3 bg-[#FFD700] text-black rounded-xl font-bold hover:bg-[#FFD700]/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+                >
+                  {isProcessingPayment ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4" />
+                      Send ${donationAmount}
+                    </>
+                  )}
+                </button>
                 <button
                   onClick={() => setShowDonateModal(false)}
                   className="px-4 py-2.5 sm:py-3 bg-white/5 text-gray-400 rounded-xl hover:bg-white/10 transition-colors text-sm"
@@ -689,9 +711,15 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
       {/* Wallet Required Modal */}
       <WalletRequiredModal
         isOpen={showWalletModal}
-        onClose={() => setShowWalletModal(false)}
+        onClose={() => {
+          setShowWalletModal(false);
+          setPendingUnlock(false); // Cancel pending unlock if user closes
+        }}
         mode={walletModalMode}
-        onSuccess={() => setShowWalletModal(false)}
+        onSuccess={() => {
+          setShowWalletModal(false);
+          // pendingUnlock useEffect will handle opening donate modal
+        }}
       />
     </div>
   );
