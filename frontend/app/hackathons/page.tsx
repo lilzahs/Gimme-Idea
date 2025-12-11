@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Calendar, Users, Trophy, ArrowRight, Zap } from 'lucide-react';
 import Link from 'next/link';
