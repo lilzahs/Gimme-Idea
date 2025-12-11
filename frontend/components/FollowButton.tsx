@@ -99,17 +99,17 @@ export const FollowButton: React.FC<FollowButtonProps> = ({
     );
   }
 
-  // Default variant
+  // Default variant - Pill shape purple button
   return (
     <motion.button
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
+      whileHover={{ scale: 1.03 }}
+      whileTap={{ scale: 0.97 }}
       onClick={handleClick}
       disabled={isLoading}
-      className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
+      className={`px-6 py-2.5 rounded-full font-semibold transition-all flex items-center gap-2 shadow-lg ${
         isFollowing
-          ? 'bg-white/10 text-white hover:bg-red-500/20 hover:text-red-400 border border-white/20 group'
-          : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white hover:from-purple-600 hover:to-pink-600'
+          ? 'bg-white/10 text-white hover:bg-red-500/20 hover:text-red-400 border border-white/20 group backdrop-blur-sm'
+          : 'bg-gradient-to-r from-purple-600 via-purple-500 to-violet-500 text-white hover:from-purple-700 hover:via-purple-600 hover:to-violet-600 shadow-purple-500/25'
       } ${className}`}
     >
       {isLoading ? (
@@ -127,7 +127,7 @@ export const FollowButton: React.FC<FollowButtonProps> = ({
       ) : (
         <>
           <UserPlus className="w-4 h-4" />
-          <span>Follow{targetUsername ? ` ${targetUsername}` : ''}</span>
+          <span>Follow</span>
         </>
       )}
     </motion.button>
