@@ -485,23 +485,44 @@ export const Profile = () => {
                             )}
                         </div>
 
-                        {/* Edit Profile Button - positioned to the right */}
-                        {isOwnProfile && !isEditing && (
+                        {/* Action Buttons */}
+                        <div className="flex items-center gap-2">
+                            {/* Share Profile Button - shows on ALL profiles */}
                             <button 
-                                onClick={() => setIsEditing(true)}
-                                className="px-5 py-2 border border-white/30 hover:bg-white/10 rounded-full text-sm font-bold transition-colors"
+                                onClick={() => {
+                                    const profileUrl = `${window.location.origin}/profile/${displayUser.username}`;
+                                    navigator.clipboard.writeText(profileUrl);
+                                    // Show toast notification
+                                    const toast = document.createElement('div');
+                                    toast.className = 'fixed bottom-4 right-4 bg-yellow-500 text-black px-4 py-2 rounded-full font-semibold shadow-lg z-50 animate-pulse';
+                                    toast.textContent = 'Profile link copied!';
+                                    document.body.appendChild(toast);
+                                    setTimeout(() => toast.remove(), 2000);
+                                }}
+                                className="px-5 py-2.5 bg-gradient-to-r from-yellow-400 via-yellow-500 to-amber-500 hover:from-yellow-500 hover:via-yellow-600 hover:to-amber-600 text-black rounded-full text-sm font-bold transition-all shadow-lg shadow-yellow-500/25 flex items-center gap-2"
                             >
-                                Edit profile
+                                <LinkIcon className="w-4 h-4" />
+                                Share Profile
                             </button>
-                        )}
-                        
-                        {/* Follow Button - for other profiles */}
-                        {!isOwnProfile && displayUser?.id && (
-                            <FollowButton
-                                targetUserId={displayUser.id}
-                                targetUsername={displayUser.username}
-                            />
-                        )}
+                            
+                            {/* Edit Profile Button - only for own profile */}
+                            {isOwnProfile && !isEditing && (
+                                <button 
+                                    onClick={() => setIsEditing(true)}
+                                    className="px-5 py-2.5 border border-white/30 hover:bg-white/10 rounded-full text-sm font-bold transition-colors"
+                                >
+                                    Edit profile
+                                </button>
+                            )}
+                            
+                            {/* Follow Button - for other profiles */}
+                            {!isOwnProfile && displayUser?.id && (
+                                <FollowButton
+                                    targetUserId={displayUser.id}
+                                    targetUsername={displayUser.username}
+                                />
+                            )}
+                        </div>
                     </div>
 
                     {/* Name & Info Section - Below Avatar */}

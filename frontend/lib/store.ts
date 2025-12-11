@@ -273,6 +273,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       if (response.success && response.data) {
         const userData = response.data;
         const displayedUser: User = {
+          id: userData.id, // Include user ID for follow functionality
           username: userData.username,
           wallet: userData.wallet,
           avatar:
@@ -283,6 +284,8 @@ export const useAppStore = create<AppState>((set, get) => ({
           projects: [],
           bio: userData.bio || "Builder on Solana",
           socials: userData.socialLinks || {},
+          followersCount: userData.followersCount || 0,
+          followingCount: userData.followingCount || 0,
         };
         set({
           viewedUser: displayedUser,
