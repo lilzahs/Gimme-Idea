@@ -89,14 +89,37 @@ export interface User {
   authId?: string;
   needsWalletConnect?: boolean;
   role?: "user" | "admin" | "moderator";
+  // Follow system
+  followersCount?: number;
+  followingCount?: number;
 }
+
+export type NotificationType =
+  | "follow"
+  | "new_post"
+  | "comment"
+  | "comment_reply"
+  | "like"
+  | "comment_like"
+  | "donation"
+  | "mention";
 
 export interface Notification {
   id: string;
+  actorId: string | null;
+  actorUsername: string | null;
+  actorAvatar: string | null;
+  type: NotificationType;
+  title: string;
   message: string;
-  type: "info" | "success" | "warning" | "error";
+  targetType: "project" | "comment" | "user" | null;
+  targetId: string | null;
+  metadata?: {
+    amount?: number;
+    tx_hash?: string;
+  };
   read: boolean;
-  timestamp: string;
+  createdAt: string;
 }
 
 export interface StatMetric {
@@ -141,4 +164,27 @@ export interface AIQuota {
   paidCredits: number;
   interactionsUsed: number;
   maxFreeInteractions: number;
+}
+
+// ============================================
+// Follow System Types
+// ============================================
+
+export interface FollowUser {
+  userId: string;
+  username: string;
+  avatar: string | null;
+  bio: string | null;
+  wallet: string;
+  followersCount: number;
+  followingCount: number;
+  followedAt: string;
+  isFollowingBack?: boolean;
+}
+
+export interface FollowStats {
+  followersCount: number;
+  followingCount: number;
+  isFollowing: boolean;
+  isFollowedBy: boolean;
 }

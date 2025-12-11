@@ -120,6 +120,8 @@ export class AuthService {
       authProvider: user.auth_provider || "wallet",
       authId: user.auth_id,
       needsWalletConnect: user.needs_wallet_connect || false,
+      followersCount: user.followers_count || 0,
+      followingCount: user.following_count || 0,
     };
 
     return {
@@ -209,6 +211,8 @@ export class AuthService {
       authProvider: user.auth_provider || "google",
       authId: user.auth_id,
       needsWalletConnect: needs_wallet,
+      followersCount: user.followers_count || 0,
+      followingCount: user.following_count || 0,
     };
 
     return {
@@ -291,6 +295,8 @@ export class AuthService {
       authProvider: user.auth_provider,
       authId: user.auth_id,
       needsWalletConnect: false,
+      followersCount: user.followers_count || 0,
+      followingCount: user.following_count || 0,
     };
 
     return {
@@ -333,6 +339,8 @@ export class AuthService {
       authProvider: user.auth_provider || "wallet",
       authId: user.auth_id,
       needsWalletConnect: user.needs_wallet_connect || false,
+      followersCount: user.followers_count || 0,
+      followingCount: user.following_count || 0,
     };
 
     return {

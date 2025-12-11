@@ -6,12 +6,15 @@ import { useAuth } from '../contexts/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { motion } from 'framer-motion';
-import { Camera, Edit2, Save, X, Github, Twitter, Facebook, Send, Pencil, Trash2, ArrowLeft, Wallet, Check, Repeat, Loader2, Lightbulb, MessageSquare, Heart, Star, Calendar, Link as LinkIcon, ImageIcon, ThumbsUp, TrendingUp } from 'lucide-react';
+import { Camera, Edit2, Save, X, Github, Twitter, Facebook, Send, Pencil, Trash2, ArrowLeft, Wallet, Check, Repeat, Loader2, Lightbulb, MessageSquare, Heart, Star, Calendar, Link as LinkIcon, ImageIcon, ThumbsUp, TrendingUp, Users } from 'lucide-react';
 import { ProjectCard } from './ProjectCard';
 import { WalletReminderBadge } from './WalletReminderBadge';
 import { WalletRequiredModal } from './WalletRequiredModal';
 import { EditProjectModal } from './EditProjectModal';
 import { ImageCropper } from './ImageCropper';
+import { FollowButton, FollowStats } from './FollowButton';
+import { FollowListModal } from './FollowListModal';
+import { useFollow } from '../hooks/useFollow';
 import toast from 'react-hot-toast';
 import { Project } from '../lib/types';
 import { apiClient } from '../lib/api-client';
@@ -54,6 +57,10 @@ export const Profile = () => {
   
   // Stars background state
   const [stars, setStars] = useState<{ id: number; top: string; left: string; size: number; duration: string; opacity: number }[]>([]);
+  
+  // Follow system state
+  const [showFollowModal, setShowFollowModal] = useState(false);
+  const [followModalTab, setFollowModalTab] = useState<'followers' | 'following'>('followers');
   
   // Generate stars on mount
   useEffect(() => {
@@ -487,6 +494,14 @@ export const Profile = () => {
                                 Edit profile
                             </button>
                         )}
+                        
+                        {/* Follow Button - for other profiles */}
+                        {!isOwnProfile && displayUser?.id && (
+                            <FollowButton
+                                targetUserId={displayUser.id}
+                                targetUsername={displayUser.username}
+                            />
+                        )}
                     </div>
 
                     {/* Name & Info Section - Below Avatar */}
@@ -522,6 +537,34 @@ export const Profile = () => {
                         ) : isOwnProfile ? (
                             <p className="text-gray-500 text-sm mb-4">Add a bio to tell people about yourself.</p>
                         ) : null}
+
+                    {/* Followers/Following Stats */}
+                    <div className="flex items-center gap-4 mb-4">
+                        <button
+                            onClick={() => {
+                                setFollowModalTab('followers');
+                                setShowFollowModal(true);
+                            }}
+                            className="flex items-center gap-1.5 hover:text-purple-400 transition-colors group"
+                        >
+                            <span className="font-bold text-white group-hover:text-purple-400">
+                                {displayUser.followersCount || 0}
+                            </span>
+                            <span className="text-gray-400 text-sm">Followers</span>
+                        </button>
+                        <button
+                            onClick={() => {
+                                setFollowModalTab('following');
+                                setShowFollowModal(true);
+                            }}
+                            className="flex items-center gap-1.5 hover:text-purple-400 transition-colors group"
+                        >
+                            <span className="font-bold text-white group-hover:text-purple-400">
+                                {displayUser.followingCount || 0}
+                            </span>
+                            <span className="text-gray-400 text-sm">Following</span>
+                        </button>
+                    </div>
 
                     {/* Meta Info */}
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-4 text-sm text-gray-500">
@@ -901,6 +944,17 @@ export const Profile = () => {
             aspectRatio={3}
             onCropComplete={handleCoverCropComplete}
             title="Crop Cover Image"
+          />
+        )}
+
+        {/* Follow List Modal */}
+        {displayUser?.id && (
+          <FollowListModal
+            isOpen={showFollowModal}
+            onClose={() => setShowFollowModal(false)}
+            userId={displayUser.id}
+            username={displayUser.username}
+            initialTab={followModalTab}
           />
         )}
     </motion.div>

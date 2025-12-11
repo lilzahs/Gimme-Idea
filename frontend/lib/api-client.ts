@@ -304,4 +304,117 @@ export const apiClient = {
 
   // Settings
   getMenuConfig: () => apiFetch<any[]>("/settings/menu-config"),
+
+  // =====================================
+  // FOLLOW API
+  // =====================================
+
+  // Follow a user
+  followUser: (userId: string) =>
+    apiFetch<{ message: string }>(`/users/${userId}/follow`, {
+      method: "POST",
+    }),
+
+  // Unfollow a user
+  unfollowUser: (userId: string) =>
+    apiFetch<{ message: string }>(`/users/${userId}/follow`, {
+      method: "DELETE",
+    }),
+
+  // Get follow stats for a user
+  getFollowStats: (userId: string) =>
+    apiFetch<{
+      followersCount: number;
+      followingCount: number;
+      isFollowing: boolean;
+      isFollowedBy: boolean;
+    }>(`/users/${userId}/follow-stats`),
+
+  // Get followers of a user
+  getFollowers: (
+    userId: string,
+    params?: { limit?: number; offset?: number }
+  ) => {
+    const query = new URLSearchParams(
+      params as Record<string, string>
+    ).toString();
+    return apiFetch<any[]>(
+      `/users/${userId}/followers${query ? `?${query}` : ""}`
+    );
+  },
+
+  // Get users that a user is following
+  getFollowing: (
+    userId: string,
+    params?: { limit?: number; offset?: number }
+  ) => {
+    const query = new URLSearchParams(
+      params as Record<string, string>
+    ).toString();
+    return apiFetch<any[]>(
+      `/users/${userId}/following${query ? `?${query}` : ""}`
+    );
+  },
+
+  // Check if user follows another user
+  isFollowing: (userId: string, targetId: string) =>
+    apiFetch<{ isFollowing: boolean }>(
+      `/users/${userId}/is-following/${targetId}`
+    ),
+
+  // ============================================
+  // NOTIFICATIONS API
+  // ============================================
+
+  // Get notifications
+  getNotifications: (params?: {
+    limit?: number;
+    offset?: number;
+    unreadOnly?: boolean;
+  }) => {
+    const query = params
+      ? new URLSearchParams(
+          Object.entries(params)
+            .filter(([, v]) => v !== undefined)
+            .map(([k, v]) => [k, String(v)])
+        ).toString()
+      : "";
+    return apiFetch<{
+      success: boolean;
+      notifications: any[];
+    }>(`/notifications${query ? `?${query}` : ""}`);
+  },
+
+  // Get unread notification count
+  getUnreadNotificationCount: () =>
+    apiFetch<{ success: boolean; unreadCount: number }>(
+      "/notifications/unread-count"
+    ),
+
+  // Mark notification as read
+  markNotificationRead: (notificationId: string) =>
+    apiFetch<{ success: boolean }>(`/notifications/${notificationId}/read`, {
+      method: "POST",
+    }),
+
+  // Mark all notifications as read
+  markAllNotificationsRead: () =>
+    apiFetch<{ success: boolean; markedCount: number }>(
+      "/notifications/read-all",
+      {
+        method: "POST",
+      }
+    ),
+
+  // Delete a notification
+  deleteNotification: (notificationId: string) =>
+    apiFetch<{ success: boolean }>(`/notifications/${notificationId}`, {
+      method: "DELETE",
+    }),
+
+  // Clear all notifications
+  clearAllNotifications: () =>
+    apiFetch<{ success: boolean }>("/notifications", {
+      method: "DELETE",
+    }),
 };

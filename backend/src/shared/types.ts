@@ -75,6 +75,9 @@ export interface User {
   authProvider?: "wallet" | "google";
   authId?: string;
   needsWalletConnect?: boolean;
+  // Follow system
+  followersCount?: number;
+  followingCount?: number;
 }
 
 export interface Transaction {

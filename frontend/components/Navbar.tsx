@@ -3,13 +3,14 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wallet, Bell, Search, Menu, X, LayoutGrid, Plus, Trophy, BarChart3, User as UserIcon, Lightbulb, Heart, Rocket, LogOut, AlertCircle, MoreHorizontal, Info, Mail, Lock } from 'lucide-react';
+import { Wallet, Bell, Search, Menu, X, LayoutGrid, Plus, Trophy, BarChart3, User as UserIcon, Lightbulb, Heart, Rocket, LogOut, AlertCircle, MoreHorizontal, Info, Mail, Lock, UserPlus, MessageCircle, Sparkles, ThumbsUp, DollarSign } from 'lucide-react';
 import { useAppStore } from '../lib/store';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { LoginButton } from './LoginButton';
+import { useNotifications } from '../hooks/useNotifications';
 
 import { apiClient } from '../lib/api-client';
 
@@ -18,14 +19,19 @@ const Navbar = () => {
     openConnectReminder,
     searchQuery,
     setSearchQuery,
-    notifications,
-    markNotificationRead,
-    clearNotifications,
     setView,
     setSelectedProject
   } = useAppStore();
 
   const { user, signOut, setShowWalletPopup } = useAuth();
+  const { 
+    notifications, 
+    unreadCount, 
+    markAsRead, 
+    markAllAsRead, 
+    clearAll, 
+    getNotificationPath 
+  } = useNotifications();
 
   const router = useRouter();
   const pathname = usePathname();
@@ -77,8 +83,6 @@ const Navbar = () => {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const notificationRef = useRef<HTMLDivElement>(null);
   const moreMenuRef = useRef<HTMLDivElement>(null); // Ref for 'More' menu
-
-  const unreadCount = notifications.filter(n => !n.read).length;
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -341,27 +345,80 @@ const Navbar = () => {
                              <div className="p-3 border-b border-white/5 flex justify-between items-center">
                                  <span className="text-xs font-bold text-gray-400 uppercase">Notifications</span>
                                  {notifications.length > 0 && (
-                                     <button onClick={clearNotifications} className="text-xs text-red-400 hover:text-red-300">Clear All</button>
+                                   <div className="flex items-center gap-2">
+                                     {unreadCount > 0 && (
+                                       <button onClick={markAllAsRead} className="text-xs text-blue-400 hover:text-blue-300">Read All</button>
+                                     )}
+                                     <button onClick={clearAll} className="text-xs text-red-400 hover:text-red-300">Clear All</button>
+                                   </div>
                                  )}
                              </div>
-                             <div className="max-h-64 overflow-y-auto">
+                             <div className="max-h-80 overflow-y-auto">
                                 {notifications.length > 0 ? (
-                                    notifications.map(notif => (
-                                        <div 
-                                            key={notif.id} 
-                                            className={`p-3 border-b border-white/5 hover:bg-white/5 transition-colors ${!notif.read ? 'bg-white/[0.02]' : ''}`}
-                                            onClick={() => markNotificationRead(notif.id)}
-                                        >
-                                            <p className="text-sm text-gray-200 mb-1">{notif.message}</p>
-                                            <div className="flex justify-between items-center">
-                                                <span className="text-[10px] text-gray-500 font-mono">{notif.timestamp}</span>
-                                                {!notif.read && <span className="w-1.5 h-1.5 bg-accent rounded-full" />}
-                                            </div>
-                                        </div>
-                                    ))
+                                    notifications.map(notif => {
+                                        const NotifIcon = notif.type === 'follow' ? UserPlus 
+                                          : notif.type === 'new_post' ? Sparkles 
+                                          : notif.type === 'comment' || notif.type === 'comment_reply' ? MessageCircle 
+                                          : notif.type === 'like' || notif.type === 'comment_like' ? ThumbsUp
+                                          : notif.type === 'donation' ? DollarSign
+                                          : Bell;
+                                        
+                                        const iconBgColor = notif.type === 'donation' 
+                                          ? 'from-green-500 to-emerald-500' 
+                                          : notif.type === 'like' || notif.type === 'comment_like'
+                                          ? 'from-pink-500 to-red-500'
+                                          : 'from-purple-500 to-blue-500';
+                                        
+                                        return (
+                                          <div 
+                                              key={notif.id} 
+                                              className={`p-3 border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer ${!notif.read ? 'bg-purple-500/5' : ''}`}
+                                              onClick={() => {
+                                                markAsRead(notif.id);
+                                                const path = getNotificationPath(notif);
+                                                if (path !== '/') {
+                                                  router.push(path);
+                                                  setShowNotifications(false);
+                                                }
+                                              }}
+                                          >
+                                              <div className="flex items-start gap-3">
+                                                {notif.actorAvatar ? (
+                                                  <Image 
+                                                    src={notif.actorAvatar} 
+                                                    alt="" 
+                                                    width={32} 
+                                                    height={32} 
+                                                    className="w-8 h-8 rounded-full flex-shrink-0"
+                                                  />
+                                                ) : (
+                                                  <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${iconBgColor} flex items-center justify-center flex-shrink-0`}>
+                                                    <NotifIcon className="w-4 h-4 text-white" />
+                                                  </div>
+                                                )}
+                                                <div className="flex-1 min-w-0">
+                                                  <p className="text-sm text-gray-200 line-clamp-2">{notif.message}</p>
+                                                  <div className="flex justify-between items-center mt-1">
+                                                    <span className="text-[10px] text-gray-500 font-mono">
+                                                      {new Date(notif.createdAt).toLocaleDateString('en-US', { 
+                                                        month: 'short', 
+                                                        day: 'numeric',
+                                                        hour: '2-digit',
+                                                        minute: '2-digit'
+                                                      })}
+                                                    </span>
+                                                    {!notif.read && <span className="w-2 h-2 bg-purple-500 rounded-full animate-pulse" />}
+                                                  </div>
+                                                </div>
+                                              </div>
+                                          </div>
+                                        );
+                                    })
                                 ) : (
-                                    <div className="p-6 text-center text-gray-500 text-sm">
-                                        No new notifications
+                                    <div className="p-8 text-center">
+                                      <Bell className="w-10 h-10 text-gray-600 mx-auto mb-3" />
+                                      <p className="text-gray-500 text-sm">No notifications yet</p>
+                                      <p className="text-gray-600 text-xs mt-1">When someone follows you or comments on your ideas, you&apos;ll see it here</p>
                                     </div>
                                 )}
                              </div>

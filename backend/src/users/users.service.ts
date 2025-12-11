@@ -50,6 +50,8 @@ export class UsersService {
       lastLoginAt: user.last_login_at,
       loginCount: user.login_count || 0,
       createdAt: user.created_at,
+      followersCount: user.followers_count || 0,
+      followingCount: user.following_count || 0,
     };
 
     return {
@@ -111,6 +113,8 @@ export class UsersService {
       lastLoginAt: user.last_login_at,
       loginCount: user.login_count || 0,
       createdAt: user.created_at,
+      followersCount: user.followers_count || 0,
+      followingCount: user.following_count || 0,
     };
 
     return {
