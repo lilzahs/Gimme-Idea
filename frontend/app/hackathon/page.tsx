@@ -10,31 +10,31 @@ import { useRouter } from 'next/navigation';
 const TIMELINE_STEPS = [
   {
     id: 1,
-    title: 'Đăng Ký',
-    date: '01/12 - 15/12',
+    title: 'Registration',
+    date: 'Dec 01 - Dec 15',
     status: 'completed',
-    description: 'Mở đơn đăng ký cho tất cả các đội thi.'
+    description: 'Registration opens for all teams.'
   },
   {
     id: 2,
-    title: 'Submit Ý Tưởng',
-    date: '16/12 - 20/12',
+    title: 'Idea Submission',
+    date: 'Dec 16 - Dec 20',
     status: 'completed',
-    description: 'Nộp bản mô tả chi tiết và MVP sơ bộ.'
+    description: 'Submit detailed description & initial MVP.'
   },
   {
     id: 3,
-    title: 'Vòng Loại',
-    date: '21/12 - 25/12',
+    title: 'Qualifying Round',
+    date: 'Dec 21 - Dec 25',
     status: 'current',
-    description: 'BGK chấm điểm và chọn ra Top 10.'
+    description: 'Judges score and select Top 10.'
   },
   {
     id: 4,
-    title: 'Chung Kết',
-    date: '30/12/2025',
+    title: 'Final Round',
+    date: 'Dec 30, 2025',
     status: 'upcoming',
-    description: 'Demo sản phẩm & Pitching trực tiếp.'
+    description: 'Product Demo & Live Pitching.'
   }
 ];
 
@@ -58,7 +58,7 @@ export default function HackathonPage() {
         <aside className="lg:col-span-3 relative">
           <div className="sticky top-28">
             <h3 className="text-xl font-bold font-quantico mb-8 text-gray-400 uppercase tracking-widest border-b border-white/10 pb-2">
-              Lộ trình
+              Timeline
             </h3>
             
             <div className="relative border-l-2 border-white/10 ml-3 space-y-10 pb-4">
@@ -108,7 +108,7 @@ export default function HackathonPage() {
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <span className="px-3 py-1 rounded-full bg-green-500/10 border border-green-500/30 text-green-400 text-xs font-bold uppercase tracking-wider animate-pulse">
-                  Đang diễn ra: Vòng Loại
+                  Live: Qualifying Round
                 </span>
               </div>
               <h1 className="text-4xl md:text-5xl font-black font-quantico text-transparent bg-clip-text bg-gradient-to-r from-white via-gray-200 to-gray-500">
@@ -122,7 +122,7 @@ export default function HackathonPage() {
                <div className="relative bg-[#1A1A1A] border border-[#FFD700]/30 rounded-xl p-6 min-w-[280px] text-center">
                   <div className="flex items-center justify-center gap-2 text-[#FFD700] mb-1">
                     <Trophy className="w-5 h-5" />
-                    <span className="text-sm font-bold uppercase tracking-widest">Tổng Giải Thưởng</span>
+                    <span className="text-sm font-bold uppercase tracking-widest">Prize Pool</span>
                   </div>
                   <div className="text-4xl font-black text-white font-mono tracking-tighter">
                     $1,000<span className="text-xl text-gray-500">.00</span>
@@ -135,7 +135,7 @@ export default function HackathonPage() {
           <div className="py-4">
             <h2 className="text-xl font-bold mb-6 text-gray-300 flex items-center gap-2">
               <span className="w-1 h-6 bg-[#FFD700] rounded-full"></span>
-              Thẻ Dự Thi Của Bạn
+              Your Entry Ticket
             </h2>
 
             {/* TICKET CONTAINER */}
@@ -237,12 +237,12 @@ export default function HackathonPage() {
             >
                <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-blue-500 opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
                <span className="flex items-center gap-3">
-                 Khám Phá Thư Viện Dự Án
+                 Explore Project Gallery
                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                </span>
             </button>
             <p className="mt-4 text-gray-500 text-sm">
-              Xem các dự án đối thủ và tìm cảm hứng
+              Check out other projects and get inspired
             </p>
           </div>
 
