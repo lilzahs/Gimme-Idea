@@ -10,6 +10,7 @@ import { UsersModule } from "./users/users.module";
 import { PaymentsModule } from "./payments/payments.module";
 import { SettingsModule } from "./settings/settings.module";
 import { AIModule } from "./ai/ai.module";
+import { HackathonModule } from "./hackathon/hackathon.module";
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { AIModule } from "./ai/ai.module";
     PaymentsModule,
     SettingsModule,
     AIModule,
+    HackathonModule,
   ],
   controllers: [AppController],
   providers: [SupabaseService, SolanaService],
