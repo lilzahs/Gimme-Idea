@@ -45,7 +45,7 @@ export default function HackathonsList() {
   const [isSponsorModalOpen, setIsSponsorModalOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-gray-300 pt-20 pb-10 px-4 font-sans text-sm">
+    <div className="min-h-screen bg-[#0a0a0a] text-gray-300 pt-32 pb-10 px-4 font-sans text-sm">
       <div className="max-w-[1000px] mx-auto space-y-8">
         
         {/* Header */}

@@ -42,7 +42,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
   const [activeTab, setActiveTab] = useState('tracks');
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-gray-300 pt-20 pb-10 px-4 font-sans text-sm">
+    <div className="min-h-screen bg-[#0a0a0a] text-gray-300 pt-32 pb-10 px-4 font-sans text-sm">
       <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* --- LEFT COLUMN: META & TIMELINE (20%) --- */}
