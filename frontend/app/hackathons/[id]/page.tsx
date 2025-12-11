@@ -2,47 +2,27 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Trophy, Calendar, Users, Clock, ChevronRight, 
-  Target, Zap, MessageSquare, FileText, CheckCircle2, 
-  AlertCircle, MoreHorizontal, Github, Disc, Link as LinkIcon 
+import {
+  Trophy, Calendar, Users, Clock, ChevronRight,
+  Target, Zap, MessageSquare, FileText, CheckCircle2,
+  AlertCircle, MoreHorizontal, Github, Disc, Link as LinkIcon,
+  Monitor, Mic, SwatchBook, Code, ShieldCheck, Smartphone, UserPlus, RefreshCw
 } from 'lucide-react';
 import Image from 'next/image';
+import { HACKATHONS_MOCK_DATA } from '@/lib/mock-hackathons';
 
-// --- MOCK DATA ---
-const TIMELINE = [
-  { id: 1, title: 'Registration', date: 'Dec 01', status: 'done' },
-  { id: 2, title: 'Team Formation', date: 'Dec 10', status: 'done' },
-  { id: 3, title: 'Submission', date: 'Dec 20', status: 'active' },
-  { id: 4, title: 'Voting', date: 'Dec 25', status: 'pending' },
-  { id: 5, title: 'Demo Day', date: 'Dec 30', status: 'pending' },
-];
+// Map icon names from mock data to Lucide React components
+const LucideIconMap: { [key: string]: React.ElementType } = {
+  Trophy, Calendar, Users, Clock, ChevronRight,
+  Target, Zap, MessageSquare, FileText, CheckCircle2,
+  AlertCircle, MoreHorizontal, Github, Disc, LinkIcon,
+  Monitor, Mic, SwatchBook, Code, ShieldCheck, Smartphone, UserPlus, RefreshCw
+};
 
-const TASKS = [
-  { id: 1, text: 'Join Discord Server', done: true },
-  { id: 2, text: 'Create Team Profile', done: true },
-  { id: 3, text: 'Submit Project Proposal', done: false },
-  { id: 4, text: 'Upload Demo Video', done: false },
-];
-
-const TRACKS = [
-  { title: 'DeFi Revolution', reward: '$5,000', icon: Zap, color: 'text-yellow-400' },
-  { title: 'NFT Utility', reward: '$3,000', icon: Disc, color: 'text-purple-400' },
-  { title: 'Gaming & Metaverse', reward: '$4,000', icon: Target, color: 'text-green-400' },
-  { title: 'Social Graph', reward: '$2,000', icon: Users, color: 'text-blue-400' },
-];
-
-const LEADERBOARD = [
-  { rank: 1, name: 'Alpha Squad', points: 980 },
-  { rank: 2, name: 'BlockBuilders', points: 945 },
-  { rank: 3, name: 'ChainReaction', points: 890 },
-];
-
-export default function HackathonDashboard({ params }: { params: { id: string } }) {
-  const [activeTab, setActiveTab] = useState('tracks');
+export default function HackathonDashboard({ params }: { params: { id: string } }) {  const [activeTab, setActiveTab] = useState('tracks');
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-gray-300 pt-32 pb-10 px-4 font-sans text-sm">
+    <div className="min-h-screen bg-[#0a0a0a] text-gray-300 pt-28 pb-10 px-4 font-sans text-sm">
       <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         {/* --- LEFT COLUMN: META & TIMELINE (20%) --- */}
@@ -214,29 +194,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
              </div>
           </div>
 
-          {/* Mini Leaderboard */}
-          <div className="bg-[#111] border border-white/5 rounded-xl p-4">
-             <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Top Teams</h3>
-                <MoreHorizontal className="w-4 h-4 text-gray-600 cursor-pointer hover:text-white" />
-             </div>
-             <div className="space-y-3">
-               {LEADERBOARD.map((team) => (
-                 <div key={team.rank} className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-3">
-                       <span className={`w-5 h-5 rounded flex items-center justify-center font-bold text-[10px] 
-                         ${team.rank === 1 ? 'bg-yellow-500/20 text-yellow-500' : 
-                           team.rank === 2 ? 'bg-gray-400/20 text-gray-400' : 
-                           'bg-orange-700/20 text-orange-600'}`}>
-                         {team.rank}
-                       </span>
-                       <span className="text-gray-300">{team.name}</span>
-                    </div>
-                    <span className="font-mono text-gray-500">{team.points} pts</span>
-                 </div>
-               ))}
-             </div>
-          </div>
+
 
         </aside>
 
