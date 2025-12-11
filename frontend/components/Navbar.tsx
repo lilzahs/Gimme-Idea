@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wallet, Bell, Search, Menu, X, LayoutGrid, Plus, Trophy, BarChart3, User as UserIcon, Lightbulb, Heart, Rocket, LogOut, AlertCircle, MoreHorizontal, Info, Mail, Lock, UserPlus, MessageCircle, Sparkles, ThumbsUp, DollarSign } from 'lucide-react';
+import { Wallet, Bell, Search, Menu, X, LayoutGrid, Plus, Trophy, BarChart3, User as UserIcon, Lightbulb, Heart, Rocket, LogOut, AlertCircle, MoreHorizontal, Info, Mail, Lock, UserPlus, MessageCircle, Sparkles, ThumbsUp, DollarSign, Map } from 'lucide-react';
 import { useAppStore } from '../lib/store';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
@@ -11,8 +11,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { LoginButton } from './LoginButton';
 import { useNotifications } from '../hooks/useNotifications';
-
-import { apiClient } from '../lib/api-client';
 
 const Navbar = () => {
   const {
@@ -44,120 +42,32 @@ const Navbar = () => {
   
   // Dynamic Menu State
   const [moreLinks, setMoreLinks] = useState([
-    { 
-      name: 'Hackathon', 
-      route: '/hackathon', 
-      icon: Trophy, 
+    {
+      name: 'Hackathon',
+      route: '/hackathon',
+      icon: Trophy,
       status: 'open',
-      highlight: { badge: 'LIVE', borderColor: '#14F195' } 
+      highlight: { badge: 'LIVE', borderColor: '#14F195' },
+      id: 'hackathon',
+      isActive: true,
     },
-    { 
-      name: 'About Us', 
-      route: '/about', 
-      icon: Info, 
-      status: 'open' 
+    {
+      name: 'Challenge',
+      route: '/challenge',
+      icon: Sparkles, // Using Sparkles for challenge
+      status: 'open',
+      id: 'challenge',
+      isActive: true,
     },
-    { 
-      name: 'Contact', 
-      route: '/contact', 
-      icon: Mail, 
-      status: 'locked',
-      highlight: { badge: 'SOON' }
+    {
+      name: 'Contact',
+      route: '/contact',
+      icon: Mail,
+      status: 'open', // Changed to open
+      id: 'contact',
+      isActive: true,
     },
   ]);
-
-  useEffect(() => {
-    // Fetch dynamic menu config
-    const fetchMenuConfig = async () => {
-      const response = await apiClient.getMenuConfig();
-      if (response.success && response.data && Array.isArray(response.data)) {
-        // Map string icon names back to Lucide components if needed
-        // For now, we'll stick to the default icons if names match, or extend logic later
-        // This is a simplified version assuming the backend returns compatible structure
-        // In a real app, you'd map string 'Trophy' -> Trophy component
-      }
-    };
-    fetchMenuConfig();
-  }, []);
-
-  const searchInputRef = useRef<HTMLInputElement>(null);
-  const notificationRef = useRef<HTMLDivElement>(null);
-  const moreMenuRef = useRef<HTMLDivElement>(null); // Ref for 'More' menu
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-        if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
-            setShowNotifications(false);
-        }
-        // Handle click outside for 'More' menu
-        if (moreMenuRef.current && !moreMenuRef.current.contains(event.target as Node)) {
-            setShowMoreMenu(false);
-        }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  useEffect(() => {
-      if (showSearch && searchInputRef.current) {
-          searchInputRef.current.focus();
-      }
-  }, [showSearch]);
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      setSearchQuery(e.target.value);
-  };
-
-  const handleNotificationClick = () => {
-      setShowNotifications(!showNotifications);
-      setShowMoreMenu(false); // Close other menus
-  };
-
-  const handleMoreMenuClick = () => {
-    setShowMoreMenu(!showMoreMenu);
-    setShowNotifications(false); // Close other menus
-  };
-
-  const navLinks = [
-    { name: 'HOME', route: '/home', icon: LayoutGrid },
-    { name: 'IDEA', route: '/idea', icon: Lightbulb },
-    { name: 'PROJECT', route: '/projects', icon: Rocket },
-    { name: 'Donate me', route: '/donate', icon: Heart },
-    { name: 'More', isDropdown: true, icon: MoreHorizontal } // New 'More' entry
-  ];
-
-  // Helper to map icon name string to Component
-  const getIconComponent = (iconName: string) => {
-    switch (iconName) {
-      case 'Trophy': return Trophy;
-      case 'Info': return Info;
-      case 'Mail': return Mail;
-      case 'Heart': return Heart;
-      case 'Star': return Lightbulb;
-      case 'Lock': return Lock;
-      default: return Info;
-    }
-  };
-
-  useEffect(() => {
-    const fetchMenuConfig = async () => {
-      const response = await apiClient.getMenuConfig();
-      if (response.success && response.data && Array.isArray(response.data)) {
-        const mappedLinks = response.data
-          .filter((item: any) => item.status !== 'hidden')
-          .map((item: any) => ({
-            ...item,
-            icon: getIconComponent(item.icon),
-            isActive: item.isActive ?? true
-          }));
-        
-        if (mappedLinks.length > 0) {
-          setMoreLinks(mappedLinks);
-        }
-      }
-    };
-    fetchMenuConfig();
-  }, []);
 
   return (
     <nav className="fixed top-4 sm:top-6 left-0 right-0 z-50 flex justify-center px-2 sm:px-4 pointer-events-none">
