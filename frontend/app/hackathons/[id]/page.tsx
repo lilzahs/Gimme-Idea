@@ -89,6 +89,20 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
         {/* --- CENTER COLUMN: MAIN CONTENT (55%) --- */}
         <main className="lg:col-span-6 space-y-6">
           
+          {/* Image Banner */}
+          {hackathon.image_url && (
+            <div className="relative w-full aspect-video rounded-xl overflow-hidden shadow-lg border border-white/5 bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a]">
+              <Image 
+                src={hackathon.image_url} 
+                alt={`${hackathon.title} Banner`} 
+                layout="fill" 
+                objectFit="cover" 
+                className="opacity-80 hover:opacity-100 transition-opacity duration-300"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a]/70 via-transparent to-transparent" />
+            </div>
+          )}
+
           {/* Top Stats Bar */}
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-[#111] border border-white/5 rounded-xl p-4 flex flex-col items-center justify-center">
