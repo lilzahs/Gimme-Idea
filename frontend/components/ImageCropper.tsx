@@ -162,8 +162,9 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({
     try {
       const image = imageRef.current;
       
-      // Output dimensions
-      const outputWidth = aspectRatio >= 1 ? 800 : 400;
+      // Output dimensions - higher resolution for cover images
+      // Cover (aspect 3:1) = 1200x400, Avatar (aspect 1:1) = 500x500
+      const outputWidth = aspectRatio >= 2 ? 1200 : (aspectRatio >= 1 ? 500 : 400);
       const outputHeight = Math.round(outputWidth / aspectRatio);
       
       // Create canvas

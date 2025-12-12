@@ -279,6 +279,7 @@ export const useAppStore = create<AppState>((set, get) => ({
           avatar:
             userData.avatar ||
             `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.username}`,
+          coverImage: userData.coverImage,
           reputation: userData.reputationScore || 0,
           balance: userData.balance || 0,
           projects: [],
