@@ -55,8 +55,8 @@ BEGIN
     -- Transfer comments ownership
     UPDATE comments SET user_id = p_user_id WHERE user_id = v_existing_wallet_user_id;
     
-    -- Transfer likes
-    UPDATE project_likes SET user_id = p_user_id WHERE user_id = v_existing_wallet_user_id;
+    -- Transfer votes/likes (project_votes, not project_likes)
+    UPDATE project_votes SET user_id = p_user_id WHERE user_id = v_existing_wallet_user_id;
     UPDATE comment_likes SET user_id = p_user_id WHERE user_id = v_existing_wallet_user_id;
     
     -- Transfer follows (followers of old account now follow new account)
