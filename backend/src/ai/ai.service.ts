@@ -2,14 +2,16 @@ import { Injectable, Logger } from "@nestjs/common";
 import OpenAI from "openai";
 import { SupabaseService } from "../shared/supabase.service";
 
-// AI Bot Account Configuration
+// AI Bot Account Configuration - Uses environment variables for flexibility
 const AI_BOT_CONFIG = {
-  username: "Gimme Sensei",
-  wallet: "FzcnaZMYcoAYpLgr7Wym2b8hrKYk3VXsRxWSLuvZKLJm",
-  email: "doanzah2710@gmail.com",
+  username: process.env.AI_BOT_USERNAME || "Gimme Sensei",
+  wallet:
+    process.env.AI_BOT_WALLET || "FzcnaZMYcoAYpLgr7Wym2b8hrKYk3VXsRxWSLuvZKLJm",
+  email: process.env.AI_BOT_EMAIL || "gimmeidea.contact@gmail.com",
   avatar:
+    process.env.AI_BOT_AVATAR ||
     "https://api.dicebear.com/7.x/bottts/svg?seed=gimme-sensei&backgroundColor=6366f1",
-  bio: "AI-powered startup advisor & mentor",
+  bio: process.env.AI_BOT_BIO || "AI-powered startup advisor & mentor",
 };
 
 export interface IdeaFeedbackRequest {
