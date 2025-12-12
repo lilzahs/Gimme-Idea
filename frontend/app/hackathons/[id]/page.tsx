@@ -116,7 +116,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
           
           {/* Image Banner */}
           {hackathon.image_url && (
-            <div className="relative w-full aspect-[3/1] rounded-xl overflow-hidden shadow-lg border border-white/5 bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a]">
+            <div className="relative w-full aspect-[6/1] rounded-xl overflow-hidden shadow-lg border border-white/5 bg-gradient-to-br from-[#1a1a1a] to-[#0a0a0a]">
               <Image 
                 src={hackathon.image_url} 
                 alt={`${hackathon.title} Banner`} 
