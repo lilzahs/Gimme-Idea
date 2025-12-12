@@ -4,7 +4,8 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../lib/store';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ThumbsUp, ThumbsDown, MessageCircle, Send, EyeOff, User, DollarSign, Share2, Pencil, Trash2, X, Check, Loader2 } from 'lucide-react';
+import { ArrowLeft, ThumbsUp, ThumbsDown, MessageCircle, Send, EyeOff, User, DollarSign, Share2, Pencil, Trash2, X, Check, Loader2, Bookmark } from 'lucide-react';
+import { BookmarkModal } from './BookmarkModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { Comment } from '../lib/types';
@@ -472,6 +473,9 @@ export const IdeaDetail = () => {
   const [recipientWallet, setRecipientWallet] = useState('');
   const [selectedCommentId, setSelectedCommentId] = useState<string | null>(null);
 
+  // Bookmark Modal State
+  const [showBookmarkModal, setShowBookmarkModal] = useState(false);
+
   const project = selectedProject;
 
   // Subscribe to realtime comment updates for this project
@@ -576,6 +580,18 @@ export const IdeaDetail = () => {
                             className="bg-[#1DA1F2] text-white px-4 sm:px-5 py-2 rounded-full font-bold flex items-center gap-2 hover:scale-105 transition-transform shadow-[0_0_20px_rgba(29,161,242,0.3)] text-sm"
                          >
                              <Share2 className="w-4 h-4" /> Share
+                         </button>
+                         <button
+                            onClick={() => {
+                              if (!user) {
+                                openConnectReminder();
+                                return;
+                              }
+                              setShowBookmarkModal(true);
+                            }}
+                            className="bg-purple-600 text-white px-4 sm:px-5 py-2 rounded-full font-bold flex items-center gap-2 hover:scale-105 transition-transform shadow-[0_0_20px_rgba(147,51,234,0.3)] text-sm"
+                         >
+                             <Bookmark className="w-4 h-4" /> Save
                          </button>
                          <button
                             onClick={handleVote}
@@ -708,6 +724,13 @@ export const IdeaDetail = () => {
             recipientWallet={recipientWallet}
             context={'comment'}
             onConfirm={handlePaymentConfirm}
+        />
+
+        <BookmarkModal
+            isOpen={showBookmarkModal}
+            onClose={() => setShowBookmarkModal(false)}
+            projectId={project.id}
+            projectTitle={project.title}
         />
     </motion.div>
   );

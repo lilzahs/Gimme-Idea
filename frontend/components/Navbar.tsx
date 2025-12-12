@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wallet, Bell, Search, Menu, X, LayoutGrid, Plus, Trophy, BarChart3, User as UserIcon, Lightbulb, Heart, Rocket, LogOut, AlertCircle, MoreHorizontal, Info, Mail, Lock, UserPlus, MessageCircle, Sparkles, ThumbsUp, DollarSign, Map } from 'lucide-react';
+import { Wallet, Bell, Search, Menu, X, LayoutGrid, Plus, Trophy, BarChart3, User as UserIcon, Lightbulb, Heart, Rocket, LogOut, AlertCircle, MoreHorizontal, Info, Mail, Lock, UserPlus, MessageCircle, Sparkles, ThumbsUp, DollarSign, Map, Rss } from 'lucide-react';
 import { useAppStore } from '../lib/store';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
@@ -54,16 +54,25 @@ const Navbar = () => {
     {
       name: 'Challenge',
       route: '/challenge',
-      icon: Sparkles, // Using Sparkles for challenge
+      icon: Sparkles,
       status: 'open',
       id: 'challenge',
+      isActive: true,
+    },
+    {
+      name: 'Donate me',
+      route: '/donate',
+      icon: Heart,
+      status: 'open',
+      highlight: { borderColor: '#FF6B6B', textColor: '#FF6B6B' },
+      id: 'donate',
       isActive: true,
     },
     {
       name: 'Contact',
       route: '/contact',
       icon: Mail,
-      status: 'open', // Changed to open
+      status: 'open',
       id: 'contact',
       isActive: true,
     },
@@ -111,8 +120,8 @@ const Navbar = () => {
     { name: 'HOME', route: '/home', icon: LayoutGrid },
     { name: 'IDEA', route: '/idea', icon: Lightbulb },
     { name: 'PROJECT', route: '/projects', icon: Rocket },
-    { name: 'Donate me', route: '/donate', icon: Heart },
-    { name: 'More', isDropdown: true, icon: MoreHorizontal } // New 'More' entry
+    { name: 'GmiFeeds', route: '/feeds', icon: Rss },
+    { name: 'More', isDropdown: true, icon: MoreHorizontal }
   ];
 
 

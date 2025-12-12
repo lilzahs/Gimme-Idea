@@ -417,4 +417,93 @@ export const apiClient = {
     apiFetch<{ success: boolean }>("/notifications", {
       method: "DELETE",
     }),
+
+  // =====================================
+  // FEEDS API (GmiFeeds)
+  // =====================================
+
+  // Get all public feeds
+  getFeeds: (params?: { featured?: boolean; limit?: number; offset?: number }) => {
+    const query = params
+      ? new URLSearchParams(
+          Object.entries(params)
+            .filter(([, v]) => v !== undefined)
+            .map(([k, v]) => [k, String(v)])
+        ).toString()
+      : "";
+    return apiFetch<any>(`/feeds${query ? `?${query}` : ""}`);
+  },
+
+  // Get featured feeds for discovery
+  getDiscoverFeeds: () => apiFetch<any>("/feeds/discover"),
+
+  // Get current user's created feeds
+  getMyFeeds: () => apiFetch<any>("/feeds/my"),
+
+  // Get feeds user is following
+  getFollowingFeeds: () => apiFetch<any>("/feeds/following"),
+
+  // Get user's feeds for bookmark selection
+  getFeedsForBookmark: (projectId: string) =>
+    apiFetch<any>(`/feeds/for-bookmark/${projectId}`),
+
+  // Get single feed by ID
+  getFeed: (feedId: string) => apiFetch<any>(`/feeds/${feedId}`),
+
+  // Get items in a feed
+  getFeedItems: (feedId: string, params?: { limit?: number; offset?: number }) => {
+    const query = params
+      ? new URLSearchParams(
+          Object.entries(params)
+            .filter(([, v]) => v !== undefined)
+            .map(([k, v]) => [k, String(v)])
+        ).toString()
+      : "";
+    return apiFetch<any>(`/feeds/${feedId}/items${query ? `?${query}` : ""}`);
+  },
+
+  // Create a new feed
+  createFeed: (data: { name: string; description?: string; coverImage?: string; isPublic?: boolean }) =>
+    apiFetch<any>("/feeds", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  // Update a feed
+  updateFeed: (feedId: string, data: { name?: string; description?: string; coverImage?: string; isPublic?: boolean }) =>
+    apiFetch<any>(`/feeds/${feedId}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+
+  // Delete a feed
+  deleteFeed: (feedId: string) =>
+    apiFetch<any>(`/feeds/${feedId}`, {
+      method: "DELETE",
+    }),
+
+  // Follow a feed
+  followFeed: (feedId: string) =>
+    apiFetch<any>(`/feeds/${feedId}/follow`, {
+      method: "POST",
+    }),
+
+  // Unfollow a feed
+  unfollowFeed: (feedId: string) =>
+    apiFetch<any>(`/feeds/${feedId}/follow`, {
+      method: "DELETE",
+    }),
+
+  // Add item to feed (bookmark)
+  addItemToFeed: (feedId: string, data: { projectId: string; note?: string }) =>
+    apiFetch<any>(`/feeds/${feedId}/items`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  // Remove item from feed
+  removeItemFromFeed: (feedId: string, itemId: string) =>
+    apiFetch<any>(`/feeds/${feedId}/items/${itemId}`, {
+      method: "DELETE",
+    }),
 };

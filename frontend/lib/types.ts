@@ -167,6 +167,48 @@ export interface AIQuota {
 }
 
 // ============================================
+// GmiFeeds Types
+// ============================================
+
+export interface Feed {
+  id: string;
+  creatorId: string;
+  name: string;
+  description?: string;
+  coverImage?: string;
+  isPublic: boolean;
+  isFeatured: boolean;
+  feedType: 'custom' | 'trending' | 'ai_top' | 'hidden_gems' | 'staff_picks';
+  itemsCount: number;
+  followersCount: number;
+  membersCount: number;
+  createdAt: string;
+  updatedAt: string;
+  creator?: {
+    username: string;
+    wallet: string;
+    avatar?: string;
+  };
+  isFollowing?: boolean;
+  isMember?: boolean;
+  hasItem?: boolean; // For bookmark modal
+}
+
+export interface FeedItem {
+  id: string;
+  feedId: string;
+  projectId: string;
+  addedBy: string;
+  note?: string;
+  createdAt: string;
+  project?: Project;
+  addedByUser?: {
+    username: string;
+    avatar?: string;
+  };
+}
+
+// ============================================
 // Follow System Types
 // ============================================
 
