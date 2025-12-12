@@ -17,13 +17,30 @@ export function createSlug(text: string): string {
 }
 
 /**
+ * Create a username slug for profile URLs
+ * Example: "John Doe" -> "john-doe"
+ */
+export function createUsernameSlug(username: string): string {
+  return createSlug(username);
+}
+
+/**
  * Create a unique slug with ID suffix for guaranteed uniqueness
  * Example: "My Idea" with id "abc123" -> "my-idea-abc123"
+ * @deprecated Use createSlug instead - slugs are now stored in database
  */
 export function createUniqueSlug(text: string, id: string): string {
   const slug = createSlug(text);
   const shortId = id.slice(0, 8); // Use first 8 chars of ID
   return `${slug}-${shortId}`;
+}
+
+/**
+ * Create idea/project slug - just the title without ID
+ * Example: "My Awesome Idea" -> "my-awesome-idea"
+ */
+export function createIdeaSlug(title: string): string {
+  return createSlug(title);
 }
 
 /**
@@ -43,4 +60,11 @@ export function extractIdFromSlug(slug: string): string | null {
 
   // If not a UUID prefix, return the full slug (might be just an ID)
   return slug;
+}
+
+/**
+ * Check if a string looks like a slug (contains only lowercase, numbers, hyphens)
+ */
+export function isValidSlug(str: string): boolean {
+  return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(str);
 }

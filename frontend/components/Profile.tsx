@@ -19,6 +19,7 @@ import toast from 'react-hot-toast';
 import { Project } from '../lib/types';
 import { apiClient } from '../lib/api-client';
 import { uploadAvatar } from '../lib/imgbb';
+import { createUsernameSlug } from '../lib/slug-utils';
 
 interface UserStats {
   reputation: number;
@@ -516,7 +517,8 @@ export const Profile = () => {
                             {/* Share Profile Button - shows on ALL profiles */}
                             <button 
                                 onClick={() => {
-                                    const profileUrl = `${window.location.origin}/profile/${displayUser.username}`;
+                                    const profileSlug = displayUser.slug || createUsernameSlug(displayUser.username);
+                                    const profileUrl = `${window.location.origin}/profile/${profileSlug}`;
                                     navigator.clipboard.writeText(profileUrl);
                                     // Show toast notification
                                     const toast = document.createElement('div');

@@ -238,12 +238,13 @@ export class ProjectsService {
   }
 
   /**
-   * Get single project by ID
+   * Get single project by ID or slug
    */
-  async findOne(id: string): Promise<ApiResponse<Project>> {
+  async findOne(idOrSlug: string): Promise<ApiResponse<Project>> {
     const supabase = this.supabaseService.getAdminClient();
 
-    const { data: project, error } = await supabase
+    // First try to find by slug
+    let { data: project, error } = await supabase
       .from("projects")
       .select(
         `
@@ -255,8 +256,62 @@ export class ProjectsService {
         )
       `
       )
-      .eq("id", id)
+      .eq("slug", idOrSlug)
       .single();
+
+    // If not found by slug, try by ID (UUID format)
+    if (error || !project) {
+      const isUUID =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          idOrSlug
+        );
+
+      if (isUUID) {
+        const result = await supabase
+          .from("projects")
+          .select(
+            `
+            *,
+            author:users!projects_author_id_fkey(
+              username,
+              wallet,
+              avatar
+            )
+          `
+          )
+          .eq("id", idOrSlug)
+          .single();
+
+        project = result.data;
+        error = result.error;
+      }
+
+      // Also try matching by ID prefix (for old slug format like "my-idea-abc12345")
+      if (error || !project) {
+        const parts = idOrSlug.split("-");
+        const lastPart = parts[parts.length - 1];
+
+        if (/^[a-f0-9]{8}$/i.test(lastPart)) {
+          const result = await supabase
+            .from("projects")
+            .select(
+              `
+              *,
+              author:users!projects_author_id_fkey(
+                username,
+                wallet,
+                avatar
+              )
+            `
+            )
+            .ilike("id", `${lastPart}%`)
+            .single();
+
+          project = result.data;
+          error = result.error;
+        }
+      }
+    }
 
     if (error || !project) {
       throw new NotFoundException("Project not found");
@@ -275,7 +330,7 @@ export class ProjectsService {
         )
       `
       )
-      .eq("project_id", id)
+      .eq("project_id", project.id)
       .order("created_at", { ascending: true });
 
     const projectResponse: Project = {

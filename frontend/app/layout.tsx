@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     siteName: 'Gimme Idea',
     images: [
       {
-        url: '/OG-img.png',
+        url: 'https://gimmeidea.com/OG-img.png',
         width: 1200,
         height: 630,
         alt: 'Gimme Idea - Share & Validate Startup Ideas',
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Gimme Idea | Share & Validate Startup Ideas',
     description: 'Share your startup ideas, get community feedback, and receive crypto tips on Solana.',
-    images: ['/OG-img.png'],
+    images: ['https://gimmeidea.com/OG-img.png'],
   },
   icons: {
     icon: [

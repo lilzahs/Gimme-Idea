@@ -57,6 +57,7 @@ export interface User {
   id: string;
   wallet: string;
   username: string;
+  slug?: string; // URL-friendly identifier
   bio?: string;
   avatar?: string;
   coverImage?: string; // Profile cover/banner image

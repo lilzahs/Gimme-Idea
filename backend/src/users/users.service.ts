@@ -22,16 +22,41 @@ export class UsersService {
   constructor(private supabaseService: SupabaseService) {}
 
   /**
-   * Get user by username
+   * Get user by username or slug
    */
   async findByUsername(username: string): Promise<ApiResponse<User>> {
     const supabase = this.supabaseService.getAdminClient();
 
-    const { data: user, error } = await supabase
+    // First try to find by slug (clean URL)
+    let { data: user, error } = await supabase
       .from("users")
       .select("*")
-      .eq("username", username)
+      .eq("slug", username)
       .single();
+
+    // If not found by slug, try by exact username
+    if (error || !user) {
+      const result = await supabase
+        .from("users")
+        .select("*")
+        .eq("username", username)
+        .single();
+
+      user = result.data;
+      error = result.error;
+    }
+
+    // If still not found, try case-insensitive search
+    if (error || !user) {
+      const result = await supabase
+        .from("users")
+        .select("*")
+        .ilike("username", username)
+        .single();
+
+      user = result.data;
+      error = result.error;
+    }
 
     if (error || !user) {
       throw new NotFoundException("User not found");
@@ -44,6 +69,7 @@ export class UsersService {
       bio: user.bio,
       avatar: user.avatar,
       coverImage: user.cover_image,
+      slug: user.slug,
       reputationScore: user.reputation_score || 0,
       balance: user.balance || 0,
       socialLinks: user.social_links,

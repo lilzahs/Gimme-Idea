@@ -29,6 +29,7 @@ export interface Project {
   id: string;
   type: "project" | "idea"; // Distinguish between fully formed projects and raw ideas
   title: string;
+  slug?: string; // URL-friendly identifier
   description: string;
   category:
     | "DeFi"
@@ -71,6 +72,7 @@ export interface User {
   id?: string; // Database user ID (returned from backend)
   wallet: string;
   username: string;
+  slug?: string; // URL-friendly identifier
   reputation: number;
   balance: number; // USDC
   projects: string[]; // Project IDs
@@ -177,9 +179,9 @@ export interface Feed {
   name: string;
   description?: string;
   coverImage?: string;
-  visibility: 'private' | 'unlisted' | 'public';
+  visibility: "private" | "unlisted" | "public";
   isFeatured: boolean;
-  feedType: 'custom' | 'trending' | 'ai_top' | 'hidden_gems' | 'staff_picks';
+  feedType: "custom" | "trending" | "ai_top" | "hidden_gems" | "staff_picks";
   itemsCount: number;
   followersCount: number;
   createdAt: string;

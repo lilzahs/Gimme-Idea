@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { createUsernameSlug } from '../lib/slug-utils';
 
 interface AuthorLinkProps {
   username: string;
@@ -44,7 +45,7 @@ export const AuthorLink: React.FC<AuthorLinkProps> = ({
 
   return (
     <Link
-      href={`/profile/${encodeURIComponent(username)}`}
+      href={`/profile/${createUsernameSlug(username)}`}
       className={`flex items-center gap-2 hover:text-purple-400 transition-colors group ${className}`}
       onClick={(e) => e.stopPropagation()}
     >
@@ -93,7 +94,7 @@ export const AuthorAvatar: React.FC<{
 
   return (
     <Link
-      href={`/profile/${encodeURIComponent(username)}`}
+      href={`/profile/${createUsernameSlug(username)}`}
       className={`block flex-shrink-0 ${sizeClasses[size]} rounded-full overflow-hidden border border-white/10 hover:border-purple-400/50 transition-colors ${className}`}
       onClick={(e) => e.stopPropagation()}
     >

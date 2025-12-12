@@ -7,7 +7,7 @@ import { useAppStore } from '../lib/store';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
-import { createUniqueSlug } from '../lib/slug-utils';
+import { createIdeaSlug } from '../lib/slug-utils';
 import { AuthorLink } from './AuthorLink';
 
 interface ProjectCardProps {
@@ -39,7 +39,8 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   };
 
   const handleCardClick = () => {
-    const slug = createUniqueSlug(project.title, project.id);
+    // Use slug from project if available, otherwise create from title
+    const slug = project.slug || createIdeaSlug(project.title);
     const route = isIdea ? `/idea/${slug}` : `/projects/${slug}`;
     router.push(route);
   };
@@ -60,23 +61,23 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
       onClick={handleCardClick}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      whileHover={{ y: -4 }}
+      whileHover={{ y: -8, scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
-      transition={{ type: "spring", stiffness: 400, damping: 25 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
       className="relative rounded-2xl overflow-hidden cursor-pointer flex flex-col h-full group"
     >
-      {/* Card background - semi-transparent with subtle golden tint */}
-      <div className="absolute inset-0 bg-[#12131a]/90" />
+      {/* Card background - more transparent */}
+      <div className="absolute inset-0 bg-[#12131a]/70 backdrop-blur-sm group-hover:bg-[#12131a]/80 transition-all duration-500" />
       
       {/* Subtle golden glow background for Ideas */}
       {isIdea && (
-        <div className="absolute inset-0 bg-gradient-to-br from-[#FFD700]/[0.02] via-transparent to-[#FFD700]/[0.01]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#FFD700]/[0.03] via-transparent to-[#FFD700]/[0.02] group-hover:from-[#FFD700]/[0.08] group-hover:to-[#FFD700]/[0.04] transition-all duration-500" />
       )}
       
       {/* Subtle geometric pattern overlay for Ideas */}
       {isIdea && (
         <div 
-          className="absolute inset-0 opacity-[0.03] pointer-events-none"
+          className="absolute inset-0 opacity-[0.03] group-hover:opacity-[0.06] pointer-events-none transition-opacity duration-500"
           style={{
             backgroundImage: `
               radial-gradient(circle at 20% 80%, #FFD700 1px, transparent 1px),
@@ -89,21 +90,19 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
         />
       )}
       
-      {/* Border with subtle golden tint for ideas */}
+      {/* Border with glow effect on hover */}
       <div className={`absolute inset-0 rounded-2xl border transition-all duration-500 ${
         isIdea 
-          ? 'border-[#FFD700]/[0.08] group-hover:border-[#FFD700]/25' 
-          : 'border-white/[0.06] group-hover:border-white/20'
+          ? 'border-[#FFD700]/[0.08] group-hover:border-[#FFD700]/40 group-hover:shadow-[0_0_30px_rgba(255,215,0,0.15)]' 
+          : 'border-white/[0.06] group-hover:border-purple-500/40 group-hover:shadow-[0_0_30px_rgba(153,69,255,0.15)]'
       }`} />
       
-      {/* Subtle glow effect on hover */}
-      <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-        style={{
-          boxShadow: isIdea 
-            ? 'inset 0 0 30px rgba(255, 215, 0, 0.03), 0 0 15px rgba(255, 215, 0, 0.05)'
-            : 'inset 0 0 30px rgba(153, 69, 255, 0.03), 0 0 15px rgba(153, 69, 255, 0.05)'
-        }}
-      />
+      {/* Inner glow effect on hover */}
+      <div className={`absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none ${
+        isIdea 
+          ? 'shadow-[inset_0_1px_0_rgba(255,215,0,0.2),inset_0_-1px_0_rgba(255,215,0,0.1)]'
+          : 'shadow-[inset_0_1px_0_rgba(153,69,255,0.2),inset_0_-1px_0_rgba(153,69,255,0.1)]'
+      }`} />
 
       {/* Diagonal white shimmer effect on hover - slow vertical sweep */}
       {hasShimmered && (

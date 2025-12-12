@@ -15,6 +15,7 @@ import { Feed, FeedItem, Project } from '@/lib/types';
 import { ProjectCard } from '@/components/ProjectCard';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
+import { createUsernameSlug } from '@/lib/slug-utils';
 
 // Feed type icons
 const FEED_TYPE_CONFIG = {
@@ -339,7 +340,7 @@ export default function FeedDetailPage() {
                 <div className="flex items-center gap-2 mt-4 pt-4 border-t border-white/5">
                   <span className="text-xs text-gray-500">Created by</span>
                   <button
-                    onClick={() => router.push(`/profile/${feed.creator?.username}`)}
+                    onClick={() => router.push(`/profile/${createUsernameSlug(feed.creator?.username || '')}`)}
                     className="flex items-center gap-2 hover:opacity-80 transition-opacity"
                   >
                     {feed.creator.avatar ? (
