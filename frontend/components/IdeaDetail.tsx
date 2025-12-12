@@ -15,6 +15,7 @@ import { MarkdownContent } from './MarkdownContent';
 import { MarkdownGuide } from './MarkdownGuide';
 import { AuthorLink, AuthorAvatar } from './AuthorLink';
 import { apiClient } from '../lib/api-client';
+import { sanitizeText, hasDangerousContent } from '../lib/sanitize';
 
 // AI Bot display name
 const AI_BOT_NAME = 'Gimme Sensei';
@@ -530,11 +531,21 @@ export const IdeaDetail = () => {
           openConnectReminder();
           return;
       }
-      if (isSubmitting || !commentText.trim()) return; // Prevent double submit
+      
+      // Sanitize comment
+      const sanitizedComment = sanitizeText(commentText, 2000);
+      
+      if (isSubmitting || !sanitizedComment) return; // Prevent double submit
+      
+      // Check for dangerous content
+      if (hasDangerousContent(commentText)) {
+          toast.error('Invalid content detected. Please remove any HTML or scripts.');
+          return;
+      }
 
       setIsSubmitting(true);
       try {
-        await addComment(project.id, commentText, isAnonComment);
+        await addComment(project.id, sanitizedComment, isAnonComment);
         setCommentText('');
         toast.success('Comment added');
       } catch (error) {

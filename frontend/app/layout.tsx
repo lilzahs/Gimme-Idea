@@ -9,6 +9,7 @@ import Navbar from '../components/Navbar';
 import { ConnectReminderModal } from '../components/ConnectReminderModal';
 import { ConnectWalletPopup } from '../components/ConnectWalletPopup';
 import { SubmissionModal } from '../components/SubmissionModal';
+import ErrorBoundary from '../components/ErrorBoundary';
 import Script from 'next/script';
 import React from 'react';
 
@@ -87,27 +88,29 @@ export default function RootLayout({
 
         <WalletProvider>
           <AuthProvider>
-            <Navbar />
-            <ConnectWalletPopup />
-            <ConnectReminderModal />
-            <SubmissionModal />
-            <Toaster
-              position="bottom-right"
-              toastOptions={{
-                style: {
-                  background: '#1A1A1A',
-                  color: '#fff',
-                  border: '1px solid #333',
-                },
-                success: {
-                  iconTheme: {
-                    primary: '#14F195',
-                    secondary: '#000',
+            <ErrorBoundary>
+              <Navbar />
+              <ConnectWalletPopup />
+              <ConnectReminderModal />
+              <SubmissionModal />
+              <Toaster
+                position="bottom-right"
+                toastOptions={{
+                  style: {
+                    background: '#1A1A1A',
+                    color: '#fff',
+                    border: '1px solid #333',
                   },
-                },
-              }}
-            />
-            {children}
+                  success: {
+                    iconTheme: {
+                      primary: '#14F195',
+                      secondary: '#000',
+                    },
+                  },
+                }}
+              />
+              {children}
+            </ErrorBoundary>
           </AuthProvider>
         </WalletProvider>
       </body>

@@ -11,6 +11,7 @@ import { Project } from '../lib/types';
 import { LoadingLightbulb, LoadingStatus } from './LoadingLightbulb';
 import { MarkdownGuide } from './MarkdownGuide';
 import { uploadProjectImage } from '../lib/imgbb';
+import { sanitizeText, sanitizeUrl, hasDangerousContent } from '../lib/sanitize';
 
 export const SubmissionModal = () => {
   const { isSubmitModalOpen, submitType, closeSubmitModal, addProject, user, openConnectReminder } = useAppStore();
@@ -122,7 +123,24 @@ export const SubmissionModal = () => {
         return;
     }
 
-    if (!formData.title.trim()) {
+    // Sanitize inputs
+    const sanitizedTitle = sanitizeText(formData.title, 200);
+    const sanitizedDescription = sanitizeText(formData.description, 5000);
+    const sanitizedProblem = sanitizeText(formData.problem, 3000);
+    const sanitizedSolution = sanitizeText(formData.solution, 3000);
+    const sanitizedOpportunity = sanitizeText(formData.opportunity, 3000);
+    const sanitizedWebsite = sanitizeUrl(formData.website);
+
+    // Check for dangerous content
+    if (hasDangerousContent(formData.title) || 
+        hasDangerousContent(formData.description) || 
+        hasDangerousContent(formData.problem) || 
+        hasDangerousContent(formData.solution)) {
+        toast.error('Invalid content detected. Please remove any HTML or scripts.');
+        return;
+    }
+
+    if (!sanitizedTitle) {
         toast.error('Please enter a title');
         return;
     }
@@ -132,14 +150,14 @@ export const SubmissionModal = () => {
         return;
     }
 
-    if (submitType === 'project' && !formData.description.trim()) {
+    if (submitType === 'project' && !sanitizedDescription) {
         toast.error('Please describe your project');
         return;
     }
 
     // Idea validation
     if (submitType === 'idea') {
-        if (!formData.problem.trim() || !formData.solution.trim()) {
+        if (!sanitizedProblem || !sanitizedSolution) {
             toast.error('Please fill in Problem and Solution fields');
             return;
         }
@@ -149,22 +167,25 @@ export const SubmissionModal = () => {
     setStatus('loading');
 
     try {
-        // Prepare project data for API
+        // Sanitize tags
+        const sanitizedTags = tags.map(tag => sanitizeText(tag, 50)).filter(Boolean);
+        
+        // Prepare project data for API with sanitized values
         const projectData = {
             type: submitType,
-            title: formData.title,
-            description: submitType === 'project' ? formData.description : formData.problem.substring(0, 100) + '...',
+            title: sanitizedTitle,
+            description: submitType === 'project' ? sanitizedDescription : sanitizedProblem.substring(0, 100) + '...',
             category: formData.categories[0] as Project['category'],
             stage: formData.stage as Project['stage'],
-            tags: tags.length > 0 ? tags : [...formData.categories.slice(1), 'New', 'Solana'],
+            tags: sanitizedTags.length > 0 ? sanitizedTags : [...formData.categories.slice(1), 'New', 'Solana'],
             // Project Specific
-            website: formData.website,
+            website: sanitizedWebsite,
             imageUrl: imagePreview || undefined,
             bounty: formData.bounty ? Number(formData.bounty) : undefined,
             // Idea Specific
-            problem: formData.problem,
-            opportunity: formData.opportunity,
-            solution: formData.solution,
+            problem: sanitizedProblem,
+            opportunity: sanitizedOpportunity,
+            solution: sanitizedSolution,
             isAnonymous: formData.isAnonymous
         };
 

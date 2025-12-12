@@ -11,6 +11,7 @@ import { Comment } from '../lib/types';
 import { useRealtimeComments } from '../hooks/useRealtimeComments';
 import { MarkdownContent } from './MarkdownContent';
 import { AuthorLink, AuthorAvatar } from './AuthorLink';
+import { sanitizeText, hasDangerousContent } from '../lib/sanitize';
 
 interface CommentItemProps {
     comment: Comment;
@@ -246,9 +247,20 @@ export const ProjectDetail = () => {
         toast.error("Please connect wallet to comment");
         return;
     }
-    if (!commentText.trim()) return;
+    
+    // Sanitize comment
+    const sanitizedComment = sanitizeText(commentText, 2000);
+    
+    if (!sanitizedComment) return;
+    
+    // Check for dangerous content
+    if (hasDangerousContent(commentText)) {
+        toast.error('Invalid content detected. Please remove any HTML or scripts.');
+        return;
+    }
+    
     try {
-      await addComment(project.id, commentText);
+      await addComment(project.id, sanitizedComment);
       setCommentText('');
       toast.success('Comment posted!');
     } catch (error) {
