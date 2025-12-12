@@ -149,12 +149,12 @@ const content = {
         items: ['AI-powered idea analysis', 'Follow system & notifications', 'Hackathon feature', 'Mobile wallet adapter', 'Reputation & leaderboard']
       },
       {
-        phase: 'Phase 3', title: 'Expansion', status: 'upcoming', date: 'Q2 2025',
-        items: ['Token launch & governance', 'Idea NFT minting', 'Collaboration tools', 'Investor matching', 'Mobile app (iOS/Android)']
+        phase: 'Phase 3', title: 'Idea Pool System', status: 'upcoming', date: 'Q2 2025',
+        items: ['Idea Pool with unique token per idea', 'Community staking mechanism', 'Builder proposal system', 'Revenue sharing for stakers & creators', 'Collaboration tools']
       },
       {
         phase: 'Phase 4', title: 'Ecosystem', status: 'planned', date: 'Q3-Q4 2025',
-        items: ['DAO governance', 'Grant program for builders', 'API for integrations', 'Multi-chain support', 'Enterprise features']
+        items: ['Advanced analytics dashboard', 'Investor matching', 'Grant program for builders', 'API for integrations', 'Multi-chain support']
       },
     ],
 
@@ -285,12 +285,12 @@ const content = {
         items: ['Phân tích ý tưởng bằng AI', 'Hệ thống theo dõi & thông báo', 'Tính năng Hackathon', 'Mobile wallet adapter', 'Uy tín & bảng xếp hạng']
       },
       {
-        phase: 'Giai đoạn 3', title: 'Mở rộng', status: 'upcoming', date: 'Q2 2025',
-        items: ['Ra mắt token & governance', 'Mint NFT cho ý tưởng', 'Công cụ cộng tác', 'Kết nối nhà đầu tư', 'Ứng dụng mobile (iOS/Android)']
+        phase: 'Giai đoạn 3', title: 'Idea Pool System', status: 'upcoming', date: 'Q2 2025',
+        items: ['Idea Pool với token riêng cho mỗi ý tưởng', 'Cơ chế staking từ cộng đồng', 'Hệ thống proposal cho builders', 'Chia sẻ lợi nhuận cho stakers & creators', 'Công cụ cộng tác']
       },
       {
         phase: 'Giai đoạn 4', title: 'Hệ sinh thái', status: 'planned', date: 'Q3-Q4 2025',
-        items: ['DAO governance', 'Chương trình grant cho builders', 'API tích hợp', 'Hỗ trợ đa chuỗi', 'Tính năng doanh nghiệp']
+        items: ['Dashboard phân tích nâng cao', 'Kết nối nhà đầu tư', 'Chương trình grant cho builders', 'API tích hợp', 'Hỗ trợ đa chuỗi']
       },
     ],
 
@@ -352,17 +352,12 @@ const DocsPage = () => {
           <div className="absolute top-40 right-1/4 w-80 h-80 bg-yellow-500/10 rounded-full blur-3xl" />
         </div>
         
-        <div className="relative max-w-6xl mx-auto px-4 py-20">
+        <div className="relative max-w-6xl mx-auto px-4 pt-28 pb-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full mb-6">
-              <FileText className="w-4 h-4 text-[#FFD700]" />
-              <span className="text-sm text-gray-300">{t.badge}</span>
-            </div>
-            
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
               {t.heroTitle}{' '}
               <span className="bg-gradient-to-r from-[#FFD700] to-[#FDB931] bg-clip-text text-transparent">

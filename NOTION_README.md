@@ -101,17 +101,17 @@ Hỗ trợ creators bằng cách donate SOL trực tiếp:
 - [x] Donation with SOL
 - [ ] AI-powered feedback
 
-### Q3 - Enhancement
-- [ ] Mobile app (React Native)
-- [ ] Advanced analytics
-- [ ] NFT badges
-- [ ] Creator verification
+### Q3 - Idea Pool System
+- [ ] Idea Pool với token riêng cho mỗi ý tưởng
+- [ ] Cộng đồng stake SOL để ủng hộ idea
+- [ ] Builder gửi proposal xin funding
+- [ ] Revenue sharing cho stakers & idea owners
 
-### Q4 - Expansion
-- [ ] DAO governance
-- [ ] Token launch
-- [ ] Investor matching
-- [ ] Global expansion
+### Q4 - Ecosystem
+- [ ] Dashboard phân tích nâng cao
+- [ ] Kết nối nhà đầu tư
+- [ ] API tích hợp
+- [ ] Hỗ trợ đa chuỗi
 
 ---
 
