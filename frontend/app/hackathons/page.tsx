@@ -80,11 +80,8 @@ export default function HackathonsList() {
                            <Trophy className="w-3.5 h-3.5" />
                            {hackathon.prizePool}
                          </div>
-                         <div className="flex gap-2 ml-2">
-                           {hackathon.tags.map((tag: string) => (
-                             <span key={tag} className="bg-white/5 px-2 py-0.5 rounded text-[10px]">{tag}</span>
-                           ))}
-                         </div>
+                         
+
                       </div>
                     </div>
 
