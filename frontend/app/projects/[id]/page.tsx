@@ -4,7 +4,6 @@ import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ProjectDetail } from '../../../components/ProjectDetail';
 import { useAppStore } from '../../../lib/store';
-import { extractIdFromSlug } from '../../../lib/slug-utils';
 
 export default function ProjectDetailPage() {
   const params = useParams();
@@ -12,15 +11,15 @@ export default function ProjectDetailPage() {
   const { selectedProject, setSelectedProject, fetchProjectById, isLoading } = useAppStore();
   const slugOrId = params.id as string;
   
-  // Extract ID from slug (ID is the last 8 chars after final hyphen)
-  const projectId = extractIdFromSlug(slugOrId) || slugOrId;
+  // Just pass the slug directly to backend - it will handle finding by slug or ID
+  const projectId = slugOrId;
 
   useEffect(() => {
     if (projectId) {
       // Clear old project immediately to prevent showing wrong data
       setSelectedProject(null);
 
-      // Fetch the project by ID and set it as selected
+      // Fetch the project by slug/ID and set it as selected
       fetchProjectById(projectId).then((project) => {
         if (project) {
           setSelectedProject(project);
