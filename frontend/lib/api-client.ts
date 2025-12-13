@@ -440,6 +440,9 @@ export const apiClient = {
   // Get current user's created feeds
   getMyFeeds: () => apiFetch<any>("/feeds/my"),
 
+  // Get a specific user's public feeds
+  getUserFeeds: (userId: string) => apiFetch<any>(`/feeds/user/${userId}`),
+
   // Get feeds user is following
   getFollowingFeeds: () => apiFetch<any>("/feeds/following"),
 

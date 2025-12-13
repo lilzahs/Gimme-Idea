@@ -174,6 +174,32 @@ export class FeedsService {
   }
 
   /**
+   * Get user's public feeds (for viewing other profiles)
+   */
+  async findPublicByUser(userId: string): Promise<ApiResponse<Feed[]>> {
+    const supabase = this.supabaseService.getAdminClient();
+
+    const { data: feeds, error } = await supabase
+      .from('feeds')
+      .select(`
+        *,
+        creator:users!feeds_creator_id_fkey(username, wallet, avatar)
+      `)
+      .eq('creator_id', userId)
+      .eq('visibility', 'public')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      throw new Error(`Failed to fetch user public feeds: ${error.message}`);
+    }
+
+    return {
+      success: true,
+      data: feeds.map(f => this.mapFeed(f)),
+    };
+  }
+
+  /**
    * Get feeds user is following
    */
   async findFollowing(userId: string): Promise<ApiResponse<Feed[]>> {
@@ -485,10 +511,26 @@ export class FeedsService {
    * Get items in a feed
    */
   async getFeedItems(
-    feedId: string,
+    feedIdOrSlug: string,
     options?: { limit?: number; offset?: number }
   ): Promise<ApiResponse<FeedItem[]>> {
     const supabase = this.supabaseService.getAdminClient();
+
+    // Resolve slug to ID if needed
+    let feedId = feedIdOrSlug;
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(feedIdOrSlug);
+    
+    if (!isUUID) {
+      const { data: feed } = await supabase
+        .from('feeds')
+        .select('id')
+        .eq('slug', feedIdOrSlug)
+        .single();
+      
+      if (feed) {
+        feedId = feed.id;
+      }
+    }
 
     let query = supabase
       .from('feed_items')

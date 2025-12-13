@@ -86,22 +86,12 @@ DROP POLICY IF EXISTS "Members can view feed items" ON feed_items;
 -- Drop members count column
 ALTER TABLE feeds DROP COLUMN IF EXISTS members_count;
 
--- Drop triggers related to members (ignore if not exist)
-DROP TRIGGER IF EXISTS trigger_increment_feed_members ON feed_members;
-DROP TRIGGER IF EXISTS trigger_decrement_feed_members ON feed_members;
-
--- Drop functions related to members
-DROP FUNCTION IF EXISTS increment_feed_members_count();
-DROP FUNCTION IF EXISTS decrement_feed_members_count();
+-- Drop functions related to members (triggers will be dropped automatically)
+DROP FUNCTION IF EXISTS increment_feed_members_count() CASCADE;
+DROP FUNCTION IF EXISTS decrement_feed_members_count() CASCADE;
 
 -- Drop feed_members table if exists
-DO $$ 
-BEGIN
-  DROP TABLE IF EXISTS feed_members CASCADE;
-EXCEPTION WHEN OTHERS THEN
-  -- Table doesn't exist, ignore
-  NULL;
-END $$;
+DROP TABLE IF EXISTS feed_members CASCADE;
 
 -- =============================================
 -- 4. UPDATE RLS POLICIES FOR NEW VISIBILITY
@@ -110,6 +100,7 @@ END $$;
 -- Drop old policies
 DROP POLICY IF EXISTS "Public feeds are viewable by everyone" ON feeds;
 DROP POLICY IF EXISTS "Users can view their own private feeds" ON feeds;
+DROP POLICY IF EXISTS "Public and unlisted feeds are viewable by everyone" ON feeds;
 
 -- Create new policies based on visibility
 CREATE POLICY "Public and unlisted feeds are viewable by everyone" ON feeds
@@ -121,6 +112,8 @@ CREATE POLICY "Users can view their own private feeds" ON feeds
 -- Update feed_items policy
 DROP POLICY IF EXISTS "Feed items are viewable if feed is public" ON feed_items;
 DROP POLICY IF EXISTS "Members can add items to feeds" ON feed_items;
+DROP POLICY IF EXISTS "Feed items are viewable if feed is accessible" ON feed_items;
+DROP POLICY IF EXISTS "Owners can add items to feeds" ON feed_items;
 
 CREATE POLICY "Feed items are viewable if feed is accessible" ON feed_items
   FOR SELECT USING (

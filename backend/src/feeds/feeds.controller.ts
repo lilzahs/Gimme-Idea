@@ -62,6 +62,15 @@ export class FeedsController {
   }
 
   /**
+   * GET /api/feeds/user/:userId
+   * Get a specific user's public feeds
+   */
+  @Get('user/:userId')
+  async getUserPublicFeeds(@Param('userId') userId: string) {
+    return this.feedsService.findPublicByUser(userId);
+  }
+
+  /**
    * GET /api/feeds/following
    * Get feeds current user is following
    */

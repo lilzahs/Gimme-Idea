@@ -59,7 +59,7 @@ export default function FeedDetailPage() {
     if (feedId) {
       loadFeed();
     }
-  }, [feedId, user]);
+  }, [feedId, user?.id]);
 
   const loadFeed = async () => {
     setIsLoading(true);

@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { motion } from 'framer-motion';
-import { Camera, Edit2, Save, X, Github, Twitter, Facebook, Send, Pencil, Trash2, ArrowLeft, Wallet, Check, Repeat, Loader2, Lightbulb, MessageSquare, Heart, Star, Calendar, Link as LinkIcon, ImageIcon, ThumbsUp, TrendingUp, Users } from 'lucide-react';
+import { Camera, Edit2, Save, X, Github, Twitter, Facebook, Send, Pencil, Trash2, ArrowLeft, Wallet, Check, Repeat, Loader2, Lightbulb, MessageSquare, Heart, Star, Calendar, Link as LinkIcon, ImageIcon, ThumbsUp, TrendingUp, Users, Rss, Bookmark } from 'lucide-react';
 import { ProjectCard } from './ProjectCard';
 import { WalletReminderBadge } from './WalletReminderBadge';
 import { WalletRequiredModal } from './WalletRequiredModal';
@@ -16,7 +16,7 @@ import { FollowButton, FollowStats } from './FollowButton';
 import { FollowListModal } from './FollowListModal';
 import { useFollow } from '../hooks/useFollow';
 import toast from 'react-hot-toast';
-import { Project } from '../lib/types';
+import { Project, Feed } from '../lib/types';
 import { apiClient } from '../lib/api-client';
 import { uploadAvatar } from '../lib/imgbb';
 import { createUsernameSlug } from '../lib/slug-utils';
@@ -44,7 +44,7 @@ export const Profile = () => {
   const [isLoadingStats, setIsLoadingStats] = useState(false);
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [walletModalMode, setWalletModalMode] = useState<'reconnect' | 'connect' | 'change'>('reconnect');
-  const [activeTab, setActiveTab] = useState<'ideas' | 'about'>('ideas');
+  const [activeTab, setActiveTab] = useState<'ideas' | 'feeds'>('ideas');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
   
@@ -64,6 +64,10 @@ export const Profile = () => {
   const [followModalTab, setFollowModalTab] = useState<'followers' | 'following'>('followers');
   const [localFollowersCount, setLocalFollowersCount] = useState(0);
   const [localFollowingCount, setLocalFollowingCount] = useState(0);
+  
+  // Feeds state
+  const [userFeeds, setUserFeeds] = useState<Feed[]>([]);
+  const [isLoadingFeeds, setIsLoadingFeeds] = useState(false);
   
   // Generate stars on mount
   useEffect(() => {
@@ -160,6 +164,35 @@ export const Profile = () => {
 
     fetchFollowStats();
   }, [displayUser?.id]);
+
+  // Fetch user's public feeds
+  useEffect(() => {
+    const fetchUserFeeds = async () => {
+      if (!displayUser?.id) return;
+      
+      setIsLoadingFeeds(true);
+      try {
+        // If own profile, get all feeds; otherwise get public feeds only
+        if (isOwnProfile) {
+          const response = await apiClient.getMyFeeds();
+          if (response.success && response.data) {
+            setUserFeeds(response.data);
+          }
+        } else {
+          const response = await apiClient.getUserFeeds(displayUser.id);
+          if (response.success && response.data) {
+            setUserFeeds(response.data);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch user feeds:', error);
+      } finally {
+        setIsLoadingFeeds(false);
+      }
+    };
+
+    fetchUserFeeds();
+  }, [displayUser?.id, isOwnProfile]);
 
   // Handler for when follow status changes
   const handleFollowChange = (isFollowing: boolean) => {
@@ -809,13 +842,13 @@ export const Profile = () => {
                         )}
                     </button>
                     <button
-                        onClick={() => setActiveTab('about')}
+                        onClick={() => setActiveTab('feeds')}
                         className={`flex-1 py-3 text-sm font-medium transition-colors relative border-l border-white/10 ${
-                            activeTab === 'about' ? 'text-white' : 'text-gray-500 hover:text-gray-300'
+                            activeTab === 'feeds' ? 'text-white' : 'text-gray-500 hover:text-gray-300'
                         }`}
                     >
-                        About
-                        {activeTab === 'about' && (
+                        {isOwnProfile ? 'Your Feeds' : 'Feeds'}
+                        {activeTab === 'feeds' && (
                             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-1 bg-purple-500 rounded-full" />
                         )}
                     </button>
@@ -874,67 +907,64 @@ export const Profile = () => {
                         )}
                     </>
                 ) : (
-                    <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-                        <h3 className="font-bold mb-4">About {displayUser.username}</h3>
-                        
-                        <div className="space-y-4 text-sm">
-                            {displayUser.bio && (
-                                <div>
-                                    <p className="text-gray-400 text-xs uppercase mb-1">Bio</p>
-                                    <p className="text-gray-200">{displayUser.bio}</p>
-                                </div>
-                            )}
-                            
-                            {displayUser.wallet && (
-                                <div>
-                                    <p className="text-gray-400 text-xs uppercase mb-1">Wallet</p>
-                                    <p className="text-gray-200 font-mono text-xs bg-white/5 px-3 py-2 rounded-lg inline-block">
-                                        {displayUser.wallet}
-                                    </p>
-                                </div>
-                            )}
-
-                            {hasSocialLinks && (
-                                <div>
-                                    <p className="text-gray-400 text-xs uppercase mb-2">Links</p>
-                                    <div className="flex flex-col gap-2">
-                                        {displayUser.socials?.twitter && (
-                                            <a href={displayUser.socials.twitter} target="_blank" rel="noopener noreferrer"
-                                               className="flex items-center gap-2 text-gray-300 hover:text-[#1DA1F2] transition-colors">
-                                                <Twitter className="w-4 h-4" />
-                                                <span className="truncate">{displayUser.socials.twitter}</span>
-                                            </a>
-                                        )}
-                                        {displayUser.socials?.github && (
-                                            <a href={displayUser.socials.github} target="_blank" rel="noopener noreferrer"
-                                               className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors">
-                                                <Github className="w-4 h-4" />
-                                                <span className="truncate">{displayUser.socials.github}</span>
-                                            </a>
-                                        )}
-                                        {displayUser.socials?.telegram && (
-                                            <a href={displayUser.socials.telegram} target="_blank" rel="noopener noreferrer"
-                                               className="flex items-center gap-2 text-gray-300 hover:text-[#0088cc] transition-colors">
-                                                <Send className="w-4 h-4" />
-                                                <span className="truncate">{displayUser.socials.telegram}</span>
-                                            </a>
-                                        )}
-                                        {displayUser.socials?.facebook && (
-                                            <a href={displayUser.socials.facebook} target="_blank" rel="noopener noreferrer"
-                                               className="flex items-center gap-2 text-gray-300 hover:text-[#4267B2] transition-colors">
-                                                <Facebook className="w-4 h-4" />
-                                                <span className="truncate">{displayUser.socials.facebook}</span>
-                                            </a>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-
-                            <div>
-                                <p className="text-gray-400 text-xs uppercase mb-1">Status</p>
-                                <p className="text-gray-200">Active Gimme Idea Member</p>
+                    /* Feeds Tab */
+                    <div>
+                        {isLoadingFeeds ? (
+                            <div className="flex items-center justify-center py-16">
+                                <Loader2 className="w-8 h-8 animate-spin text-[#FFD700]" />
                             </div>
-                        </div>
+                        ) : userFeeds.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {userFeeds.map(feed => (
+                                    <div
+                                        key={feed.id}
+                                        onClick={() => router.push(`/feeds/${feed.slug || feed.id}`)}
+                                        className="bg-white/5 border border-white/10 rounded-2xl p-5 cursor-pointer hover:bg-white/[0.08] hover:border-white/20 transition-all group"
+                                    >
+                                        <div className="flex items-start gap-4">
+                                            <div className="w-12 h-12 rounded-xl bg-[#FFD700]/20 flex items-center justify-center flex-shrink-0">
+                                                <Rss className="w-6 h-6 text-[#FFD700]" />
+                                            </div>
+                                            <div className="flex-grow min-w-0">
+                                                <h3 className="font-bold text-white group-hover:text-[#FFD700] transition-colors truncate">
+                                                    {feed.name}
+                                                </h3>
+                                                {feed.description && (
+                                                    <p className="text-sm text-gray-400 line-clamp-2 mt-1">
+                                                        {feed.description}
+                                                    </p>
+                                                )}
+                                                <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
+                                                    <span className="flex items-center gap-1">
+                                                        <Bookmark className="w-3.5 h-3.5" />
+                                                        {feed.itemsCount} ideas
+                                                    </span>
+                                                    <span className="flex items-center gap-1">
+                                                        <Users className="w-3.5 h-3.5" />
+                                                        {feed.followersCount} followers
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center py-16 bg-white/5 border border-dashed border-white/10 rounded-2xl">
+                                <Rss className="w-12 h-12 mx-auto mb-4 text-gray-600" />
+                                <p className="text-gray-500 mb-4">
+                                    {isOwnProfile ? "You haven't created any feeds yet" : "No public feeds"}
+                                </p>
+                                {isOwnProfile && (
+                                    <button 
+                                        onClick={() => router.push('/feeds')} 
+                                        className="text-[#FFD700] font-medium hover:text-[#FFD700]/80 transition-colors"
+                                    >
+                                        Create your first feed →
+                                    </button>
+                                )}
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
