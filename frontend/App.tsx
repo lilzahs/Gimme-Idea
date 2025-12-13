@@ -76,7 +76,7 @@ function App() {
                 <h2 className="text-5xl md:text-6xl font-display font-bold tracking-tight">
                   Ready to validate your <br /><span className="text-gold glow-text-gold">Moonshot?</span>
                 </h2>
-                <p className="text-xl text-gray-400">Join 12,000+ developers building the future of Solana.</p>
+                <p className="text-xl text-gray-400">Where ideas meet builders. Share, discover, and grow together.</p>
                 <div className="flex flex-col sm:flex-row justify-center gap-4">
 
                   <button 

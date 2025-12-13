@@ -45,8 +45,8 @@ const Hero: React.FC = () => {
             </h1>
             
             <p className="text-lg text-gray-400 max-w-xl leading-relaxed">
-              Don't build in a silo. Validate your <span className="text-gold font-mono">Solana</span> protocols with a community of builders before you deploy capital. 
-              Earn reputation and USDC for quality code reviews.
+              Turn your ideas into reality. Share concepts, get honest feedback from real builders, and discover what the community truly wants. 
+              Build with confidence, backed by collective wisdom.
             </p>
 
             <div className="flex flex-wrap gap-4 mt-8">

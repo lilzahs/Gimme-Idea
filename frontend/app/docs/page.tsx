@@ -141,19 +141,19 @@ const content = {
     weAreHere: '← We are here',
     phases: [
       {
-        phase: 'Phase 1', title: 'Foundation', status: 'completed', date: 'Q4 2024',
+        phase: 'Phase 1', title: 'Foundation', status: 'completed', date: 'Q4 2025',
         items: ['Platform launch with core features', 'Google authentication', 'Idea submission & browsing', 'SOL tipping system', 'Basic user profiles']
       },
       {
-        phase: 'Phase 2', title: 'Growth', status: 'current', date: 'Q1 2025',
-        items: ['AI-powered idea analysis', 'Follow system & notifications', 'Hackathon feature', 'Mobile wallet adapter', 'Reputation & leaderboard']
+        phase: 'Phase 2', title: 'Growth', status: 'current', date: 'Q1 2026',
+        items: ['AI-powered idea analysis', 'Follow system & notifications', 'Hackathon feature ← Current', 'Monthly Idea Challenge', 'Reputation & leaderboard']
       },
       {
-        phase: 'Phase 3', title: 'Idea Pool System', status: 'upcoming', date: 'Q2 2025',
+        phase: 'Phase 3', title: 'Idea Pool System', status: 'upcoming', date: 'Q2 2026',
         items: ['Idea Pool with unique token per idea', 'Community staking mechanism', 'Builder proposal system', 'Revenue sharing for stakers & creators', 'Collaboration tools']
       },
       {
-        phase: 'Phase 4', title: 'Ecosystem', status: 'planned', date: 'Q3-Q4 2025',
+        phase: 'Phase 4', title: 'Ecosystem', status: 'planned', date: 'Q3-Q4 2026',
         items: ['Advanced analytics dashboard', 'Investor matching', 'Grant program for builders', 'API for integrations', 'Multi-chain support']
       },
     ],
@@ -277,19 +277,19 @@ const content = {
     weAreHere: '← Chúng tôi đang ở đây',
     phases: [
       {
-        phase: 'Giai đoạn 1', title: 'Nền tảng', status: 'completed', date: 'Q4 2024',
+        phase: 'Giai đoạn 1', title: 'Nền tảng', status: 'completed', date: 'Q4 2025',
         items: ['Ra mắt platform với tính năng cốt lõi', 'Xác thực Google', 'Đăng & duyệt ý tưởng', 'Hệ thống tip SOL', 'Hồ sơ người dùng cơ bản']
       },
       {
-        phase: 'Giai đoạn 2', title: 'Tăng trưởng', status: 'current', date: 'Q1 2025',
-        items: ['Phân tích ý tưởng bằng AI', 'Hệ thống theo dõi & thông báo', 'Tính năng Hackathon', 'Mobile wallet adapter', 'Uy tín & bảng xếp hạng']
+        phase: 'Giai đoạn 2', title: 'Tăng trưởng', status: 'current', date: 'Q1 2026',
+        items: ['Phân tích ý tưởng bằng AI', 'Hệ thống theo dõi & thông báo', 'Tính năng Hackathon ← Hiện tại', 'Monthly Idea Challenge', 'Uy tín & bảng xếp hạng']
       },
       {
-        phase: 'Giai đoạn 3', title: 'Idea Pool System', status: 'upcoming', date: 'Q2 2025',
+        phase: 'Giai đoạn 3', title: 'Idea Pool System', status: 'upcoming', date: 'Q2 2026',
         items: ['Idea Pool với token riêng cho mỗi ý tưởng', 'Cơ chế staking từ cộng đồng', 'Hệ thống proposal cho builders', 'Chia sẻ lợi nhuận cho stakers & creators', 'Công cụ cộng tác']
       },
       {
-        phase: 'Giai đoạn 4', title: 'Hệ sinh thái', status: 'planned', date: 'Q3-Q4 2025',
+        phase: 'Giai đoạn 4', title: 'Hệ sinh thái', status: 'planned', date: 'Q3-Q4 2026',
         items: ['Dashboard phân tích nâng cao', 'Kết nối nhà đầu tư', 'Chương trình grant cho builders', 'API tích hợp', 'Hỗ trợ đa chuỗi']
       },
     ],
