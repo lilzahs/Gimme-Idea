@@ -4,7 +4,6 @@ export const HACKATHONS_MOCK_DATA = [
     title: 'DSUC HACKATHON : Education Ecosystem using Solana blockchain',
     date: 'Jan 15 - Feb 15, 2026',
     status: 'upcoming',
-    participants: 0,
     prizePool: '17,000,000 VND',
     description: 'Build innovative solutions for the education sector leveraging the power of Solana blockchain. Focus on decentralized learning, credentialing, and community building.',
     countdown: '03M : 05D : 10H',
@@ -49,6 +48,18 @@ export const HACKATHONS_MOCK_DATA = [
       { id: '5', date: '2026-02-01 17:00:00', message: 'REGISTRATION PHASE CONCLUDED. GOOD LUCK!', type: 'success', config: { effect: 'glitch' } },
       { id: '6', date: '2026-02-05 09:00:00', message: 'IDEA SUBMISSION PHASE ACTIVE!', type: 'success', config: { effect: 'typewriter' } },
       { id: '7', date: '2026-02-10 12:00:00', message: 'Reminder: Submission deadline is in 2 days.', type: 'warning', config: { effect: 'pulse' } },
+    ],
+    teams: [
+      { id: 1, name: 'Solana Builders', members: 3, maxMembers: 5, tags: ['DeFi', 'Rust'], lookingFor: ['Frontend Dev', 'Designer'] },
+      { id: 2, name: 'EduChain', members: 2, maxMembers: 4, tags: ['Education', 'DAO'], lookingFor: ['Smart Contract Dev'] },
+      { id: 3, name: 'Alpha Squad', members: 4, maxMembers: 4, tags: ['NFT', 'Gaming'], lookingFor: [] },
+      { id: 4, name: 'Green Earth', members: 1, maxMembers: 3, tags: ['Eco', 'Social'], lookingFor: ['Full Stack', 'Marketing'] },
+    ],
+    participants: [
+      { id: 1, name: 'Alex Chen', role: 'Full Stack Dev', skills: ['React', 'Node.js', 'Solana'], bio: 'Looking for a serious team to build a DeFi protocol.' },
+      { id: 2, name: 'Sarah Jones', role: 'UI/UX Designer', skills: ['Figma', 'Tailwind'], bio: 'Passionate about education and accessible design.' },
+      { id: 3, name: 'Mike Ross', role: 'Smart Contract Dev', skills: ['Rust', 'Anchor'], bio: 'Experienced in Solana program development.' },
+      { id: 4, name: 'Emily White', role: 'Product Manager', skills: ['Strategy', 'Marketing'], bio: 'I have a great idea for a social dapp.' },
     ]
   },
 ];

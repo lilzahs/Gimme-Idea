@@ -22,20 +22,6 @@ const LucideIconMap: { [key: string]: React.ElementType } = {
   Monitor, Mic, SwatchBook, Code, ShieldCheck, Smartphone, UserPlus, RefreshCw
 };
 
-const MOCK_TEAMS = [
-  { id: 1, name: 'Solana Builders', members: 3, maxMembers: 5, tags: ['DeFi', 'Rust'], lookingFor: ['Frontend Dev', 'Designer'] },
-  { id: 2, name: 'EduChain', members: 2, maxMembers: 4, tags: ['Education', 'DAO'], lookingFor: ['Smart Contract Dev'] },
-  { id: 3, name: 'Alpha Squad', members: 4, maxMembers: 4, tags: ['NFT', 'Gaming'], lookingFor: [] },
-  { id: 4, name: 'Green Earth', members: 1, maxMembers: 3, tags: ['Eco', 'Social'], lookingFor: ['Full Stack', 'Marketing'] },
-];
-
-const MOCK_TEAMMATES = [
-  { id: 1, name: 'Alex Chen', role: 'Full Stack Dev', skills: ['React', 'Node.js', 'Solana'], bio: 'Looking for a serious team to build a DeFi protocol.' },
-  { id: 2, name: 'Sarah Jones', role: 'UI/UX Designer', skills: ['Figma', 'Tailwind'], bio: 'Passionate about education and accessible design.' },
-  { id: 3, name: 'Mike Ross', role: 'Smart Contract Dev', skills: ['Rust', 'Anchor'], bio: 'Experienced in Solana program development.' },
-  { id: 4, name: 'Emily White', role: 'Product Manager', skills: ['Strategy', 'Marketing'], bio: 'I have a great idea for a social dapp.' },
-];
-
 export default function HackathonDashboard({ params }: { params: { id: string } }) {
   const { id } = params;
 
@@ -185,10 +171,10 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
         <aside className="lg:col-span-3 space-y-6">
           {/* Event Info Card */}
           <div className="bg-surface border border-white/5 rounded-xl p-4">
-            <h1 className="text-xl font-bold text-white font-quantico">
-              {hackathon.title.split(' ')[0]}<span className="text-gold">{hackathon.title.split(' ')[1]}</span>
+            <h1 className="text-xl font-bold text-white font-quantico break-words">
+              {hackathon.title}
             </h1>
-            <p className="text-xs text-gray-500 mt-1">{hackathon.title.substring(hackathon.title.indexOf('Season'))}</p>
+            <p className="text-xs text-gray-500 mt-1">{hackathon.status === 'active' ? 'Live Event' : 'Upcoming Event'}</p>
             {hackathon.countdown && (
               <div className="mt-4 space-y-1">
                 <p className="text-[10px] text-gray-500 uppercase tracking-wider">{countdown.label}</p>
@@ -341,7 +327,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                     
                                                             return (
                                                               <div key={log.id} className="group">
-                                                                  <span className="opacity-50 text-xs mr-2">[{log.date}]</span>
+                                                                  <span className="opacity-50 text-xs mr-2">[{format(new Date(log.date), 'MM-dd HH:mm')}]</span>
                                                                   <span className={`
                                                                       ${log.type === 'warning' ? 'text-yellow-400' : log.type === 'success' ? 'text-green-400' : 'text-gray-300'}
                                                                       ${effectClass}
@@ -585,15 +571,15 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                        {/* Content List */}
                        <div className="grid gap-4">
                           {teamTabMode === 'teams' ? (
-                            // Render MOCK_TEAMS filtered by search
-                            MOCK_TEAMS.filter(t => t.name.toLowerCase().includes(searchTeamQuery.toLowerCase()) || t.tags.some(tag => tag.toLowerCase().includes(searchTeamQuery.toLowerCase())))
-                              .map(team => (
+                            // Render hackathon.teams filtered by search
+                            (hackathon.teams || []).filter((t: any) => t.name.toLowerCase().includes(searchTeamQuery.toLowerCase()) || t.tags.some((tag: any) => tag.toLowerCase().includes(searchTeamQuery.toLowerCase())))
+                              .map((team: any) => (
                                 <div key={team.id} className="bg-surface border border-white/5 rounded-xl p-5 hover:border-gold/30 transition-all group">
                                   <div className="flex justify-between items-start">
                                     <div>
                                       <h3 className="text-lg font-bold text-white group-hover:text-gold transition-colors">{team.name}</h3>
                                       <div className="flex gap-2 mt-2">
-                                        {team.tags.map(tag => <span key={tag} className="text-[10px] bg-white/5 px-2 py-0.5 rounded text-gray-400">{tag}</span>)}
+                                        {team.tags.map((tag: any) => <span key={tag} className="text-[10px] bg-white/5 px-2 py-0.5 rounded text-gray-400">{tag}</span>)}
                                       </div>
                                     </div>
                                     <button className="bg-gold text-black text-xs font-bold px-4 py-2 rounded hover:bg-gold/90 transition-colors">
@@ -615,9 +601,9 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                 </div>
                               ))
                           ) : (
-                            // Render MOCK_TEAMMATES filtered by search
-                            MOCK_TEAMMATES.filter(u => u.name.toLowerCase().includes(searchTeamQuery.toLowerCase()) || u.skills.some(s => s.toLowerCase().includes(searchTeamQuery.toLowerCase())))
-                              .map(user => (
+                            // Render hackathon.participants filtered by search
+                            (hackathon.participants || []).filter((u: any) => u.name.toLowerCase().includes(searchTeamQuery.toLowerCase()) || u.skills.some((s: any) => s.toLowerCase().includes(searchTeamQuery.toLowerCase())))
+                              .map((user: any) => (
                                 <div key={user.id} className="bg-surface border border-white/5 rounded-xl p-5 hover:border-blue-400/30 transition-all flex items-center justify-between group">
                                   <div className="flex items-center gap-4">
                                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-white font-bold text-lg">
@@ -627,7 +613,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                       <h3 className="text-white font-bold">{user.name}</h3>
                                       <p className="text-xs text-gray-400">{user.role}</p>
                                       <div className="flex gap-1 mt-1">
-                                        {user.skills.map(skill => <span key={skill} className="text-[10px] border border-white/10 px-1.5 rounded text-gray-500">{skill}</span>)}
+                                        {user.skills.map((skill: any) => <span key={skill} className="text-[10px] border border-white/10 px-1.5 rounded text-gray-500">{skill}</span>)}
                                       </div>
                                     </div>
                                   </div>

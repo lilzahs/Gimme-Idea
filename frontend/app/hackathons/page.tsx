@@ -74,7 +74,7 @@ export default function HackathonsList() {
                       <div className="flex items-center gap-4 text-xs text-gray-500 pt-2">
                          <div className="flex items-center gap-1">
                            <Users className="w-3.5 h-3.5" />
-                           {hackathon.participants} Builders
+                           {hackathon.participants?.length || 0} Builders
                          </div>
                          <div className="flex items-center gap-1">
                            <Trophy className="w-3.5 h-3.5" />
