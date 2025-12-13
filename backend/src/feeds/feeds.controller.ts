@@ -27,12 +27,14 @@ export class FeedsController {
   async findAll(
     @Query('featured') featured?: string,
     @Query('limit') limit?: string,
-    @Query('offset') offset?: string
+    @Query('offset') offset?: string,
+    @CurrentUser('userId') userId?: string
   ) {
     return this.feedsService.findAll({
       featured: featured === 'true',
       limit: limit ? parseInt(limit) : undefined,
       offset: offset ? parseInt(offset) : undefined,
+      userId,
     });
   }
 

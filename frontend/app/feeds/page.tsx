@@ -294,7 +294,7 @@ export default function FeedsPage() {
           {user && (
             <button
               onClick={() => setShowCreateModal(true)}
-              className="px-5 py-2.5 bg-gradient-to-r from-[#FFD700] to-[#FDB931] text-black rounded-full font-bold text-sm hover:shadow-lg hover:shadow-[#FFD700]/20 transition-all flex items-center gap-2"
+              className="w-fit px-5 py-2.5 bg-gradient-to-r from-[#FFD700] to-[#FDB931] text-black rounded-full font-bold text-sm hover:shadow-lg hover:shadow-[#FFD700]/20 transition-all flex items-center gap-2 flex-shrink-0"
             >
               <Plus className="w-4 h-4" />
               Create Feed

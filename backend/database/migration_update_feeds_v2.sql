@@ -86,7 +86,7 @@ DROP POLICY IF EXISTS "Members can view feed items" ON feed_items;
 -- Drop members count column
 ALTER TABLE feeds DROP COLUMN IF EXISTS members_count;
 
--- Drop triggers related to members
+-- Drop triggers related to members (ignore if not exist)
 DROP TRIGGER IF EXISTS trigger_increment_feed_members ON feed_members;
 DROP TRIGGER IF EXISTS trigger_decrement_feed_members ON feed_members;
 
@@ -94,8 +94,14 @@ DROP TRIGGER IF EXISTS trigger_decrement_feed_members ON feed_members;
 DROP FUNCTION IF EXISTS increment_feed_members_count();
 DROP FUNCTION IF EXISTS decrement_feed_members_count();
 
--- Drop feed_members table (CASCADE to remove any remaining dependencies)
-DROP TABLE IF EXISTS feed_members CASCADE;
+-- Drop feed_members table if exists
+DO $$ 
+BEGIN
+  DROP TABLE IF EXISTS feed_members CASCADE;
+EXCEPTION WHEN OTHERS THEN
+  -- Table doesn't exist, ignore
+  NULL;
+END $$;
 
 -- =============================================
 -- 4. UPDATE RLS POLICIES FOR NEW VISIBILITY
