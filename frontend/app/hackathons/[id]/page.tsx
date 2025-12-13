@@ -55,7 +55,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
     { id: 'tracks', label: 'Tracks', stepId: null },
     { id: 'team', label: 'Team', stepId: '1' },
     { id: 'submission', label: 'Submission', stepId: '2' },
-    { id: 'voting', label: 'Voting', stepId: '3' },
+    { id: 'awarding', label: 'Trao thưởng', stepId: '3' },
   ];
 
   const visibleTabs = allTabs
@@ -359,11 +359,10 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                 </div>
              )}
 
-             {activeTab === 'voting' && (
+             {activeTab === 'awarding' && (
                 <div className="text-center py-10 text-gray-500">
-                    <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                    <p>Community voting will begin after the submission deadline.</p>
-                    <p className="text-xs mt-2">Get ready to vote for your favorite projects!</p>
+                    <Trophy className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p>Thông tin trao thưởng sẽ được cập nhật sớm.</p>
                 </div>
              )}
           </div>
