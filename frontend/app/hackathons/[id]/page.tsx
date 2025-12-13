@@ -107,6 +107,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
   const [terminalHistory, setTerminalHistory] = useState<{ type: 'command' | 'error', content: string }[]>([]);
   const [isTerminalShaking, setIsTerminalShaking] = useState(false);
   const [deniedCount, setDeniedCount] = useState(0);
+  const terminalEndRef = React.useRef<HTMLDivElement>(null);
 
   const denialMessages = new Map<number, string>([
     [5, "Bro, just give up already."],
@@ -204,6 +205,11 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
       return () => clearInterval(interval);
     }
   }, [hackathon, mockDate]);
+
+  // Auto-scroll terminal
+  useEffect(() => {
+    terminalEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [terminalHistory, hackathon?.announcements]);
 
   if (!hackathon) {
     return (
@@ -427,6 +433,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                         )}
                       </div>
                     </div>
+                    <div ref={terminalEndRef} />
                   </div>
                 </div>
               </div>
