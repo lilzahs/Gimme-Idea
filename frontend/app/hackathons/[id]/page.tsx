@@ -354,90 +354,92 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
           </div>
           {/* Tab Content Area */}
           <div className="min-h-[400px]">
-                                                             {activeTab === 'announcement' && (
-                                                                <div className="bg-black border border-green-500/30 rounded-lg p-6 font-mono text-xs shadow-[0_0_20px_rgba(34,197,94,0.1)] min-h-[500px]">
-                                                                  <div className="flex gap-1.5 mb-4">
-                                                                    <div className="w-3 h-3 rounded-full bg-red-500/50" />
-                                                                    <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
-                                                                    <div className="w-3 h-3 rounded-full bg-green-500/50" />
-                                                                  </div>
-                                                                  <div className="space-y-4">
-                                                                    <div className="border-b border-green-500/20 pb-2 flex justify-between">
-                                                                       <div><span className="text-green-600">$</span> <span className="text-green-400">cat system_announcements.log</span></div>
-                                                                       <div className="text-xs text-green-800">Connection: SECURE</div>
-                                                                    </div>
-                                                                    
-                                                                    <div className="space-y-3 text-green-300/80 max-h-[400px] overflow-y-auto pr-2">                    {hackathon.announcements ? hackathon.announcements.map((log: any) => {
-                    // Effect Logic
-                    let effectClass = '';
-                    if (log.config?.effect === 'pulse') effectClass = 'animate-pulse font-bold';
-                    if (log.config?.effect === 'typewriter') effectClass = 'border-r-2 border-green-500 pr-1 animate-pulse'; // Simple cursor simulation
-                    if (log.config?.effect === 'glitch') effectClass = 'text-shadow-glitch'; // Need custom CSS or inline style
-
-                    // Widget Logic (Countdown)
-                    let widgetContent = null;
-                    if (log.config?.widget?.type === 'countdown') {
-                      const target = new Date(log.config.widget.target);
-                      const diff = target.getTime() - now.getTime();
-                      if (diff > 0) {
-                        const hrs = Math.floor(diff / (1000 * 60 * 60));
-                        const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                        const secs = Math.floor((diff % (1000 * 60)) / 1000);
-                        widgetContent = <span className="ml-2 text-red-500 font-bold bg-red-900/20 px-1 rounded">{String(hrs).padStart(2, '0')}:{String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}</span>;
-                      } else {
-                        widgetContent = <span className="ml-2 text-gray-500">[EXPIRED]</span>;
-                      }
-                    }
-
-                    return (
-                      <div key={log.id} className="group">
-                        <span className="opacity-50 text-xs mr-2">[{format(new Date(log.date), 'MM-dd HH:mm')}]</span>
-                        <span className={`
-                                                                      ${log.type === 'warning' ? 'text-yellow-400' : log.type === 'success' ? 'text-green-400' : 'text-gray-300'}
-                                                                      ${effectClass}
-                                                                  `}
-                          style={log.config?.effect === 'glitch' ? { textShadow: '2px 0 red, -2px 0 blue' } : {}}
-                        >
-                          {log.message}
-                        </span>
-                        {widgetContent}
-                      </div>
-                    );
-                  }) : (
-                    <p className="text-gray-500 italic">No announcements found.</p>
-                  )}
-                    {/* Session History */}
-                    {terminalHistory.map((item, idx) => (
-                      <div key={idx} className={`${item.type === 'error' ? 'text-red-500 font-bold' : 'text-gray-400'}`}>
-                        {item.type === 'command' ? `$ ${item.content}` : item.content}
-                      </div>
-                    ))}
-
-                    {/* Input Line */}
-                    <div className="flex items-center gap-2 mt-4">
-                      <span className="text-green-500">$</span>
-                      <div className="relative flex-1">
-                        <motion.input
-                          type="text"
-                          value={terminalInput}
-                          onChange={(e) => setTerminalInput(e.target.value)}
-                          onKeyDown={handleTerminalSubmit}
-                          className={`bg-transparent border-none outline-none font-mono w-full ${isTerminalShaking ? 'text-red-500 placeholder-red-500/50' : 'text-green-500'}`}
-                          animate={isTerminalShaking ? { x: [-5, 5, -5, 5, 0] } : {}}
-                          transition={{ duration: 0.4 }}
-                          spellCheck={false}
-                          autoComplete="off"
-                        />
-                        {!terminalInput && (
-                          <span className="absolute left-0 top-1/2 -translate-y-1/2 w-2 h-4 bg-green-500 animate-pulse block pointer-events-none" />
-                        )}
-                      </div>
-                    </div>
-                    <div ref={terminalEndRef} />
-                  </div>
-                </div>
-              </div>
-            )}                       {activeTab === 'tracks' && (<div className="space-y-4">
+                                                                                                              {activeTab === 'announcement' && (
+                                                                                                                 <div className="bg-black border border-green-500/30 rounded-lg p-6 font-mono text-xs shadow-[0_0_20px_rgba(34,197,94,0.1)] min-h-[500px] flex flex-col">
+                                                                                                                   <div className="flex gap-1.5 mb-4">
+                                                                                                                     <div className="w-3 h-3 rounded-full bg-red-500/50" />
+                                                                                                                     <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
+                                                                                                                     <div className="w-3 h-3 rounded-full bg-green-500/50" />
+                                                                                                                   </div>
+                                                                                                                   <div className="flex-1 flex flex-col space-y-4 overflow-hidden">
+                                                                                                                     <div className="border-b border-green-500/20 pb-2 flex justify-between shrink-0">
+                                                                                                                        <div><span className="text-green-600">$</span> <span className="text-green-400">cat system_announcements.log</span></div>
+                                                                                                                        <div className="text-xs text-green-800">Connection: SECURE</div>
+                                                                                                                     </div>
+                                                                                                                     
+                                                                                                                     <div className="flex-1 overflow-y-auto space-y-3 text-green-300/80 pr-2">
+                                                                                                                       {hackathon.announcements ? hackathon.announcements.map((log: any) => {
+                                                                                                                         // Effect Logic
+                                                                                                                         let effectClass = '';
+                                                                                                                         if (log.config?.effect === 'pulse') effectClass = 'animate-pulse font-bold';
+                                                                                                                         if (log.config?.effect === 'typewriter') effectClass = 'border-r-2 border-green-500 pr-1 animate-pulse'; // Simple cursor simulation
+                                                                                                                         if (log.config?.effect === 'glitch') effectClass = 'text-shadow-glitch'; // Need custom CSS or inline style
+                                                                                                 
+                                                                                                                         // Widget Logic (Countdown)
+                                                                                                                         let widgetContent = null;
+                                                                                                                         if (log.config?.widget?.type === 'countdown') {
+                                                                                                                            const target = new Date(log.config.widget.target);
+                                                                                                                            const diff = target.getTime() - now.getTime();
+                                                                                                                            if (diff > 0) {
+                                                                                                                               const hrs = Math.floor(diff / (1000 * 60 * 60));
+                                                                                                                               const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                                                                                                                               const secs = Math.floor((diff % (1000 * 60)) / 1000);
+                                                                                                                               widgetContent = <span className="ml-2 text-red-500 font-bold bg-red-900/20 px-1 rounded">{String(hrs).padStart(2, '0')}:{String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}</span>;
+                                                                                                                            } else {
+                                                                                                                               widgetContent = <span className="ml-2 text-gray-500">[EXPIRED]</span>;
+                                                                                                                            }
+                                                                                                                         }
+                                                                                                 
+                                                                                                                         return (
+                                                                                                                           <div key={log.id} className="group">
+                                                                                                                               <span className="opacity-50 text-xs mr-2">[{format(new Date(log.date), 'MM-dd HH:mm')}]</span>
+                                                                                                                               <span className={`
+                                                                                                                                   ${log.type === 'warning' ? 'text-yellow-400' : log.type === 'success' ? 'text-green-400' : 'text-gray-300'}
+                                                                                                                                   ${effectClass}
+                                                                                                                               `}
+                                                                                                                               style={log.config?.effect === 'glitch' ? { textShadow: '2px 0 red, -2px 0 blue' } : {}}
+                                                                                                                               >
+                                                                                                                                 {log.message}
+                                                                                                                               </span>
+                                                                                                                               {widgetContent}
+                                                                                                                           </div>
+                                                                                                                         );
+                                                                                                                       }) : (
+                                                                                                                         <p className="text-gray-500 italic">No announcements found.</p>
+                                                                                                                       )}
+                                                                                                                       {/* Session History */}
+                                                                                                                       {terminalHistory.map((item, idx) => (
+                                                                                                                         <div key={idx} className={`${item.type === 'error' ? 'text-red-500 font-bold' : 'text-gray-400'}`}>
+                                                                                                                           {item.type === 'command' ? `$ ${item.content}` : item.content}
+                                                                                                                         </div>
+                                                                                                                       ))}
+                                                                                                                       <div ref={terminalEndRef} />
+                                                                                                                     </div>
+                                                             
+                                                                                                                     {/* Input Line */}
+                                                                                                                     <div className="flex items-center gap-2 pt-2 border-t border-green-500/20 shrink-0">
+                                                                                                                       <span className="text-green-500">$</span>
+                                                                                                                       <div className="relative flex-1">
+                                                                                                                                                                                     <motion.input
+                                                                                                                                                                                       type="text"
+                                                                                                                                                                                       value={terminalInput}
+                                                                                                                                                                                       onChange={(e) => setTerminalInput(e.target.value)}
+                                                                                                                                                                                       onKeyDown={handleTerminalSubmit}
+                                                                                                                                                                                       className={`border outline-none font-mono w-full px-2 py-1 rounded
+                                                                                                                                                                                         ${isTerminalShaking ? 'bg-red-900/20 border-red-500 text-red-500 placeholder-red-500/50' : 'bg-transparent border-transparent text-green-500'}
+                                                                                                                                                                                       `}
+                                                                                                                                                                                       animate={isTerminalShaking ? { x: [-5, 5, -5, 5, 0] } : {}}
+                                                                                                                                                                                       transition={{ duration: 0.4 }}
+                                                                                                                                                                                       spellCheck={false}
+                                                                                                                                                                                       autoComplete="off"
+                                                                                                                                                                                     />                                                                                                                         {!terminalInput && (
+                                                                                                                           <span className="absolute left-0 top-1/2 -translate-y-1/2 w-2 h-4 bg-green-500 animate-pulse block pointer-events-none" />
+                                                                                                                         )}
+                                                                                                                       </div>
+                                                                                                                     </div>
+                                                                                                                   </div>
+                                                                                                                 </div>
+                                                                                                              )}                       {activeTab === 'tracks' && (<div className="space-y-4">
               {hackathon.tracks?.map((track, i) => {
                 const TrackIcon = LucideIconMap[track.icon as keyof typeof LucideIconMap] || Target;
                 const isExpanded = expandedTrack === i;
