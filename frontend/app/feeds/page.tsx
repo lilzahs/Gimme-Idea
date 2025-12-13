@@ -125,7 +125,19 @@ export default function FeedsPage() {
   };
 
   const handleFeedCreated = (newFeed: Feed) => {
+    // Add to My Feeds
     setMyFeeds(prev => [newFeed, ...prev]);
+    
+    // If public, also add to Discover and All Public Feeds
+    if (newFeed.visibility === 'public') {
+      setAllPublicFeeds(prev => [newFeed, ...prev]);
+      setDiscoverFeeds(prev => {
+        // Keep max 4 feeds in discover section
+        const updated = [newFeed, ...prev];
+        return updated.slice(0, 4);
+      });
+    }
+    
     setShowCreateModal(false);
     toast.success('Feed created successfully!');
   };
