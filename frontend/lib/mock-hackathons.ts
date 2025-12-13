@@ -5,7 +5,7 @@ export const HACKATHONS_MOCK_DATA = [
     date: 'Jan 15 - Feb 15, 2026', 
     status: 'upcoming',
     participants: 0,
-    prizePool: '$25,000 USDC',
+    prizePool: '17,000,000 VND',
     description: 'Build innovative solutions for the education sector leveraging the power of Solana blockchain. Focus on decentralized learning, credentialing, and community building.',
     tags: ['Education', 'Solana', 'DeFi', 'Community'],
     countdown: '03M : 05D : 10H',
@@ -15,11 +15,9 @@ export const HACKATHONS_MOCK_DATA = [
         { id: 3, title: 'Judging & Demo Day', date: '2026-02-15T19:00:00Z', status: 'pending' },
     ],
     prizes: [
-      { rank: '1st Place', reward: '$12,000' },
-      { rank: '2nd Place', reward: '$6,000' },
-      { rank: '3rd Place', reward: '$3,000' },
-      { rank: 'Community Choice', reward: '$2,000' },
-      { rank: 'Best UI/UX', reward: '$2,000' },
+      { rank: '1st Place', reward: '10,000,000 VND' },
+      { rank: '2nd Place', reward: '5,000,000 VND' },
+      { rank: '3rd Place', reward: '2,000,000 VND' },
     ],
     tasks: [
         { id: 1, text: 'Register for the Hackathon', done: false },
