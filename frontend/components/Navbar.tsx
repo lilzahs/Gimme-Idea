@@ -60,6 +60,14 @@ const Navbar = () => {
       isActive: true,
     },
     {
+      name: 'Donate',
+      route: '/donate',
+      icon: Heart,
+      status: 'open',
+      id: 'donate',
+      isActive: true,
+    },
+    {
       name: 'Docs',
       route: '/docs',
       icon: Info,

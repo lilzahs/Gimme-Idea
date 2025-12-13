@@ -44,6 +44,22 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
   const mockDate = searchParams.get('mockDate') || searchParams.get('mockdate');
   const now = mockDate ? new Date(mockDate) : new Date(); // Get current date/time (or mock)
 
+  // Stars background
+  const [stars, setStars] = useState<{ id: number; top: string; left: string; size: number; duration: string; opacity: number }[]>([]);
+
+  // Generate stars on mount
+  useEffect(() => {
+    const newStars = Array.from({ length: 50 }).map((_, i) => ({
+      id: i,
+      top: `${Math.random() * 100}%`,
+      left: `${Math.random() * 100}%`,
+      size: Math.random() * 2 + 1,
+      duration: `${Math.random() * 3 + 2}s`,
+      opacity: Math.random()
+    }));
+    setStars(newStars);
+  }, []);
+
   // Timeline logic moved up
   const dynamicTimeline = hackathon?.timeline.map((step, index) => {
     const start = new Date(step.startDate);
@@ -265,7 +281,37 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
   }
 
   return (
-    <div className="min-h-screen bg-background text-gray-300 pt-28 pb-10 px-4 font-sans text-sm">
+    <div className="min-h-screen text-gray-300 pt-28 pb-10 px-4 font-sans text-sm relative">
+      {/* Background with Stars & Grid */}
+      <div className="fixed inset-0 z-[-1] pointer-events-none overflow-hidden">
+        <div className="bg-grid opacity-40"></div>
+        
+        {/* Deep Purple Orb - Top Left */}
+        <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-[#2e1065] rounded-full blur-[120px] animate-pulse-slow opacity-40 mix-blend-screen" />
+      
+        {/* Dark Gold/Bronze Orb - Bottom Right */}
+        <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-[#422006] rounded-full blur-[120px] animate-pulse-slow opacity-40 mix-blend-screen" style={{animationDelay: '2s'}} />
+
+        <div className="stars-container">
+          {stars.map((star) => (
+            <div
+              key={star.id}
+              className="star"
+              style={{
+                top: star.top,
+                left: star.left,
+                width: `${star.size}px`,
+                height: `${star.size}px`,
+                '--duration': star.duration,
+                '--opacity': star.opacity
+              } as React.CSSProperties}
+            />
+          ))}
+          <div className="shooting-star" style={{ top: '20%', left: '80%' }} />
+          <div className="shooting-star" style={{ top: '60%', left: '10%', animationDelay: '2s' }} />
+        </div>
+      </div>
+
       <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
 
         {/* --- LEFT COLUMN: META & TIMELINE (20%) --- */}

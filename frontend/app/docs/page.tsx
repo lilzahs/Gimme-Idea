@@ -146,7 +146,12 @@ const content = {
       },
       {
         phase: 'Phase 2', title: 'Growth', status: 'current', date: 'Q1 2026',
-        items: ['AI-powered idea analysis', 'Follow system & notifications', 'Hackathon feature ← Current', 'Monthly Idea Challenge', 'Reputation & leaderboard']
+        items: [
+          { text: 'AI-powered idea analysis', status: 'completed' },
+          { text: 'Follow system & notifications', status: 'completed' },
+          { text: 'Hackathon feature', status: 'in-progress' },
+          { text: 'Monthly Idea Challenge', status: 'pending' }
+        ]
       },
       {
         phase: 'Phase 3', title: 'Idea Pool System', status: 'upcoming', date: 'Q2 2026',
@@ -282,7 +287,12 @@ const content = {
       },
       {
         phase: 'Giai đoạn 2', title: 'Tăng trưởng', status: 'current', date: 'Q1 2026',
-        items: ['Phân tích ý tưởng bằng AI', 'Hệ thống theo dõi & thông báo', 'Tính năng Hackathon ← Hiện tại', 'Monthly Idea Challenge', 'Uy tín & bảng xếp hạng']
+        items: [
+          { text: 'Phân tích ý tưởng bằng AI', status: 'completed' },
+          { text: 'Hệ thống theo dõi & thông báo', status: 'completed' },
+          { text: 'Tính năng Hackathon', status: 'in-progress' },
+          { text: 'Monthly Idea Challenge', status: 'pending' }
+        ]
       },
       {
         phase: 'Giai đoạn 3', title: 'Idea Pool System', status: 'upcoming', date: 'Q2 2026',
@@ -716,24 +726,32 @@ const DocsPage = () => {
                           {phase.phase}
                         </span>
                         <span className="text-gray-500">{phase.date}</span>
-                        {phase.status === 'current' && (
-                          <span className="text-[#FFD700] text-sm">{t.weAreHere}</span>
-                        )}
                       </div>
                       
                       <h3 className="text-xl font-bold text-white mb-3">{phase.title}</h3>
                       
                       <ul className="space-y-2">
-                        {phase.items.map((item, j) => (
-                          <li key={j} className="flex items-center gap-2 text-gray-300">
-                            {phase.status === 'completed' ? (
-                              <CheckCircle className="w-4 h-4 text-green-400" />
-                            ) : (
-                              <div className="w-4 h-4 rounded-full border border-gray-600" />
-                            )}
-                            {item}
-                          </li>
-                        ))}
+                        {phase.items.map((item, j) => {
+                          const isItemObject = typeof item === 'object' && item !== null;
+                          const itemText = isItemObject ? item.text : item;
+                          const itemStatus = isItemObject ? item.status : (phase.status === 'completed' ? 'completed' : 'pending');
+                          
+                          return (
+                            <li key={j} className="flex items-center gap-2 text-gray-300">
+                              {itemStatus === 'completed' ? (
+                                <CheckCircle className="w-4 h-4 text-green-400" />
+                              ) : itemStatus === 'in-progress' ? (
+                                <div className="w-4 h-4 rounded-full bg-[#FFD700] animate-pulse" />
+                              ) : (
+                                <div className="w-4 h-4 rounded-full border border-gray-600" />
+                              )}
+                              {itemText}
+                              {itemStatus === 'in-progress' && (
+                                <span className="text-[#FFD700] text-sm ml-1">{t.weAreHere}</span>
+                              )}
+                            </li>
+                          );
+                        })}
                       </ul>
                     </div>
                   </div>
