@@ -292,20 +292,36 @@ export class ProjectsService {
       }
     }
 
-    // Fallback: try ID prefix match (for old URLs like "my-idea-abc12345")
+    // Fallback: try ID prefix match (for URLs like "my-idea-abc12345" or just "abc12345")
     if (!project) {
       const parts = idOrSlug.split("-");
       const lastPart = parts[parts.length - 1];
 
+      // Check if lastPart looks like UUID prefix (8 hex chars)
       if (/^[a-f0-9]{8}$/i.test(lastPart)) {
-        const result = await supabase
+        // Search for projects where ID starts with this prefix
+        const { data: projects } = await supabase
           .from("projects")
-          .select(selectQuery)
-          .ilike("id", `${lastPart}%`)
-          .single();
+          .select(selectQuery);
 
-        project = result.data;
-        error = result.error;
+        if (projects && projects.length > 0) {
+          project = projects.find((p) =>
+            p.id.toLowerCase().startsWith(lastPart.toLowerCase())
+          );
+        }
+      }
+    }
+
+    // Final fallback: if idOrSlug itself is 8 chars, try direct prefix match
+    if (!project && /^[a-f0-9]{8}$/i.test(idOrSlug)) {
+      const { data: projects } = await supabase
+        .from("projects")
+        .select(selectQuery);
+
+      if (projects && projects.length > 0) {
+        project = projects.find((p) =>
+          p.id.toLowerCase().startsWith(idOrSlug.toLowerCase())
+        );
       }
     }
 
