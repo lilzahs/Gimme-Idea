@@ -146,7 +146,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                 <div key={step.id} className="relative pl-6 group cursor-default">
                                   <div className={`absolute -left-[5px] top-1 w-2.5 h-2.5 rounded-full border-2 transition-all
                                     ${step.status === 'done' ? 'bg-green-500 border-green-500' : 
-                                      step.status === 'active' ? 'bg-gold border-gold shadow-[0_0_8px_var(--color-gold)]' : 
+                                      step.status === 'active' ? 'bg-gold border-gold shadow-[0_0_15px_var(--color-gold)] animate-pulse scale-125' : 
                                       'bg-surface border-gray-600'}`} 
                                   />
                                   <div className={`${step.status === 'active' ? 'text-white' : 'text-gray-500'}`}>
