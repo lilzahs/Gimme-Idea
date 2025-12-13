@@ -11,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { FeedsService } from './feeds.service';
 import { AuthGuard } from '../common/guards/auth.guard';
+import { OptionalAuthGuard } from '../common/guards/optional-auth.guard';
 import { CurrentUser } from '../common/decorators/user.decorator';
 import { CreateFeedDto, UpdateFeedDto, AddFeedItemDto } from './dto/feed.dto';
 import { ApiResponse } from '../shared/types';
@@ -24,6 +25,7 @@ export class FeedsController {
    * Get all public feeds
    */
   @Get()
+  @UseGuards(OptionalAuthGuard)
   async findAll(
     @Query('featured') featured?: string,
     @Query('limit') limit?: string,
@@ -43,6 +45,7 @@ export class FeedsController {
    * Get featured/system feeds for discovery
    */
   @Get('discover')
+  @UseGuards(OptionalAuthGuard)
   async discover(@CurrentUser('userId') userId?: string) {
     return this.feedsService.findAll({
       featured: true,
@@ -98,6 +101,7 @@ export class FeedsController {
    * Get single feed by ID
    */
   @Get(':id')
+  @UseGuards(OptionalAuthGuard)
   async findOne(
     @Param('id') id: string,
     @CurrentUser('userId') userId?: string

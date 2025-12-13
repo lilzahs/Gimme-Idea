@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ArrowLeft, Users, Bookmark, Share2, MoreHorizontal, 
   Loader2, Trash2, Edit2, Globe, Lock, ExternalLink,
   TrendingUp, Star, Sparkles, Gem, ChevronRight, Link as LinkIcon,
-  ShieldOff
+  ShieldOff, Copy
 } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -108,10 +108,35 @@ export default function FeedDetailPage() {
     }
   };
 
-  const handleShare = async () => {
+  // Share dropdown state
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const shareMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (shareMenuRef.current && !shareMenuRef.current.contains(e.target as Node)) {
+        setShowShareMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleShareToX = () => {
+    if (!feed) return;
+    const feedUrl = window.location.href;
+    const tweetText = `Check out "${feed.name}" feed on Gimme Idea!\n\n${feed.description ? feed.description.substring(0, 80) + '...' : ''}\n\n`;
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(feedUrl)}`;
+    window.open(twitterUrl, '_blank', 'width=550,height=420');
+    setShowShareMenu(false);
+    toast.success('Opening X...');
+  };
+
+  const handleCopyLink = async () => {
     const url = window.location.href;
     try {
       await navigator.clipboard.writeText(url);
+      setShowShareMenu(false);
       toast.success('Link copied to clipboard!');
     } catch {
       toast.error('Failed to copy link');
@@ -201,6 +226,9 @@ export default function FeedDetailPage() {
               } as React.CSSProperties}
             />
           ))}
+          <div className="shooting-star" style={{ top: '20%', left: '80%' }} />
+          <div className="shooting-star" style={{ top: '60%', left: '10%', animationDelay: '2s' }} />
+          <div className="shooting-star" style={{ top: '40%', left: '50%', animationDelay: '4s' }} />
         </div>
       </div>
 
@@ -286,12 +314,44 @@ export default function FeedDetailPage() {
                     </button>
                   )}
 
-                  <button
-                    onClick={handleShare}
-                    className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                  >
-                    <Share2 className="w-5 h-5 text-gray-400" />
-                  </button>
+                  {/* Share dropdown */}
+                  <div ref={shareMenuRef} className="relative">
+                    <button
+                      onClick={() => setShowShareMenu(!showShareMenu)}
+                      className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                    >
+                      <Share2 className="w-5 h-5 text-gray-400" />
+                    </button>
+                    
+                    <AnimatePresence>
+                      {showShareMenu && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.95, y: -5 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95, y: -5 }}
+                          transition={{ duration: 0.15 }}
+                          className="absolute right-0 top-full mt-1 w-40 bg-[#1a1a2e] border border-white/10 rounded-xl overflow-hidden shadow-xl z-50"
+                        >
+                          <button
+                            onClick={handleShareToX}
+                            className="w-full px-4 py-2.5 text-left text-sm text-gray-300 hover:bg-white/5 hover:text-white flex items-center gap-2 transition-colors"
+                          >
+                            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                            </svg>
+                            Share on X
+                          </button>
+                          <button
+                            onClick={handleCopyLink}
+                            className="w-full px-4 py-2.5 text-left text-sm text-gray-300 hover:bg-white/5 hover:text-white flex items-center gap-2 transition-colors border-t border-white/5"
+                          >
+                            <Copy className="w-4 h-4" />
+                            Copy Link
+                          </button>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
 
                   {isOwner && (
                     <div className="relative">

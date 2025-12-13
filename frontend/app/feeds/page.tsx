@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Rss, Plus, TrendingUp, Star, Sparkles, Gem, Users, 
   Bookmark, ChevronRight, Loader2, Search, X, Lock,
-  Globe, Eye, MoreHorizontal, Link2, ChevronDown
+  Globe, Eye, MoreHorizontal, Link2, ChevronDown, Share2, Copy, Twitter
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -130,6 +130,84 @@ export default function FeedsPage() {
     toast.success('Feed created successfully!');
   };
 
+  // Share dropdown component
+  const ShareDropdown = ({ feed, className = '' }: { feed: Feed; className?: string }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+      const handleClickOutside = (e: MouseEvent) => {
+        if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+          setIsOpen(false);
+        }
+      };
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const feedUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/feeds/${feed.slug}`;
+
+    const handleShareToX = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      const tweetText = `Check out "${feed.name}" feed on Gimme Idea!\n\n${feed.description ? feed.description.substring(0, 80) + '...' : ''}\n\n`;
+      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(feedUrl)}`;
+      window.open(twitterUrl, '_blank', 'width=550,height=420');
+      setIsOpen(false);
+      toast.success('Opening X...');
+    };
+
+    const handleCopyLink = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      navigator.clipboard.writeText(feedUrl);
+      setIsOpen(false);
+      toast.success('Link copied!');
+    };
+
+    return (
+      <div ref={dropdownRef} className={`relative ${className}`}>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsOpen(!isOpen);
+          }}
+          className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+        >
+          <Share2 className="w-4 h-4" />
+        </button>
+        
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: -5 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -5 }}
+              transition={{ duration: 0.15 }}
+              className="absolute right-0 top-full mt-1 w-40 bg-[#1a1a2e] border border-white/10 rounded-xl overflow-hidden shadow-xl z-50"
+            >
+              <button
+                onClick={handleShareToX}
+                className="w-full px-4 py-2.5 text-left text-sm text-gray-300 hover:bg-white/5 hover:text-white flex items-center gap-2 transition-colors"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                </svg>
+                Share on X
+              </button>
+              <button
+                onClick={handleCopyLink}
+                className="w-full px-4 py-2.5 text-left text-sm text-gray-300 hover:bg-white/5 hover:text-white flex items-center gap-2 transition-colors border-t border-white/5"
+              >
+                <Copy className="w-4 h-4" />
+                Copy Link
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    );
+  };
+
   const FeedCard = ({ feed, showFollowButton = true, showVisibility = false }: { feed: Feed; showFollowButton?: boolean; showVisibility?: boolean }) => {
     const config = FEED_TYPE_CONFIG[feed.feedType] || FEED_TYPE_CONFIG.custom;
     const visConfig = VISIBILITY_CONFIG[feed.visibility] || VISIBILITY_CONFIG.public;
@@ -143,6 +221,7 @@ export default function FeedsPage() {
         animate={{ opacity: 1, y: 0 }}
         whileHover={{ scale: 1.02, y: -4 }}
         onClick={() => router.push(`/feeds/${feed.slug}`)}
+
         className="relative bg-gradient-to-br from-white/[0.08] to-white/[0.02] border border-white/10 rounded-2xl p-5 cursor-pointer group overflow-hidden"
       >
         {/* Glow effect */}
@@ -220,21 +299,24 @@ export default function FeedsPage() {
             </div>
           )}
 
-          {showFollowButton && !isOwner && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleFollowFeed(feed.id, feed.isFollowing || false);
-              }}
-              className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all ${
-                feed.isFollowing
-                  ? 'bg-white/10 text-white hover:bg-red-500/20 hover:text-red-400'
-                  : 'bg-[#FFD700]/20 text-[#FFD700] hover:bg-[#FFD700]/30'
-              }`}
-            >
-              {feed.isFollowing ? 'Following' : 'Follow'}
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            <ShareDropdown feed={feed} />
+            {showFollowButton && !isOwner && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleFollowFeed(feed.id, feed.isFollowing || false);
+                }}
+                className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all ${
+                  feed.isFollowing
+                    ? 'bg-white/10 text-white hover:bg-red-500/20 hover:text-red-400'
+                    : 'bg-[#FFD700]/20 text-[#FFD700] hover:bg-[#FFD700]/30'
+                }`}
+              >
+                {feed.isFollowing ? 'Following' : 'Follow'}
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Arrow indicator */}
@@ -273,6 +355,9 @@ export default function FeedsPage() {
               } as React.CSSProperties}
             />
           ))}
+          <div className="shooting-star" style={{ top: '20%', left: '80%' }} />
+          <div className="shooting-star" style={{ top: '60%', left: '10%', animationDelay: '2s' }} />
+          <div className="shooting-star" style={{ top: '40%', left: '50%', animationDelay: '4s' }} />
         </div>
       </div>
 
