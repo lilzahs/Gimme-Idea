@@ -102,6 +102,30 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
   const [expandedTrack, setExpandedTrack] = useState<number | null>(null);
   const [countdown, setCountdown] = useState({ text: 'Calculating...', label: 'Loading...' });
 
+  // Terminal State
+  const [terminalInput, setTerminalInput] = useState('');
+  const [terminalHistory, setTerminalHistory] = useState<{type: 'command' | 'error', content: string}[]>([]);
+  const [isTerminalShaking, setIsTerminalShaking] = useState(false);
+
+  const handleTerminalSubmit = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      const command = terminalInput.trim();
+      if (!command) return;
+  
+      // Add command to history
+      setTerminalHistory(prev => [...prev, { type: 'command', content: command }]);
+      
+      // Trigger error effect
+      setIsTerminalShaking(true);
+      setTimeout(() => setIsTerminalShaking(false), 500); // Reset shake
+      
+      // Add error message to history
+      setTerminalHistory(prev => [...prev, { type: 'error', content: "ACCESS DENIED: You don't have administrative rights." }]);
+      
+      setTerminalInput('');
+    }
+  };
+
   useEffect(() => {
     if (!hackathon) return;
 
@@ -342,8 +366,28 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                                           }) : (
                                                             <p className="text-gray-500 italic">No announcements found.</p>
                                                           )}
-                                                          <div className="flex items-center gap-1 mt-4">
-                                                            <span className="text-green-500">$</span> <span className="w-2 h-4 bg-green-500 animate-pulse block"></span>
+                                                          {/* Session History */}
+                                                          {terminalHistory.map((item, idx) => (
+                                                            <div key={idx} className={`${item.type === 'error' ? 'text-red-500 font-bold' : 'text-gray-400'}`}>
+                                                              {item.type === 'command' ? `$ ${item.content}` : item.content}
+                                                            </div>
+                                                          ))}
+
+                                                          {/* Input Line */}
+                                                          <div className="flex items-center gap-2 mt-4">
+                                                            <span className="text-green-500">$</span>
+                                                            <motion.input
+                                                              type="text"
+                                                              value={terminalInput}
+                                                              onChange={(e) => setTerminalInput(e.target.value)}
+                                                              onKeyDown={handleTerminalSubmit}
+                                                              className={`bg-transparent border-none outline-none font-mono flex-1 ${isTerminalShaking ? 'text-red-500 placeholder-red-500/50' : 'text-green-500'}`}
+                                                              animate={isTerminalShaking ? { x: [-5, 5, -5, 5, 0] } : {}}
+                                                              transition={{ duration: 0.4 }}
+                                                              spellCheck={false}
+                                                              autoComplete="off"
+                                                            />
+                                                            {!terminalInput && <span className="w-2 h-4 bg-green-500 animate-pulse block -ml-1"></span>}
                                                           </div>
                                                         </div>
                                                       </div>
