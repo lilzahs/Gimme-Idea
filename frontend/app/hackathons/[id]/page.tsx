@@ -34,17 +34,23 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
 
     const updateTimer = () => {
       const now = new Date();
-      // Parse timeline dates
-      const timelineDates = hackathon.timeline.map(t => ({ 
-        ...t, 
-        dateObj: new Date(t.date) 
-      })).sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime());
+      
+      // Collect all milestones (starts and ends)
+      const milestones: { date: Date; title: string }[] = [];
+      hackathon.timeline.forEach(step => {
+        milestones.push({ date: new Date(step.startDate), title: `Start: ${step.title}` });
+        if (step.endDate) {
+          milestones.push({ date: new Date(step.endDate), title: `End: ${step.title}` });
+        }
+      });
+      
+      milestones.sort((a, b) => a.date.getTime() - b.date.getTime());
 
       // Find the first step that hasn't happened yet
-      const nextStep = timelineDates.find(step => step.dateObj > now);
+      const nextStep = milestones.find(m => m.date > now);
 
       if (nextStep) {
-        const diff = nextStep.dateObj.getTime() - now.getTime();
+        const diff = nextStep.date.getTime() - now.getTime();
         
         const days = Math.floor(diff / (1000 * 60 * 60 * 24));
         const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -69,14 +75,19 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
   const now = new Date(); // Get current date/time
 
   const dynamicTimeline = hackathon?.timeline.map((step, index) => {
-    const stepDate = new Date(step.date);
-    const nextStepDate = hackathon.timeline[index + 1] ? new Date(hackathon.timeline[index + 1].date) : null;
+    const start = new Date(step.startDate);
+    const end = step.endDate ? new Date(step.endDate) : null;
+    const nextStart = hackathon.timeline[index + 1] ? new Date(hackathon.timeline[index + 1].startDate) : null;
 
     let status = 'pending';
-    if (isBefore(stepDate, now) && (nextStepDate === null || isBefore(now, nextStepDate))) {
-      status = 'active';
-    } else if (isBefore(nextStepDate || now, now)) { // If next step is past, or if it's the last step and current time is past it
-      status = 'done';
+    if (isBefore(now, start)) {
+      status = 'pending';
+    } else if (end) {
+      if (isBefore(now, end)) status = 'active';
+      else status = 'done';
+    } else {
+       if (nextStart && !isBefore(now, nextStart)) status = 'done';
+       else status = 'active';
     }
     return { ...step, status };
   }) || [];
@@ -134,7 +145,10 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                   />
                                   <div className={`${step.status === 'active' ? 'text-white' : 'text-gray-500'}`}>
                                     <p className="font-medium text-xs md:text-sm">{step.title}</p>
-                                    <p className="text-[10px] font-mono opacity-70">{format(new Date(step.date), 'MMM dd, yyyy')}</p>
+                                    <p className="text-[10px] font-mono opacity-70">
+                                      {format(new Date(step.startDate), 'MMM dd')}
+                                      {step.endDate && ` - ${format(new Date(step.endDate), 'MMM dd')}`}
+                                    </p>
                                   </div>
                                 </div>
                               ))}
@@ -194,15 +208,15 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                          const lowerTab = tab.toLowerCase();
                          const isLocked = (() => {
                            if (!hackathon) return true; // Should not happen with current flow
-                           const regOpens = dynamicTimeline.find(s => s.title === 'Registration Opens')?.date;
-                           const submissionStarts = dynamicTimeline.find(s => s.title === 'Project Submission')?.date;
-                           const votingStarts = dynamicTimeline.find(s => s.title === 'Community Voting')?.date;
+                           const regOpens = dynamicTimeline.find(s => s.title.includes('Registration'))?.startDate;
+                           const submissionStarts = dynamicTimeline.find(s => s.title.includes('Idea Submission'))?.startDate;
+                           const submissionEnds = dynamicTimeline.find(s => s.title.includes('Idea Submission'))?.endDate;
                            const now = new Date();
           
                            switch (lowerTab) {
                              case 'team': return !regOpens || isBefore(now, new Date(regOpens));
                              case 'submission': return !submissionStarts || isBefore(now, new Date(submissionStarts));
-                             case 'voting': return !votingStarts || isBefore(now, new Date(votingStarts));
+                             case 'voting': return !submissionEnds || isBefore(now, new Date(submissionEnds));
                              default: return false; // Tracks always unlocked
                            }
                          })();
