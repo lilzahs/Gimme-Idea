@@ -291,6 +291,30 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
 
 
 
+          {/* Prizes Section */}
+          {hackathon.prizes && hackathon.prizes.length > 0 && (
+            <div className="bg-surface border border-white/5 rounded-xl p-4 space-y-3">
+               <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Prizes</h3>
+               <div className="space-y-2">
+                 {hackathon.prizes.map((prize, i) => (
+                   <div key={i} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5 transition-colors hover:bg-white/10">
+                      <div className="flex items-center gap-3">
+                         <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                            i === 0 ? 'bg-gold text-black' :
+                            i === 1 ? 'bg-gray-300 text-black' :
+                            i === 2 ? 'bg-amber-700 text-white' : 'bg-surfaceHighlight text-gray-500 border border-white/10'
+                         }`}>
+                           {i < 3 ? i + 1 : '-'}
+                         </div>
+                         <span className={`text-sm font-medium ${i < 3 ? 'text-white' : 'text-gray-400'}`}>{prize.rank}</span>
+                      </div>
+                      <span className="text-gold font-mono text-sm">{prize.reward}</span>
+                   </div>
+                 ))}
+               </div>
+            </div>
+          )}
+
           {/* Resources */}
           {hackathon.resources && hackathon.resources.length > 0 && (
             <div className="bg-surface border border-white/5 rounded-xl p-4 space-y-2">

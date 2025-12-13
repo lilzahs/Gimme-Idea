@@ -16,6 +16,13 @@ export const HACKATHONS_MOCK_DATA = [
         { id: 4, title: 'Community Voting', date: 'Dec 25', status: 'pending' },
         { id: 5, title: 'Demo Day & Winners', date: 'Dec 30', status: 'pending' },
     ],
+    prizes: [
+      { rank: '1st Place', reward: '$20,000' },
+      { rank: '2nd Place', reward: '$10,000' },
+      { rank: '3rd Place', reward: '$5,000' },
+      { rank: 'Honorable Mention', reward: '$2,500' },
+      { rank: 'Honorable Mention', reward: '$2,500' },
+    ],
     tasks: [
         { id: 1, text: 'Join Discord Server', done: true },
         { id: 2, text: 'Create Team Profile', done: true },
