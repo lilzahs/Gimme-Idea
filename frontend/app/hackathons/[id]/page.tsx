@@ -151,7 +151,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
       setDeniedCount(newDeniedCount);
 
       if (newDeniedCount <= 175) {
-        const errorMessage = denialMessages.get(newDeniedCount) || "ACCESS DENIED: You don't have administrative rights.";
+        const errorMessage = denialMessages.get(newDeniedCount) || "ACCESS DENIED";
         // Add error message to history
         setTerminalHistory(prev => [...prev, { type: 'error', content: errorMessage }]);
       }
@@ -361,46 +361,45 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                     <div className="text-xs text-green-800">Connection: SECURE</div>
                   </div>
 
-                  <div className="space-y-3 text-green-300/80">
-                    {hackathon.announcements ? hackathon.announcements.map((log: any) => {
-                      // Effect Logic
-                      let effectClass = '';
-                      if (log.config?.effect === 'pulse') effectClass = 'animate-pulse font-bold';
-                      if (log.config?.effect === 'typewriter') effectClass = 'border-r-2 border-green-500 pr-1 animate-pulse'; // Simple cursor simulation
-                      if (log.config?.effect === 'glitch') effectClass = 'text-shadow-glitch'; // Need custom CSS or inline style
+                  <div className="space-y-3 text-green-300/80 max-h-[200px] overflow-y-auto pr-2">                    {hackathon.announcements ? hackathon.announcements.map((log: any) => {
+                    // Effect Logic
+                    let effectClass = '';
+                    if (log.config?.effect === 'pulse') effectClass = 'animate-pulse font-bold';
+                    if (log.config?.effect === 'typewriter') effectClass = 'border-r-2 border-green-500 pr-1 animate-pulse'; // Simple cursor simulation
+                    if (log.config?.effect === 'glitch') effectClass = 'text-shadow-glitch'; // Need custom CSS or inline style
 
-                      // Widget Logic (Countdown)
-                      let widgetContent = null;
-                      if (log.config?.widget?.type === 'countdown') {
-                        const target = new Date(log.config.widget.target);
-                        const diff = target.getTime() - now.getTime();
-                        if (diff > 0) {
-                          const hrs = Math.floor(diff / (1000 * 60 * 60));
-                          const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                          const secs = Math.floor((diff % (1000 * 60)) / 1000);
-                          widgetContent = <span className="ml-2 text-red-500 font-bold bg-red-900/20 px-1 rounded">{String(hrs).padStart(2, '0')}:{String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}</span>;
-                        } else {
-                          widgetContent = <span className="ml-2 text-gray-500">[EXPIRED]</span>;
-                        }
+                    // Widget Logic (Countdown)
+                    let widgetContent = null;
+                    if (log.config?.widget?.type === 'countdown') {
+                      const target = new Date(log.config.widget.target);
+                      const diff = target.getTime() - now.getTime();
+                      if (diff > 0) {
+                        const hrs = Math.floor(diff / (1000 * 60 * 60));
+                        const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                        const secs = Math.floor((diff % (1000 * 60)) / 1000);
+                        widgetContent = <span className="ml-2 text-red-500 font-bold bg-red-900/20 px-1 rounded">{String(hrs).padStart(2, '0')}:{String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}</span>;
+                      } else {
+                        widgetContent = <span className="ml-2 text-gray-500">[EXPIRED]</span>;
                       }
+                    }
 
-                      return (
-                        <div key={log.id} className="group">
-                          <span className="opacity-50 text-xs mr-2">[{format(new Date(log.date), 'MM-dd HH:mm')}]</span>
-                          <span className={`
+                    return (
+                      <div key={log.id} className="group">
+                        <span className="opacity-50 text-xs mr-2">[{format(new Date(log.date), 'MM-dd HH:mm')}]</span>
+                        <span className={`
                                                                       ${log.type === 'warning' ? 'text-yellow-400' : log.type === 'success' ? 'text-green-400' : 'text-gray-300'}
                                                                       ${effectClass}
                                                                   `}
-                            style={log.config?.effect === 'glitch' ? { textShadow: '2px 0 red, -2px 0 blue' } : {}}
-                          >
-                            {log.message}
-                          </span>
-                          {widgetContent}
-                        </div>
-                      );
-                    }) : (
-                      <p className="text-gray-500 italic">No announcements found.</p>
-                    )}
+                          style={log.config?.effect === 'glitch' ? { textShadow: '2px 0 red, -2px 0 blue' } : {}}
+                        >
+                          {log.message}
+                        </span>
+                        {widgetContent}
+                      </div>
+                    );
+                  }) : (
+                    <p className="text-gray-500 italic">No announcements found.</p>
+                  )}
                     {/* Session History */}
                     {terminalHistory.map((item, idx) => (
                       <div key={idx} className={`${item.type === 'error' ? 'text-red-500 font-bold' : 'text-gray-400'}`}>
