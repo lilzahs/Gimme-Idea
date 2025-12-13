@@ -6,10 +6,10 @@ import {
   Trophy, Calendar, Users, Clock, ChevronRight,
   Target, Zap, MessageSquare, FileText, CheckCircle2,
   AlertCircle, MoreHorizontal, Github, Disc, Link as LinkIcon,
-  Monitor, Mic, SwatchBook, Code, ShieldCheck, Smartphone, UserPlus, RefreshCw
+  Monitor, Mic, SwatchBook, Code, ShieldCheck, Smartphone, UserPlus, RefreshCw, Lock
 } from 'lucide-react';
 import Image from 'next/image';
-import Link from 'next/link';
+import { format, isBefore } from 'date-fns';
 import { HACKATHONS_MOCK_DATA } from '@/lib/mock-hackathons';
 
 // Map icon names from mock data to Lucide React components
@@ -26,6 +26,21 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
   const { id } = params;
 
   const hackathon = HACKATHONS_MOCK_DATA.find(h => h.id === id);
+
+  const now = new Date(); // Get current date/time
+
+  const dynamicTimeline = hackathon?.timeline.map((step, index) => {
+    const stepDate = new Date(step.date);
+    const nextStepDate = hackathon.timeline[index + 1] ? new Date(hackathon.timeline[index + 1].date) : null;
+
+    let status = 'pending';
+    if (isBefore(stepDate, now) && (nextStepDate === null || isBefore(now, nextStepDate))) {
+      status = 'active';
+    } else if (isBefore(nextStepDate || now, now)) { // If next step is past, or if it's the last step and current time is past it
+      status = 'done';
+    }
+    return { ...step, status };
+  }) || [];
 
   if (!hackathon) {
     return (
@@ -67,21 +82,21 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
           {hackathon.timeline && hackathon.timeline.length > 0 && (
             <div className="bg-surface border border-white/5 rounded-xl p-4">
               <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Timeline</h3>
-              <div className="relative border-l border-white/10 ml-2 space-y-6">
-                {hackathon.timeline.map((step) => (
-                  <div key={step.id} className="relative pl-6 group cursor-default">
-                    <div className={`absolute -left-[5px] top-1 w-2.5 h-2.5 rounded-full border-2 transition-all
-                      ${step.status === 'done' ? 'bg-green-500 border-green-500' : 
-                        step.status === 'active' ? 'bg-gold border-goldshadow-[0_0_8px_var(--color-gold)]' : 
-                        'bg-surface border-gray-600'}`} 
-                    />
-                    <div className={`${step.status === 'active' ? 'text-white' : 'text-gray-500'}`}>
-                      <p className="font-medium text-xs md:text-sm">{step.title}</p>
-                      <p className="text-[10px] font-mono opacity-70">{step.date}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                            <div className="relative border-l border-white/10 ml-2 space-y-6">
+                              {dynamicTimeline.map((step, index) => (
+                                <div key={step.id} className="relative pl-6 group cursor-default">
+                                  <div className={`absolute -left-[5px] top-1 w-2.5 h-2.5 rounded-full border-2 transition-all
+                                    ${step.status === 'done' ? 'bg-green-500 border-green-500' : 
+                                      step.status === 'active' ? 'bg-gold border-gold shadow-[0_0_8px_var(--color-gold)]' : 
+                                      'bg-surface border-gray-600'}`} 
+                                  />
+                                  <div className={`${step.status === 'active' ? 'text-white' : 'text-gray-500'}`}>
+                                    <p className="font-medium text-xs md:text-sm">{step.title}</p>
+                                    <p className="text-[10px] font-mono opacity-70">{format(new Date(step.date), 'MMM dd, yyyy')}</p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
             </div>
           )}
 
@@ -132,23 +147,42 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
 
 
           {/* Navigation Tabs */}
-          <div className="flex border-b border-white/10">
-             {['Tracks', 'Team'].map((tab) => (
-               <button
-                 key={tab}
-                 onClick={() => setActiveTab(tab.toLowerCase())}
-                 className={`px-6 py-3 text-sm font-medium transition-colors relative ${
-                   activeTab === tab.toLowerCase() ? 'text-gold' : 'text-gray-500 hover:text-white'
-                 }`}
-               >
-                 {tab}
-                 {activeTab === tab.toLowerCase() && (
-                   <motion.div layoutId="underline" className="absolute bottom-0 left-0 right-0 h-0.5 bg-gold" />
-                 )}
-               </button>
-             ))}
-          </div>
-
+                    <div className="flex border-b border-white/10">
+                       {['Tracks', 'Team', 'Submission', 'Voting'].map((tab) => {
+                         const lowerTab = tab.toLowerCase();
+                         const isLocked = (() => {
+                           if (!hackathon) return true; // Should not happen with current flow
+                           const regOpens = dynamicTimeline.find(s => s.title === 'Registration Opens')?.date;
+                           const submissionStarts = dynamicTimeline.find(s => s.title === 'Project Submission')?.date;
+                           const votingStarts = dynamicTimeline.find(s => s.title === 'Community Voting')?.date;
+                           const now = new Date();
+          
+                           switch (lowerTab) {
+                             case 'team': return !regOpens || isBefore(now, new Date(regOpens));
+                             case 'submission': return !submissionStarts || isBefore(now, new Date(submissionStarts));
+                             case 'voting': return !votingStarts || isBefore(now, new Date(votingStarts));
+                             default: return false; // Tracks always unlocked
+                           }
+                         })();
+          
+                         return (
+                           <button
+                             key={tab}
+                             onClick={() => !isLocked && setActiveTab(lowerTab)}
+                             className={`px-6 py-3 text-sm font-medium transition-colors relative flex items-center gap-2 ${
+                               activeTab === lowerTab ? 'text-gold' : 'text-gray-500 hover:text-white'
+                             } ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                             disabled={isLocked}
+                           >
+                             {tab}
+                             {isLocked && <Lock className="w-3.5 h-3.5" />}
+                             {activeTab === lowerTab && (
+                               <motion.div layoutId="underline" className="absolute bottom-0 left-0 right-0 h-0.5 bg-gold" />
+                             )}
+                           </button>
+                         );
+                       })}
+                    </div>
           {/* Tab Content Area */}
           <div className="min-h-[400px]">
              {activeTab === 'tracks' && (
@@ -237,6 +271,22 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                          </div>
                       ))}
                    </div>
+                </div>
+             )}
+
+             {activeTab === 'submission' && (
+                <div className="text-center py-10 text-gray-500">
+                    <Zap className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p>Submission portal will open once the project submission phase begins.</p>
+                    <p className="text-xs mt-2">Check the timeline for submission dates!</p>
+                </div>
+             )}
+
+             {activeTab === 'voting' && (
+                <div className="text-center py-10 text-gray-500">
+                    <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p>Community voting will begin after the submission deadline.</p>
+                    <p className="text-xs mt-2">Get ready to vote for your favorite projects!</p>
                 </div>
              )}
           </div>

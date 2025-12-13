@@ -10,9 +10,9 @@ export const HACKATHONS_MOCK_DATA = [
     tags: ['Education', 'Solana', 'DeFi', 'Community'],
     countdown: '03M : 05D : 10H', // Placeholder countdown
     timeline: [
-        { id: 1, title: 'Registration Opens', date: 'Jan 01', status: 'pending' },
-        { id: 2, title: 'Submission Deadline', date: 'Feb 10', status: 'pending' },
-        { id: 3, title: 'Judging & Demo Day', date: 'Feb 15', status: 'pending' },
+        { id: 1, title: 'Registration Opens', date: '2026-01-01T09:00:00Z', status: 'pending' },
+        { id: 2, title: 'Submission Deadline', date: '2026-02-10T17:00:00Z', status: 'pending' },
+        { id: 3, title: 'Judging & Demo Day', date: '2026-02-15T19:00:00Z', status: 'pending' },
     ],
     prizes: [
       { rank: '1st Place', reward: '$12,000' },
@@ -51,11 +51,11 @@ export const HACKATHONS_MOCK_DATA = [
     tags: ['DeFi', 'NFT', 'Gaming', 'Solana'],
     countdown: '04D : 12H : 30M',
     timeline: [
-        { id: 1, title: 'Registration Opens', date: 'Dec 01', status: 'done' },
-        { id: 2, title: 'Team Formation Deadline', date: 'Dec 10', status: 'done' },
-        { id: 3, title: 'Project Submission', date: 'Dec 20', status: 'active' },
-        { id: 4, title: 'Community Voting', date: 'Dec 25', status: 'pending' },
-        { id: 5, title: 'Demo Day & Winners', date: 'Dec 30', status: 'pending' },
+        { id: 1, title: 'Registration Opens', date: '2025-12-01T09:00:00Z', status: 'done' },
+        { id: 2, title: 'Team Formation Deadline', date: '2025-12-10T17:00:00Z', status: 'done' },
+        { id: 3, title: 'Project Submission', date: '2025-12-20T17:00:00Z', status: 'active' },
+        { id: 4, title: 'Community Voting', date: '2025-12-25T09:00:00Z', status: 'pending' },
+        { id: 5, title: 'Demo Day & Winners', date: '2025-12-30T19:00:00Z', status: 'pending' },
     ],
     prizes: [
       { rank: '1st Place', reward: '$20,000' },
@@ -105,11 +105,11 @@ export const HACKATHONS_MOCK_DATA = [
     tags: ['SocialFi', 'DAO', 'Community'],
     countdown: 'Completed',
     timeline: [
-        { id: 1, title: 'Registration Opens', date: 'Sep 01', status: 'done' },
-        { id: 2, title: 'Team Formation Deadline', date: 'Sep 10', status: 'done' },
-        { id: 3, title: 'Project Submission', date: 'Sep 20', status: 'done' },
-        { id: 4, title: 'Community Voting', date: 'Sep 25', status: 'done' },
-        { id: 5, title: 'Demo Day & Winners', date: 'Sep 30', status: 'done' },
+        { id: 1, title: 'Registration Opens', date: '2025-09-01T09:00:00Z', status: 'done' },
+        { id: 2, title: 'Team Formation Deadline', date: '2025-09-10T17:00:00Z', status: 'done' },
+        { id: 3, title: 'Project Submission', date: '2025-09-20T17:00:00Z', status: 'done' },
+        { id: 4, title: 'Community Voting', date: '2025-09-25T09:00:00Z', status: 'done' },
+        { id: 5, title: 'Demo Day & Winners', date: '2025-09-30T19:00:00Z', status: 'done' },
     ],
     tasks: [],
     tracks: [
@@ -139,11 +139,11 @@ export const HACKATHONS_MOCK_DATA = [
     tags: ['Consumer', 'Mobile', 'UX'],
     countdown: 'Completed',
     timeline: [
-        { id: 1, title: 'Registration Opens', date: 'Jun 01', status: 'done' },
-        { id: 2, title: 'Team Formation Deadline', date: 'Jun 10', status: 'done' },
-        { id: 3, title: 'Project Submission', date: 'Jun 20', status: 'done' },
-        { id: 4, title: 'Community Voting', date: 'Jun 25', status: 'done' },
-        { id: 5, title: 'Demo Day & Winners', date: 'Jun 30', status: 'done' },
+        { id: 1, title: 'Registration Opens', date: '2025-06-01T09:00:00Z', status: 'done' },
+        { id: 2, title: 'Team Formation Deadline', date: '2025-06-10T17:00:00Z', status: 'done' },
+        { id: 3, title: 'Project Submission', date: '2025-06-20T17:00:00Z', status: 'done' },
+        { id: 4, title: 'Community Voting', date: '2025-06-25T09:00:00Z', status: 'done' },
+        { id: 5, title: 'Demo Day & Winners', date: '2025-06-30T19:00:00Z', status: 'done' },
     ],
     tasks: [],
     tracks: [
