@@ -114,6 +114,24 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
     );
   }
 
+      // Tab Logic: Hide locked, sort by newest unlocked first
+      const allTabs = [
+        { id: 'tracks', label: 'Tracks', stepId: null },
+        { id: 'team', label: 'Team', stepId: '1' },
+        { id: 'submission', label: 'Submission', stepId: '2' },
+        { id: 'voting', label: 'Voting', stepId: '3' },
+      ];
+
+      const visibleTabs = allTabs
+        .map(tab => {
+          const step = tab.stepId ? dynamicTimeline.find(s => s.id === tab.stepId) : null;
+          const startDate = step ? new Date(step.startDate) : new Date(0);
+          const isLocked = step ? isBefore(now, startDate) : false;
+          return { ...tab, startDate, isLocked };
+        })
+        .filter(tab => !tab.isLocked)
+        .sort((a, b) => b.startDate.getTime() - a.startDate.getTime());
+
   return (
     <div className="min-h-screen bg-background text-gray-300 pt-28 pb-10 px-4 font-sans text-sm">
       <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -225,32 +243,20 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
 
           {/* Navigation Tabs */}
                     <div className="flex border-b border-white/10">
-                       {[
-                         { id: 'tracks', label: 'Tracks', stepId: null },
-                         { id: 'team', label: 'Team', stepId: '1' },
-                         { id: 'submission', label: 'Submission', stepId: '2' },
-                         { id: 'voting', label: 'Voting', stepId: '3' },
-                       ].map((tab) => {
-                         const step = tab.stepId ? dynamicTimeline.find(s => s.id === tab.stepId) : null;
-                         const isLocked = step ? isBefore(now, new Date(step.startDate)) : false;
-          
-                         return (
+                       {visibleTabs.map((tab) => (
                            <button
                              key={tab.id}
-                             onClick={() => !isLocked && setActiveTab(tab.id)}
+                             onClick={() => setActiveTab(tab.id)}
                              className={`px-6 py-3 text-sm font-medium transition-colors relative flex items-center gap-2 ${
                                activeTab === tab.id ? 'text-gold' : 'text-gray-500 hover:text-white'
-                             } ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
-                             disabled={isLocked}
+                             }`}
                            >
                              {tab.label}
-                             {isLocked && <Lock className="w-3.5 h-3.5" />}
                              {activeTab === tab.id && (
                                <motion.div layoutId="underline" className="absolute bottom-0 left-0 right-0 h-0.5 bg-gold" />
                              )}
                            </button>
-                         );
-                       })}
+                       ))}
                     </div>
           {/* Tab Content Area */}
           <div className="min-h-[400px]">
