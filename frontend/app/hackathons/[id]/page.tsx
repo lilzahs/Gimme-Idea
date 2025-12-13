@@ -102,6 +102,29 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
   const [expandedTrack, setExpandedTrack] = useState<number | null>(null);
   const [countdown, setCountdown] = useState({ text: 'Calculating...', label: 'Loading...' });
 
+  const [submission, setSubmission] = useState({
+    title: '',
+    description: '',
+    projectUrl: '',
+    videoUrl: '',
+    track: ''
+  });
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const handleSubmissionChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setSubmission(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmitProject = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Simulate API call
+    setTimeout(() => {
+      setIsSubmitted(true);
+      // Update mock ticket or state if needed
+    }, 1000);
+  };
+
   // Terminal State
   const [terminalInput, setTerminalInput] = useState('');
   const [terminalHistory, setTerminalHistory] = useState<{ type: 'command' | 'error', content: string }[]>([]);
@@ -710,10 +733,140 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
             )}
 
             {activeTab === 'submission' && (
-              <div className="text-center py-10 text-gray-500">
-                <Zap className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <p>Submission portal will open once the project submission phase begins.</p>
-                <p className="text-xs mt-2">Check the timeline for submission dates!</p>
+              <div className="max-w-3xl mx-auto">
+                {!isSubmitted ? (
+                  <form onSubmit={handleSubmitProject} className="bg-surface border border-white/5 rounded-xl p-8 space-y-6">
+                    <div className="text-center mb-8">
+                      <h2 className="text-2xl font-bold text-white font-quantico mb-2">Submit Your Project</h2>
+                      <p className="text-gray-400">Ready to showcase your work? Fill in the details below.</p>
+                    </div>
+
+                    <div className="space-y-4">
+                      {/* Project Name */}
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Project Name</label>
+                        <input
+                          type="text"
+                          name="title"
+                          required
+                          value={submission.title}
+                          onChange={handleSubmissionChange}
+                          placeholder="e.g. Solana DeFi Aggregator"
+                          className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-gold/50 focus:outline-none transition-colors"
+                        />
+                      </div>
+
+                      {/* Track Selection */}
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Select Track</label>
+                        <select
+                          name="track"
+                          required
+                          value={submission.track}
+                          onChange={handleSubmissionChange}
+                          className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-gold/50 focus:outline-none transition-colors appearance-none"
+                        >
+                          <option value="" disabled>Select a track...</option>
+                          {hackathon.tracks?.map((track, i) => (
+                            <option key={i} value={track.title}>{track.title}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Description */}
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Short Description</label>
+                        <textarea
+                          name="description"
+                          required
+                          value={submission.description}
+                          onChange={handleSubmissionChange}
+                          rows={4}
+                          placeholder="Briefly describe your project, the problem it solves, and the solution..."
+                          className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-gold/50 focus:outline-none transition-colors resize-none"
+                        />
+                      </div>
+
+                      {/* URLs */}
+                      <div className="grid md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Project URL / Repo</label>
+                          <div className="relative">
+                            <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                            <input
+                              type="url"
+                              name="projectUrl"
+                              required
+                              value={submission.projectUrl}
+                              onChange={handleSubmissionChange}
+                              placeholder="https://github.com/..."
+                              className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white focus:border-gold/50 focus:outline-none transition-colors"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Demo / Video URL</label>
+                          <div className="relative">
+                            <Monitor className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                            <input
+                              type="url"
+                              name="videoUrl"
+                              value={submission.videoUrl}
+                              onChange={handleSubmissionChange}
+                              placeholder="https://youtube.com/..."
+                              className="w-full bg-black/20 border border-white/10 rounded-lg pl-10 pr-4 py-3 text-white focus:border-gold/50 focus:outline-none transition-colors"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 flex items-center justify-between border-t border-white/5 mt-6">
+                      <p className="text-xs text-gray-500">
+                        By submitting, you agree to the hackathon rules and terms.
+                      </p>
+                      <button
+                        type="submit"
+                        className="bg-gold text-black font-bold px-8 py-3 rounded-lg hover:bg-gold/90 transition-transform hover:scale-105 flex items-center gap-2"
+                      >
+                        <Zap className="w-4 h-4" /> Submit Project
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <div className="bg-surface border border-green-500/30 rounded-xl p-12 text-center space-y-6 animate-in fade-in zoom-in duration-300">
+                    <div className="w-20 h-20 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mx-auto">
+                      <CheckCircle2 className="w-10 h-10" />
+                    </div>
+                    <div>
+                      <h2 className="text-3xl font-bold text-white font-quantico">Submission Received!</h2>
+                      <p className="text-gray-400 mt-2">Your project "{submission.title}" has been successfully submitted.</p>
+                    </div>
+                    
+                    <div className="bg-white/5 p-6 rounded-lg max-w-md mx-auto text-left space-y-3">
+                      <h4 className="text-sm font-bold text-gold uppercase tracking-wider mb-2 border-b border-white/10 pb-2">Submission Details</h4>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">Track:</span>
+                        <span className="text-white">{submission.track}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">Status:</span>
+                        <span className="text-green-400 bg-green-900/20 px-2 py-0.5 rounded text-xs border border-green-500/20">Under Review</span>
+                      </div>
+                       <div className="flex justify-between text-sm">
+                        <span className="text-gray-500">Submitted:</span>
+                        <span className="text-white">{format(new Date(), 'MMM dd, yyyy HH:mm')}</span>
+                      </div>
+                    </div>
+
+                    <button 
+                      onClick={() => setIsSubmitted(false)}
+                      className="text-gray-500 hover:text-white text-sm underline mt-4"
+                    >
+                      Edit Submission
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
