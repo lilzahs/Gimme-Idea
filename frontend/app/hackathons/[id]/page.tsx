@@ -133,7 +133,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
 
           {/* Navigation Tabs */}
           <div className="flex border-b border-white/10">
-             {['Tracks', 'Prize', 'Team'].map((tab) => (
+             {['Tracks', 'Team'].map((tab) => (
                <button
                  key={tab}
                  onClick={() => setActiveTab(tab.toLowerCase())}
@@ -209,24 +209,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                 </div>
              )}
              
-             {activeTab === 'prize' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                   <div className="bg-surface border border-white/5 rounded-xl p-8 text-center flex flex-col justify-center items-center">
-                      <Trophy className="w-16 h-16 text-gold mb-4" />
-                      <h2 className="text-4xl font-bold text-white mb-2 font-quantico">{hackathon.prizePool}</h2>
-                      <p className="text-gray-500 uppercase tracking-widest text-sm">Total Prize Pool</p>
-                   </div>
-                   <div className="space-y-4">
-                      <h3 className="text-lg font-bold text-white">Prize Breakdown</h3>
-                      {hackathon.tracks?.map((track, i) => (
-                        <div key={i} className="flex items-center justify-between p-4 bg-surfaceHighlight rounded-lg border border-white/5">
-                           <span className="text-gray-300">{track.title}</span>
-                           <span className="text-gold font-mono">{track.reward}</span>
-                        </div>
-                      ))}
-                   </div>
-                </div>
-             )}
+
 
              {activeTab === 'team' && (
                 <div className="space-y-6">
