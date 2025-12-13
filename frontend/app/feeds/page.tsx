@@ -221,43 +221,56 @@ export default function FeedsPage() {
         animate={{ opacity: 1, y: 0 }}
         whileHover={{ scale: 1.02, y: -4 }}
         onClick={() => router.push(`/feeds/${feed.slug}`)}
-
-        className="relative bg-gradient-to-br from-white/[0.08] to-white/[0.02] border border-white/10 rounded-2xl p-5 cursor-pointer group overflow-hidden"
+        className="relative bg-gradient-to-br from-white/[0.08] to-white/[0.02] border border-white/10 rounded-2xl cursor-pointer group overflow-hidden"
       >
-        {/* Glow effect */}
-        <div 
-          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-          style={{
-            background: `radial-gradient(circle at 50% 0%, ${config.color}20 0%, transparent 70%)`
-          }}
-        />
+        {/* Cover Image */}
+        {feed.coverImage ? (
+          <div className="relative h-32 w-full">
+            <Image
+              src={feed.coverImage}
+              alt={feed.name}
+              fill
+              className="object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+          </div>
+        ) : null}
 
-        {/* Header with icon */}
-        <div className="flex items-start justify-between mb-4">
+        <div className={feed.coverImage ? 'p-5 pt-3' : 'p-5'}>
+          {/* Glow effect */}
           <div 
-            className="w-12 h-12 rounded-xl flex items-center justify-center"
-            style={{ backgroundColor: `${config.color}20` }}
-          >
-            <IconComponent className="w-6 h-6" style={{ color: config.color }} />
-          </div>
-          
-          <div className="flex items-center gap-2">
-            {showVisibility && (
-              <span className="flex items-center gap-1 px-2 py-1 text-[10px] rounded-full bg-white/5 text-gray-400">
-                <VisIcon className="w-3 h-3" />
-                {visConfig.label}
-              </span>
-            )}
-            {feed.isFeatured && (
-              <span className="px-2 py-1 text-[10px] font-bold rounded-full bg-[#FFD700]/20 text-[#FFD700] border border-[#FFD700]/30">
-                FEATURED
-              </span>
-            )}
-          </div>
-        </div>
+            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+            style={{
+              background: `radial-gradient(circle at 50% 0%, ${config.color}20 0%, transparent 70%)`
+            }}
+          />
 
-        {/* Feed name */}
-        <h3 className="text-lg font-bold text-white mb-1 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-gray-300 transition-all">
+          {/* Header with icon */}
+          <div className="flex items-start justify-between mb-4">
+            <div 
+              className="w-12 h-12 rounded-xl flex items-center justify-center"
+              style={{ backgroundColor: `${config.color}20` }}
+            >
+              <IconComponent className="w-6 h-6" style={{ color: config.color }} />
+            </div>
+            
+            <div className="flex items-center gap-2">
+              {showVisibility && (
+                <span className="flex items-center gap-1 px-2 py-1 text-[10px] rounded-full bg-white/5 text-gray-400">
+                  <VisIcon className="w-3 h-3" />
+                  {visConfig.label}
+                </span>
+              )}
+              {feed.isFeatured && (
+                <span className="px-2 py-1 text-[10px] font-bold rounded-full bg-[#FFD700]/20 text-[#FFD700] border border-[#FFD700]/30">
+                  FEATURED
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Feed name */}
+          <h3 className="text-lg font-bold text-white mb-1 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-gray-300 transition-all">
           {feed.name}
         </h3>
 
@@ -321,6 +334,7 @@ export default function FeedsPage() {
 
         {/* Arrow indicator */}
         <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-600 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+        </div>
       </motion.div>
     );
   };

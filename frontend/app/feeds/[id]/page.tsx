@@ -243,31 +243,45 @@ export default function FeedDetailPage() {
         </button>
 
         {/* Feed Header */}
-        <div className="bg-gradient-to-br from-white/[0.08] to-white/[0.02] border border-white/10 rounded-2xl p-6 mb-8">
-          <div className="flex flex-col sm:flex-row gap-6">
-            {/* Icon */}
-            <div 
-              className="w-20 h-20 rounded-2xl flex items-center justify-center flex-shrink-0"
-              style={{ backgroundColor: `${config.color}20` }}
-            >
-              <IconComponent className="w-10 h-10" style={{ color: config.color }} />
+        <div className="bg-gradient-to-br from-white/[0.08] to-white/[0.02] border border-white/10 rounded-2xl overflow-hidden mb-8">
+          {/* Cover Image */}
+          {feed.coverImage && (
+            <div className="relative h-48 sm:h-64 w-full">
+              <Image
+                src={feed.coverImage}
+                alt={feed.name}
+                fill
+                className="object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
             </div>
+          )}
+          
+          <div className="p-6">
+            <div className="flex flex-col sm:flex-row gap-6">
+              {/* Icon */}
+              <div 
+                className={`w-20 h-20 rounded-2xl flex items-center justify-center flex-shrink-0 ${feed.coverImage ? '-mt-16 sm:-mt-12 border-4 border-[#0a0a0f]' : ''}`}
+                style={{ backgroundColor: `${config.color}20` }}
+              >
+                <IconComponent className="w-10 h-10" style={{ color: config.color }} />
+              </div>
 
-            {/* Info */}
-            <div className="flex-grow">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <h1 className="text-2xl sm:text-3xl font-bold text-white">{feed.name}</h1>
-                    {feed.visibility === 'public' ? (
-                      <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/20 border border-green-500/30">
-                        <Globe className="w-3 h-3 text-green-400" />
-                        <span className="text-[10px] font-medium text-green-400">Public</span>
-                      </div>
-                    ) : feed.visibility === 'unlisted' ? (
-                      <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500/20 border border-blue-500/30">
-                        <LinkIcon className="w-3 h-3 text-blue-400" />
-                        <span className="text-[10px] font-medium text-blue-400">Unlisted</span>
+              {/* Info */}
+              <div className="flex-grow">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <div className="flex items-center gap-3 mb-2">
+                      <h1 className="text-2xl sm:text-3xl font-bold text-white">{feed.name}</h1>
+                      {feed.visibility === 'public' ? (
+                        <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/20 border border-green-500/30">
+                          <Globe className="w-3 h-3 text-green-400" />
+                          <span className="text-[10px] font-medium text-green-400">Public</span>
+                        </div>
+                      ) : feed.visibility === 'unlisted' ? (
+                        <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500/20 border border-blue-500/30">
+                          <LinkIcon className="w-3 h-3 text-blue-400" />
+                          <span className="text-[10px] font-medium text-blue-400">Unlisted</span>
                       </div>
                     ) : (
                       <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-purple-500/20 border border-purple-500/30">
@@ -420,6 +434,7 @@ export default function FeedDetailPage() {
                 </div>
               )}
             </div>
+          </div>
           </div>
         </div>
 
