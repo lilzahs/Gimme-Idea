@@ -172,7 +172,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                   </div>
                                   <h3 className="text-xl font-bold text-white font-quantico">{track.title}</h3>
                                </div>
-                               <p className="text-gold font-mono text-lg">{track.reward}</p>
+
                                
                                {isExpanded && (
                                  <motion.div 
@@ -196,7 +196,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                    alt={track.title} 
                                    layout="fill" 
                                    objectFit="cover" 
-                                   className="transition-transform duration-700 group-hover:scale-105"
+                                   className="transition-transform duration-700"
                                  />
                                ) : (
                                  <div className={`w-full h-full bg-gradient-to-br from-gray-800 to-black`} />
@@ -289,33 +289,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
             </div>
           )}
 
-          {/* Tracks Section (Moved from Center) */}
-          {hackathon.tracks && hackathon.tracks.length > 0 && (
-             <div className="bg-surface border border-white/5 rounded-xl p-4 space-y-3">
-                <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Tracks & Bounties</h3>
-                {hackathon.tracks.map((track, i) => {
-                   const TrackIcon = LucideIconMap[track.icon as keyof typeof LucideIconMap] || Target;
-                   return (
-                   <div key={i} className="bg-white/5 border border-white/5 rounded-lg p-3 hover:border-white/20 transition-colors group">
-                      <div className="flex items-center justify-between mb-2">
-                         <div className="flex items-center gap-2">
-                            <div className={`p-1.5 rounded bg-black/40 ${track.color}`}>
-                               <TrackIcon className="w-3.5 h-3.5" />
-                            </div>
-                            <span className="font-bold text-white text-xs">{track.title}</span>
-                         </div>
-                      </div>
-                      <div className="flex items-center justify-between">
-                         <span className="text-[10px] text-gray-500">Reward Pool</span>
-                         <span className="text-xs font-mono text-gold bg-gold/10 px-2 py-0.5 rounded border-gold/20">
-                            {track.reward}
-                         </span>
-                      </div>
-                   </div>
-                   )
-                })}
-             </div>
-          )}
+
 
           {/* Resources */}
           {hackathon.resources && hackathon.resources.length > 0 && (
