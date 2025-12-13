@@ -146,7 +146,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                 <div key={step.id} className="relative pl-6 group cursor-default">
                                   <div className="absolute -left-[5px] top-1 w-2.5 h-2.5 flex items-center justify-center">
                                      {step.status === 'active' && (
-                                        <div className="absolute w-full h-full bg-gold rounded-full animate-ping opacity-75" />
+                                        <div className="absolute w-[250%] h-[250%] bg-gold rounded-full animate-ping opacity-50" />
                                      )}
                                      <div className={`relative w-full h-full rounded-full border-2 transition-all z-10
                                         ${step.status === 'done' ? 'bg-green-500 border-green-500' : 
@@ -168,29 +168,39 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
           )}
 
           {/* Tasks */}
-           {hackathon.tasks && hackathon.tasks.length > 0 && (
-            <div className="bg-surface border border-white/5 rounded-xl p-4">
-               <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Your Tasks</h3>
-                  <span className="text-[10px] bg-green-900/30 text-green-400 px-1.5 py-0.5 rounded">
-                    {hackathon.tasks.filter(t => t.done).length}/{hackathon.tasks.length}
-                  </span>
-               </div>
-               <div className="space-y-3">
-                 {hackathon.tasks.map((task) => (
-                   <div key={task.id} className="flex items-start gap-3 group">
-                      <button className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center transition-colors
-                        ${task.done ? 'bg-green-500 border-green-500 text-black' : 'border-gray-600 hover:border-gray-400'}`}>
-                        {task.done && <CheckCircle2 className="w-3 h-3" />}
-                      </button>
-                      <span className={`text-xs ${task.done ? 'text-gray-500 line-through' : 'text-gray-300'}`}>
-                        {task.text}
-                      </span>
-                   </div>
-                 ))}
-               </div>
-            </div>
-          )}
+           {(() => {
+             const activeStep = dynamicTimeline.find(step => step.status === 'active');
+             const currentTasks = hackathon.tasks?.filter(t => t.phaseId === activeStep?.id) || [];
+             
+             if (currentTasks.length === 0) return null;
+
+             return (
+              <div className="bg-surface border border-white/5 rounded-xl p-4">
+                 <div className="flex items-center justify-between mb-4">
+                    <div className="flex flex-col">
+                      <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Your Tasks</h3>
+                      {activeStep && <span className="text-[10px] text-gold mt-0.5">{activeStep.title}</span>}
+                    </div>
+                    <span className="text-[10px] bg-green-900/30 text-green-400 px-1.5 py-0.5 rounded">
+                      {currentTasks.filter(t => t.done).length}/{currentTasks.length}
+                    </span>
+                 </div>
+                 <div className="space-y-3">
+                   {currentTasks.map((task) => (
+                     <div key={task.id} className="flex items-start gap-3 group">
+                        <button className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center transition-colors
+                          ${task.done ? 'bg-green-500 border-green-500 text-black' : 'border-gray-600 hover:border-gray-400'}`}>
+                          {task.done && <CheckCircle2 className="w-3 h-3" />}
+                        </button>
+                        <span className={`text-xs ${task.done ? 'text-gray-500 line-through' : 'text-gray-300'}`}>
+                          {task.text}
+                        </span>
+                     </div>
+                   ))}
+                 </div>
+              </div>
+             );
+           })()}
         </aside>
 
 
