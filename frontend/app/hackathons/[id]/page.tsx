@@ -111,6 +111,13 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
 
+  // Automatically set the single track if only one exists
+  useEffect(() => {
+    if (hackathon?.tracks && hackathon.tracks.length === 1) {
+      setSubmission(prev => ({ ...prev, track: hackathon.tracks![0].title }));
+    }
+  }, [hackathon?.tracks]);
+
   const handleSubmissionChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setSubmission(prev => ({ ...prev, [name]: value }));
@@ -757,21 +764,55 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                       </div>
 
                       {/* Track Selection */}
-                      <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Select Track</label>
-                        <select
-                          name="track"
-                          required
-                          value={submission.track}
-                          onChange={handleSubmissionChange}
-                          className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-gold/50 focus:outline-none transition-colors appearance-none"
-                        >
-                          <option value="" disabled>Select a track...</option>
-                          {hackathon.tracks?.map((track, i) => (
-                            <option key={i} value={track.title}>{track.title}</option>
-                          ))}
-                        </select>
-                      </div>
+                      {hackathon.tracks && hackathon.tracks.length > 1 && (
+                        <div>
+                          <label className="block text-xs font-bold text-gray-500 uppercase mb-3">Select Track</label>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            {hackathon.tracks?.map((track, i) => {
+                              const TrackIcon = LucideIconMap[track.icon as keyof typeof LucideIconMap] || Target;
+                              const isSelected = submission.track === track.title;
+
+                              return (
+                                <div
+                                  key={i}
+                                  onClick={() => setSubmission(prev => ({ ...prev, track: track.title }))}
+                                  className={`
+                                    relative cursor-pointer rounded-xl p-4 border transition-all duration-300 group
+                                    ${isSelected
+                                      ? 'bg-gold/10 border-gold shadow-[0_0_15px_rgba(255,215,0,0.1)]'
+                                      : 'bg-black/20 border-white/10 hover:border-white/30 hover:bg-white/5'
+                                    }
+                                  `}
+                                >
+                                  <div className="flex flex-col items-center text-center gap-3">
+                                    <div className={`p-2 rounded-lg bg-black/40 transition-colors ${isSelected ? 'text-gold' : track.color}`}>
+                                        <TrackIcon className="w-6 h-6" />
+                                    </div>
+                                    <div>
+                                      <h4 className={`text-sm font-bold ${isSelected ? 'text-white' : 'text-gray-300'}`}>
+                                        {track.title}
+                                      </h4>
+                                    </div>
+                                  </div>
+
+                                  {/* Selection Indicator */}
+                                  <div className={`absolute top-3 right-3 w-4 h-4 rounded-full border flex items-center justify-center transition-all
+                                    ${isSelected ? 'bg-gold border-gold scale-100' : 'border-white/10 bg-black/40 scale-90 opacity-50'}
+                                  `}>
+                                    {isSelected && <CheckCircle2 className="w-3 h-3 text-black" />}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {hackathon.tracks && hackathon.tracks.length === 1 && (
+                        <div className="hidden">
+                          {/* Automatically set the single track */}
+                        </div>
+                      )}
 
                       {/* Description */}
                       <div>
