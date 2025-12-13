@@ -40,6 +40,12 @@ export const HACKATHONS_MOCK_DATA = [
       { name: 'DSUC Discord', icon: 'MessageSquare', link: 'https://discord.gg/dsuc' },
     ],
     projectTicket: null,
-    image_url: 'https://images.unsplash.com/photo-1596495578051-24750d42171f?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'
+    image_url: 'https://images.unsplash.com/photo-1596495578051-24750d42171f?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+    announcements: [
+      { id: '1', date: '2026-01-15 09:00:00', message: 'System initialized. Registration phase active.', type: 'info', config: { effect: 'typewriter' } },
+      { id: '2', date: '2026-01-20 14:30:00', message: 'New mentor added: @solana_dev_core', type: 'info' },
+      { id: '3', date: '2026-02-01 00:00:00', message: 'WARNING: Registration deadline approaching.', type: 'warning', config: { effect: 'pulse', widget: { type: 'countdown', target: '2026-02-01T17:00:00+07:00' } } },
+      { id: '4', date: '2026-02-05 09:00:00', message: 'Idea Submission phase unlocked.', type: 'success', config: { effect: 'glitch' } },
+    ]
   },
 ];
