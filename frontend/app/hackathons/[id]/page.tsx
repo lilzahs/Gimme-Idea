@@ -144,11 +144,16 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                             <div className="relative border-l border-white/10 ml-2 space-y-6">
                               {dynamicTimeline.map((step, index) => (
                                 <div key={step.id} className="relative pl-6 group cursor-default">
-                                  <div className={`absolute -left-[5px] top-1 w-2.5 h-2.5 rounded-full border-2 transition-all
-                                    ${step.status === 'done' ? 'bg-green-500 border-green-500' : 
-                                      step.status === 'active' ? 'bg-gold border-gold shadow-[0_0_15px_var(--color-gold)] animate-pulse scale-125' : 
-                                      'bg-surface border-gray-600'}`} 
-                                  />
+                                  <div className="absolute -left-[5px] top-1 w-2.5 h-2.5 flex items-center justify-center">
+                                     {step.status === 'active' && (
+                                        <div className="absolute w-full h-full bg-gold rounded-full animate-ping opacity-75" />
+                                     )}
+                                     <div className={`relative w-full h-full rounded-full border-2 transition-all z-10
+                                        ${step.status === 'done' ? 'bg-green-500 border-green-500' : 
+                                          step.status === 'active' ? 'bg-gold border-gold shadow-[0_0_15px_var(--color-gold)] scale-125' : 
+                                          'bg-surface border-gray-600'}`} 
+                                     />
+                                  </div>
                                   <div className={`${step.status === 'active' ? 'text-white' : 'text-gray-500'}`}>
                                     <p className="font-medium text-xs md:text-sm">{step.title}</p>
                                     <p className="text-[10px] font-mono opacity-70">
