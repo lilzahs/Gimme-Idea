@@ -9,6 +9,7 @@ import {
   Monitor, Mic, SwatchBook, Code, ShieldCheck, Smartphone, UserPlus, RefreshCw, Lock
 } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { format, isBefore } from 'date-fns';
 import { HACKATHONS_MOCK_DATA } from '@/lib/mock-hackathons';
 
