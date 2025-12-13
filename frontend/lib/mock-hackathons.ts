@@ -20,7 +20,7 @@ export const HACKATHONS_MOCK_DATA = [
     ],
     tasks: [
       { id: '1.1', text: 'Register for the Hackathon', phaseId: '1', done: false },
-      { id: '1.2', text: 'Join DSUC Discord', phaseId: '1', done: false },
+      { id: '1.2', text: 'Join Gimmeidea Telegram Group', phaseId: '1', done: false },
       { id: '1.3', text: 'Form a Team', phaseId: '1', done: false },
       { id: '2.1', text: 'Submit Idea Proposal', phaseId: '2', done: false },
       { id: '2.2', text: 'Update Project Page', phaseId: '2', done: false },
@@ -36,7 +36,7 @@ export const HACKATHONS_MOCK_DATA = [
     leaderboard: [],
     resources: [
       { name: 'Solana Docs', icon: 'Code', link: 'https://docs.solana.com/' },
-      { name: 'DSUC Discord', icon: 'MessageSquare', link: 'https://discord.gg/dsuc' },
+      { name: 'Gimmeidea Telegram User Group', icon: 'MessageSquare', link: 'https://t.me/+HNfxqk_nWHthMzY1' },
     ],
     tabs: [
       { id: 'announcement', label: 'Announcements', stepId: null },
