@@ -71,18 +71,52 @@ export default function Dashboard({ mode }: DashboardProps) {
 
   const categories = ['All', 'DeFi', 'NFT', 'Gaming', 'Infrastructure', 'DAO', 'DePIN', 'Social', 'Mobile', 'Security', 'Payment', 'Developer Tooling', 'ReFi', 'Content', 'Dapp', 'Blinks'];
 
-  // Filter logic
-  const filteredProjects = projects.filter(project => {
-    const matchesType = project.type === mode;
-    const matchesCategory = categoryFilter === 'All' ||
-      project.category === categoryFilter ||
-      project.tags.some(tag => tag === categoryFilter);
-    const matchesSearch = searchQuery === '' ||
-        project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        project.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-
-    return matchesType && matchesCategory && matchesSearch;
-  });
+  // Filter logic with improved search (title > description > author name)
+  const filteredProjects = projects
+    .filter(project => {
+      const matchesType = project.type === mode;
+      const matchesCategory = categoryFilter === 'All' ||
+        project.category === categoryFilter ||
+        project.tags.some(tag => tag === categoryFilter);
+      
+      if (searchQuery === '') return matchesType && matchesCategory;
+      
+      const query = searchQuery.toLowerCase();
+      const matchesTitle = project.title.toLowerCase().includes(query);
+      const matchesDescription = project.description?.toLowerCase().includes(query);
+      const matchesAuthor = project.author?.username?.toLowerCase().includes(query);
+      const matchesTags = project.tags.some(tag => tag.toLowerCase().includes(query));
+      
+      const matchesSearch = matchesTitle || matchesDescription || matchesAuthor || matchesTags;
+      
+      return matchesType && matchesCategory && matchesSearch;
+    })
+    .sort((a, b) => {
+      // If no search query, keep original order
+      if (searchQuery === '') return 0;
+      
+      const query = searchQuery.toLowerCase();
+      
+      // Calculate search score (higher = better match)
+      const getScore = (project: typeof a) => {
+        let score = 0;
+        // Priority 1: Title match (highest)
+        if (project.title.toLowerCase().includes(query)) {
+          score += 100;
+          // Bonus for exact start match
+          if (project.title.toLowerCase().startsWith(query)) score += 50;
+        }
+        // Priority 2: Description match
+        if (project.description?.toLowerCase().includes(query)) score += 30;
+        // Priority 3: Author name match
+        if (project.author?.username?.toLowerCase().includes(query)) score += 10;
+        // Priority 4: Tags match (lowest)
+        if (project.tags.some(tag => tag.toLowerCase().includes(query))) score += 5;
+        return score;
+      };
+      
+      return getScore(b) - getScore(a);
+    });
 
   const accentColor = mode === 'project' ? '#9945FF' : '#FFD700';
   const accentText = mode === 'project' ? 'text-[#9945FF]' : 'text-[#FFD700]';
