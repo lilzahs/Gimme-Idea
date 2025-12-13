@@ -7,7 +7,6 @@ import { Project } from '../lib/types';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { AuthorLink } from './AuthorLink';
-import { createUniqueSlug } from '../lib/slug-utils';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
@@ -63,8 +62,8 @@ export const RecommendedIdeas = () => {
   }, [selectedCategory]);
 
   const handleViewIdea = (idea: Project) => {
-    const slug = createUniqueSlug(idea.title, idea.id);
-    router.push(`/idea/${slug}`);
+    // Use idea.id directly until database has slug column
+    router.push(`/idea/${idea.id}`);
   };
 
   if (isLoading) {

@@ -243,73 +243,66 @@ export class ProjectsService {
   async findOne(idOrSlug: string): Promise<ApiResponse<Project>> {
     const supabase = this.supabaseService.getAdminClient();
 
-    // First try to find by slug
-    let { data: project, error } = await supabase
-      .from("projects")
-      .select(
-        `
-        *,
-        author:users!projects_author_id_fkey(
-          username,
-          wallet,
-          avatar
-        )
-      `
+    const selectQuery = `
+      *,
+      author:users!projects_author_id_fkey(
+        username,
+        wallet,
+        avatar
       )
-      .eq("slug", idOrSlug)
-      .single();
+    `;
 
-    // If not found by slug, try by ID (UUID format)
-    if (error || !project) {
-      const isUUID =
-        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-          idOrSlug
-        );
+    let project = null;
+    let error = null;
 
-      if (isUUID) {
+    // Check if it's a UUID format first (most common case)
+    const isUUID =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        idOrSlug
+      );
+
+    if (isUUID) {
+      // Direct UUID lookup
+      const result = await supabase
+        .from("projects")
+        .select(selectQuery)
+        .eq("id", idOrSlug)
+        .single();
+
+      project = result.data;
+      error = result.error;
+    }
+
+    // If not UUID or not found, try ID prefix match (for old slug format like "my-idea-abc12345")
+    if (!project) {
+      const parts = idOrSlug.split("-");
+      const lastPart = parts[parts.length - 1];
+
+      if (/^[a-f0-9]{8}$/i.test(lastPart)) {
         const result = await supabase
           .from("projects")
-          .select(
-            `
-            *,
-            author:users!projects_author_id_fkey(
-              username,
-              wallet,
-              avatar
-            )
-          `
-          )
-          .eq("id", idOrSlug)
+          .select(selectQuery)
+          .ilike("id", `${lastPart}%`)
           .single();
 
         project = result.data;
         error = result.error;
       }
+    }
 
-      // Also try matching by ID prefix (for old slug format like "my-idea-abc12345")
-      if (error || !project) {
-        const parts = idOrSlug.split("-");
-        const lastPart = parts[parts.length - 1];
+    // Finally try slug lookup (only if slug column exists in database)
+    if (!project) {
+      try {
+        const result = await supabase
+          .from("projects")
+          .select(selectQuery)
+          .eq("slug", idOrSlug)
+          .single();
 
-        if (/^[a-f0-9]{8}$/i.test(lastPart)) {
-          const result = await supabase
-            .from("projects")
-            .select(
-              `
-              *,
-              author:users!projects_author_id_fkey(
-                username,
-                wallet,
-                avatar
-              )
-            `
-            )
-            .ilike("id", `${lastPart}%`)
-            .single();
-
-          project = result.data;
-          error = result.error;
-        }
+        project = result.data;
+        error = result.error;
+      } catch (e) {
+        // slug column might not exist yet
       }
     }
 

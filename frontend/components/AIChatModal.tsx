@@ -9,7 +9,7 @@ import { Project } from '../lib/types';
 import toast from 'react-hot-toast';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
-import { createUniqueSlug } from '../lib/slug-utils';
+// Slug utils removed - using direct ID for URLs until database migration is complete
 import { useAuth } from '../contexts/AuthContext';
 import { WalletRequiredModal } from './WalletRequiredModal';
 
@@ -313,8 +313,8 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
   };
 
   const handleIdeaClick = (idea: Project) => {
-    const slug = createUniqueSlug(idea.title, idea.id);
-    router.push(`/idea/${slug}`);
+    // Use idea.id directly until database has slug column
+    router.push(`/idea/${idea.id}`);
     onClose();
   };
 
