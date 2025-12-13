@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { IdeaDetail } from '../../../components/IdeaDetail';
 import { useAppStore } from '../../../lib/store';
+import { extractIdFromSlug } from '../../../lib/slug-utils';
 
 export default function IdeaDetailPage() {
   const params = useParams();
@@ -11,8 +12,9 @@ export default function IdeaDetailPage() {
   const { selectedProject, setSelectedProject, fetchProjectById, isLoading } = useAppStore();
   const slugOrId = params.id as string;
   
-  // Just pass the slug directly to backend - it will handle finding by slug or ID
-  const ideaId = slugOrId;
+  // Extract ID prefix from slug (e.g., "my-idea-abc12345" -> "abc12345")
+  // Or use full value if it's already a UUID
+  const ideaId = extractIdFromSlug(slugOrId) || slugOrId;
 
   useEffect(() => {
     if (ideaId) {
