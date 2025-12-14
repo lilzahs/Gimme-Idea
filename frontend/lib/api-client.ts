@@ -544,4 +544,56 @@ export const apiClient = {
     apiFetch<any>(`/feeds/${feedId}/items/${itemId}`, {
       method: "DELETE",
     }),
+
+  // =====================================
+  // HACKATHON API
+  // =====================================
+
+  getHackathons: () => apiFetch<any[]>("/hackathons"),
+
+  getHackathon: (id: string) => apiFetch<any>(`/hackathons/${id}`),
+
+  getHackathonAnnouncements: (id: string) =>
+    apiFetch<any[]>(`/hackathons/${id}/announcements`),
+
+  getHackathonTeams: (id: string) => apiFetch<any[]>(`/hackathons/${id}/teams`),
+
+  getHackathonMyStatus: (id: string) =>
+    apiFetch<{ participant: any; team: any }>(`/hackathons/${id}/my-status`),
+
+  registerHackathon: (id: string) =>
+    apiFetch<any>(`/hackathons/${id}/register`, {
+      method: "POST",
+    }),
+
+  createHackathonTeam: (
+    id: string,
+    data: {
+      name: string;
+      description: string;
+      tags: string[];
+      lookingFor: string[];
+      maxMembers: number;
+    }
+  ) =>
+    apiFetch<any>(`/hackathons/${id}/teams`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  joinHackathonTeam: (id: string, teamId: string) =>
+    apiFetch<any>(`/hackathons/${id}/teams/join`, {
+      method: "POST",
+      body: JSON.stringify({ teamId }),
+    }),
+
+  submitHackathonProject: (
+    id: string,
+    data: { projectId: string; track: string }
+  ) =>
+    apiFetch<any>(`/hackathons/${id}/submit`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 };
+
