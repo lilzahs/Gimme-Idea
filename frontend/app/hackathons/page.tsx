@@ -34,8 +34,12 @@ export default function HackathonsList() {
       try {
         setIsLoading(true);
         const res = await apiClient.getHackathons();
+        console.log("DEBUG: Hackathons Response:", res); // <--- LOG QUAN TRỌNG
+
         if (res.success && res.data) {
           setHackathons(res.data);
+        } else {
+          console.error("DEBUG: Failed to load data:", res.error);
         }
       } catch (error) {
         console.error("Failed to fetch hackathons", error);
