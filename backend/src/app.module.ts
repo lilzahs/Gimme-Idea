@@ -13,7 +13,6 @@ import { PaymentsModule } from "./payments/payments.module";
 import { SettingsModule } from "./settings/settings.module";
 import { AIModule } from "./ai/ai.module";
 import { FeedsModule } from "./feeds/feeds.module";
-import { HackathonModule } from "./hackathon/hackathon.module";
 
 @Module({
   imports: [
@@ -33,7 +32,6 @@ import { HackathonModule } from "./hackathon/hackathon.module";
     SettingsModule,
     AIModule,
     FeedsModule,
-    HackathonModule,
   ],
   controllers: [AppController],
   providers: [
