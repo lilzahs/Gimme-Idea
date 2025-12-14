@@ -15,6 +15,7 @@ import { useSearchParams } from 'next/navigation';
 import { format, isBefore } from 'date-fns';
 import { useHackathon } from '@/hooks/useHackathon';
 import { useAuth } from '@/contexts/AuthContext';
+import { apiClient } from '@/lib/api-client';
 
 // Map icon names to Lucide React components
 const LucideIconMap: { [key: string]: React.ElementType } = {
@@ -123,6 +124,28 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
     selectedIdeaId: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [userProjects, setUserProjects] = useState<any[]>([]);
+  const [loadingProjects, setLoadingProjects] = useState(false);
+
+  // Fetch User Projects when Submission Tab is active
+  useEffect(() => {
+     if (activeTab === 'submission' && user && userProjects.length === 0) {
+        const fetchProjects = async () => {
+           setLoadingProjects(true);
+           try {
+              const res = await apiClient.getUserProjects(user.username);
+              if (res.success) {
+                 setUserProjects(res.data || []);
+              }
+           } catch(e) {
+              console.error(e);
+           } finally {
+              setLoadingProjects(false);
+           }
+        };
+        fetchProjects();
+     }
+  }, [activeTab, user, userProjects.length]);
 
   // Terminal State
   const [terminalInput, setTerminalInput] = useState('');
@@ -456,19 +479,44 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                             </div>
 
                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Project ID</label>
-                                <input 
-                                    type="text" 
-                                    placeholder="Enter your existing Project ID"
-                                    className="w-full bg-black/30 border border-white/10 rounded px-3 py-3 text-white"
-                                    value={submissionData.selectedIdeaId}
-                                    onChange={e => setSubmissionData({...submissionData, selectedIdeaId: e.target.value})}
-                                    required
-                                />
-                                <p className="text-[10px] text-gray-500 mt-1">
-                                    Only projects authored by you are valid. 
-                                    <Link href="/idea" className="text-gold hover:underline ml-1">Create new project</Link>
-                                </p>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Select Your Project</label>
+                                
+                                {loadingProjects ? (
+                                    <div className="flex items-center gap-2 text-gray-500 text-sm">
+                                       <Loader2 className="w-4 h-4 animate-spin" /> Loading your projects...
+                                    </div>
+                                ) : userProjects.length > 0 ? (
+                                    <div className="grid grid-cols-1 gap-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                                        {userProjects.map((proj) => {
+                                            const isSelected = submissionData.selectedIdeaId === proj.id;
+                                            return (
+                                                <div 
+                                                    key={proj.id}
+                                                    onClick={() => setSubmissionData({...submissionData, selectedIdeaId: proj.id})}
+                                                    className={`p-4 border rounded-lg cursor-pointer transition-all flex items-center justify-between
+                                                        ${isSelected 
+                                                            ? 'bg-gold/10 border-gold' 
+                                                            : 'bg-black/30 border-white/10 hover:border-white/30'
+                                                        }
+                                                    `}
+                                                >
+                                                    <div>
+                                                        <h4 className={`font-bold text-sm ${isSelected ? 'text-gold' : 'text-white'}`}>{proj.title}</h4>
+                                                        <p className="text-xs text-gray-500 line-clamp-1">{proj.description}</p>
+                                                    </div>
+                                                    {isSelected && <CheckCircle2 className="w-5 h-5 text-gold" />}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <div className="text-center p-6 border border-dashed border-white/20 rounded-lg">
+                                        <p className="text-gray-400 text-sm mb-2">You don't have any projects yet.</p>
+                                        <Link href="/idea" className="text-gold hover:underline text-sm font-bold">
+                                            + Create New Project
+                                        </Link>
+                                    </div>
+                                )}
                             </div>
 
                             <button 
