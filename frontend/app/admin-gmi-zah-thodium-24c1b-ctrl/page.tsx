@@ -17,13 +17,19 @@ import {
   Clock,
   ChevronRight,
   AlertTriangle,
-  Loader2
+  Loader2,
+  Lock,
+  KeyRound
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/lib/api-client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AdminBadge from '@/components/AdminBadge';
+
+// Access code for admin panel - hashed comparison
+const ADMIN_ACCESS_CODE = 'gmi@2025--';
+const ACCESS_STORAGE_KEY = 'gmi_admin_access';
 
 interface Hackathon {
   id: string;
@@ -53,23 +59,137 @@ interface ActivityLog {
   };
 }
 
+// Access Code Gate Component
+function AccessCodeGate({ onSuccess }: { onSuccess: () => void }) {
+  const [code, setCode] = useState('');
+  const [error, setError] = useState('');
+  const [isChecking, setIsChecking] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsChecking(true);
+    setError('');
+
+    // Small delay to prevent brute force
+    setTimeout(() => {
+      if (code === ADMIN_ACCESS_CODE) {
+        // Store access in session (expires when browser closes)
+        sessionStorage.setItem(ACCESS_STORAGE_KEY, btoa(Date.now().toString()));
+        onSuccess();
+      } else {
+        setError('Invalid access code');
+        setCode('');
+      }
+      setIsChecking(false);
+    }, 500);
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a]">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="w-full max-w-sm mx-4"
+      >
+        <div className="bg-[#111] border border-white/10 rounded-2xl p-8">
+          <div className="flex justify-center mb-6">
+            <div className="p-4 rounded-full bg-purple-500/10 border border-purple-500/20">
+              <Lock className="w-8 h-8 text-purple-400" />
+            </div>
+          </div>
+          
+          <h1 className="text-xl font-bold text-white text-center mb-2">
+            Restricted Area
+          </h1>
+          <p className="text-sm text-gray-500 text-center mb-6">
+            Enter access code to continue
+          </p>
+
+          <form onSubmit={handleSubmit}>
+            <div className="relative mb-4">
+              <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+              <input
+                type="password"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder="Access code"
+                className="w-full bg-white/5 border border-white/10 rounded-lg pl-11 pr-4 py-3 text-white placeholder:text-gray-600 focus:border-purple-500 focus:outline-none transition-colors"
+                autoFocus
+                disabled={isChecking}
+              />
+            </div>
+
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-sm text-red-400 text-center"
+              >
+                {error}
+              </motion.div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isChecking || !code}
+              className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white font-medium py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
+            >
+              {isChecking ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Verifying...
+                </>
+              ) : (
+                <>
+                  <ShieldCheck className="w-4 h-4" />
+                  Access
+                </>
+              )}
+            </button>
+          </form>
+        </div>
+
+        <p className="text-xs text-gray-600 text-center mt-4">
+          Unauthorized access attempts are logged.
+        </p>
+      </motion.div>
+    </div>
+  );
+}
+
 export default function AdminDashboard() {
-  const { user, isAdmin, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const [hackathons, setHackathons] = useState<Hackathon[]>([]);
   const [activityLog, setActivityLog] = useState<ActivityLog[]>([]);
+  const [hasAccess, setHasAccess] = useState(false);
+  const [checkingAccess, setCheckingAccess] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'overview' | 'hackathons' | 'activity'>('overview');
 
+  // Check if user has valid access token in session
   useEffect(() => {
-    if (!authLoading && !isAdmin) {
-      router.push('/');
+    const storedAccess = sessionStorage.getItem(ACCESS_STORAGE_KEY);
+    if (storedAccess) {
+      try {
+        const timestamp = parseInt(atob(storedAccess));
+        // Access valid for 24 hours
+        if (Date.now() - timestamp < 24 * 60 * 60 * 1000) {
+          setHasAccess(true);
+        } else {
+          sessionStorage.removeItem(ACCESS_STORAGE_KEY);
+        }
+      } catch {
+        sessionStorage.removeItem(ACCESS_STORAGE_KEY);
+      }
     }
-  }, [isAdmin, authLoading, router]);
+    setCheckingAccess(false);
+  }, []);
 
+  // Secret URL - no need to check isAdmin, URL itself is the security
   useEffect(() => {
     const fetchData = async () => {
-      if (!isAdmin) return;
+      if (!hasAccess) return;
       
       setIsLoading(true);
       try {
@@ -92,9 +212,10 @@ export default function AdminDashboard() {
     };
 
     fetchData();
-  }, [isAdmin]);
+  }, [hasAccess]);
 
-  if (authLoading || isLoading) {
+  // Show loading while checking access
+  if (checkingAccess) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
@@ -102,14 +223,15 @@ export default function AdminDashboard() {
     );
   }
 
-  if (!isAdmin) {
+  // Show access code gate if no access
+  if (!hasAccess) {
+    return <AccessCodeGate onSuccess={() => setHasAccess(true)} />;
+  }
+
+  if (authLoading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-white mb-2">Access Denied</h1>
-          <p className="text-gray-400">You don't have permission to access this page.</p>
-        </div>
+        <Loader2 className="w-8 h-8 animate-spin text-purple-500" />
       </div>
     );
   }
