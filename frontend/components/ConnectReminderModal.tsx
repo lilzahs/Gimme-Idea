@@ -1,25 +1,57 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Wallet, X, ArrowRight, Lock, ShieldAlert } from 'lucide-react';
+import { Wallet, X, ArrowRight, Lock, ShieldAlert, Copy, AlertTriangle } from 'lucide-react';
 import { useAppStore } from '../lib/store';
 import { useAuth } from '../contexts/AuthContext';
+import toast from 'react-hot-toast';
+
+// Detect if running in wallet in-app browser
+const isWalletBrowser = () => {
+  if (typeof window === 'undefined') return false;
+  const ua = navigator.userAgent.toLowerCase();
+  return (
+    ua.includes('phantom') ||
+    ua.includes('solflare') ||
+    ua.includes('backpack') ||
+    ua.includes('glow') ||
+    // Generic in-app browser detection
+    (ua.includes('mobile') && (ua.includes('wv') || ua.includes('webview')))
+  );
+};
 
 export const ConnectReminderModal = () => {
   const { isConnectReminderOpen, closeConnectReminder } = useAppStore();
   const { signInWithGoogle } = useAuth();
+  const [inWalletBrowser, setInWalletBrowser] = useState(false);
+  const [showWalletWarning, setShowWalletWarning] = useState(false);
+
+  useEffect(() => {
+    setInWalletBrowser(isWalletBrowser());
+  }, []);
 
   if (!isConnectReminderOpen) return null;
 
   const handleSignIn = async () => {
+    // If in wallet browser, show warning
+    if (inWalletBrowser) {
+      setShowWalletWarning(true);
+      return;
+    }
+
     closeConnectReminder();
     try {
       await signInWithGoogle();
     } catch (error) {
       console.error('Sign in error:', error);
     }
+  };
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(window.location.origin);
+    toast.success('Link copied! Open in Safari or Chrome');
   };
 
   return (
@@ -113,6 +145,57 @@ export const ConnectReminderModal = () => {
             </button>
         </div>
       </motion.div>
+
+      {/* Wallet Browser Warning - Shown on top */}
+      <AnimatePresence>
+        {showWalletWarning && (
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            className="absolute inset-0 z-20 flex items-center justify-center p-4"
+          >
+            <div 
+              className="absolute inset-0 bg-black/60"
+              onClick={() => setShowWalletWarning(false)}
+            />
+            <div className="relative w-full max-w-sm bg-[#1A1A1A] border border-white/10 rounded-2xl p-6 shadow-2xl">
+              <button
+                onClick={() => setShowWalletWarning(false)}
+                className="absolute top-3 right-3 p-1 text-gray-500 hover:text-white transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="text-center">
+                <div className="w-12 h-12 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <AlertTriangle className="w-6 h-6 text-yellow-400" />
+                </div>
+
+                <h3 className="text-base font-bold text-white mb-2">
+                  Open in Browser
+                </h3>
+                
+                <p className="text-gray-400 text-sm mb-5">
+                  Google Sign-in doesn't work in wallet browsers. Open in <span className="text-white">Safari</span> or <span className="text-white">Chrome</span>.
+                </p>
+
+                <button
+                  onClick={copyLink}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#FFD700] hover:bg-[#FFD700]/90 text-black font-bold rounded-xl transition-all mb-3"
+                >
+                  <Copy className="w-4 h-4" />
+                  Copy Link
+                </button>
+
+                <p className="text-gray-500 text-xs">
+                  Then paste in your browser
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
