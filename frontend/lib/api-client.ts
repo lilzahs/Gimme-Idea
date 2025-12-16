@@ -304,6 +304,8 @@ export const apiClient = {
     walletAddress: string;
     signature: string;
     message: string;
+    signedPayload?: string; // For passkey wallets
+    isPasskey?: boolean; // Flag for passkey wallet
   }) =>
     apiFetch<{ user: any; merged: boolean }>("/auth/link-wallet", {
       method: "POST",

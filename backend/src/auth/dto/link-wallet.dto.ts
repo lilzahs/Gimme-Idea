@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty } from "class-validator";
+import { IsString, IsNotEmpty, IsOptional, IsBoolean } from "class-validator";
 
 export class LinkWalletDto {
   @IsString()
@@ -12,4 +12,12 @@ export class LinkWalletDto {
   @IsString()
   @IsNotEmpty()
   message: string;
+
+  @IsOptional()
+  @IsString()
+  signedPayload?: string; // For passkey wallets (WebAuthn)
+
+  @IsOptional()
+  @IsBoolean()
+  isPasskey?: boolean; // Flag to indicate passkey wallet
 }

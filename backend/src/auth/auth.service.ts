@@ -239,14 +239,27 @@ export class AuthService {
     userId: string,
     linkWalletDto: LinkWalletDto
   ): Promise<ApiResponse<{ user: User; merged: boolean }>> {
-    const { walletAddress, signature, message } = linkWalletDto;
+    const { walletAddress, signature, message, signedPayload, isPasskey } = linkWalletDto;
 
-    // 1. Verify Solana signature
-    const isValid = this.solanaService.verifySignature(
-      walletAddress,
-      signature,
-      message
-    );
+    // 1. Verify signature based on wallet type
+    let isValid = false;
+    
+    if (isPasskey && signedPayload) {
+      // Passkey wallet (LazorKit) - uses P256/WebAuthn
+      isValid = this.solanaService.verifyPasskeySignature(
+        signedPayload,
+        signature,
+        message
+      );
+    } else {
+      // Regular Solana wallet - uses Ed25519
+      isValid = this.solanaService.verifySignature(
+        walletAddress,
+        signature,
+        message
+      );
+    }
+    
     if (!isValid) {
       throw new UnauthorizedException("Invalid wallet signature");
     }

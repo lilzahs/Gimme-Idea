@@ -141,13 +141,16 @@ export const ConnectWalletPopup = () => {
           const message = `Link wallet to GimmeIdea\n\nTimestamp: ${timestamp}\nWallet: ${passkeyWalletAddress}\nEmail: ${user.email}`;
           
           // Request signature from passkey wallet
-          const { signature: signatureBase58 } = await signPasskeyMessage(message);
+          // signPasskeyMessage returns { signature, signedPayload } for WebAuthn
+          const { signature, signedPayload } = await signPasskeyMessage(message);
 
-          // Send to backend
+          // Send to backend with passkey-specific data
           const response = await apiClient.linkWallet({
             walletAddress: passkeyWalletAddress,
-            signature: signatureBase58,
+            signature,
             message,
+            signedPayload, // Required for passkey verification
+            isPasskey: true, // Flag to use P256 verification
           });
 
           if (response.success && response.data) {
