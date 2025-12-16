@@ -2,15 +2,16 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Wallet, AlertTriangle, ArrowLeft, ChevronUp, Smartphone } from 'lucide-react';
+import { X, Wallet, AlertTriangle, ArrowLeft, ChevronUp, Smartphone, Fingerprint } from 'lucide-react';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { usePasskeyWallet } from '@/contexts/LazorkitContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/lib/api-client';
 import { LoadingLightbulb } from './LoadingLightbulb';
 import toast from 'react-hot-toast';
 import bs58 from 'bs58';
 
-type Step = 'initial' | 'warning' | 'select-wallet' | 'connecting';
+type Step = 'initial' | 'warning' | 'select-wallet' | 'connecting' | 'connecting-passkey';
 
 // Key to track if user has dismissed the popup before
 const WALLET_POPUP_DISMISSED_KEY = 'gimme_wallet_popup_dismissed';
@@ -28,6 +29,7 @@ export const ConnectWalletPopup = () => {
   const [isMobile, setIsMobile] = useState(false);
   const { showWalletPopup, setShowWalletPopup, setIsNewUser, user, setUser, refreshUser } = useAuth();
   const { wallets, select, connect, publicKey, signMessage, connected, disconnect } = useWallet();
+  const { isPasskeyConnected, passkeyWalletAddress, connectPasskey, disconnectPasskey, signPasskeyMessage, isPasskeyConnecting } = usePasskeyWallet();
   
   // Flag to prevent multiple API calls
   const isLinkingRef = useRef(false);
@@ -125,6 +127,68 @@ export const ConnectWalletPopup = () => {
     linkWalletToAccount();
   }, [step, connected, publicKey, signMessage, user, setUser, setIsNewUser, setShowWalletPopup, disconnect]);
 
+  // Handle Passkey wallet connection and linking
+  useEffect(() => {
+    const linkPasskeyWalletToAccount = async () => {
+      if (isLinkingRef.current) return;
+      
+      if (step === 'connecting-passkey' && isPasskeyConnected && passkeyWalletAddress && user) {
+        isLinkingRef.current = true;
+        
+        try {
+          // Create message for signing
+          const timestamp = new Date().toISOString();
+          const message = `Link wallet to GimmeIdea\n\nTimestamp: ${timestamp}\nWallet: ${passkeyWalletAddress}\nEmail: ${user.email}`;
+          
+          // Request signature from passkey wallet
+          const { signature: signatureBase58 } = await signPasskeyMessage(message);
+
+          // Send to backend
+          const response = await apiClient.linkWallet({
+            walletAddress: passkeyWalletAddress,
+            signature: signatureBase58,
+            message,
+          });
+
+          if (response.success && response.data) {
+            setUser({
+              ...user,
+              wallet: passkeyWalletAddress,
+              needsWalletConnect: false,
+              reputation: response.data.user.reputationScore || user.reputation,
+              balance: response.data.user.balance || user.balance,
+            });
+
+            if (response.data.merged) {
+              toast.success('Passkey wallet linked & data merged!', { duration: 5000 });
+            } else {
+              toast.success('Passkey wallet connected successfully!');
+            }
+
+            setIsNewUser(false);
+            setShowWalletPopup(false);
+          } else {
+            throw new Error(response.error || 'Failed to link passkey wallet');
+          }
+        } catch (error: any) {
+          console.error('Link passkey wallet error:', error);
+          
+          if (error.message?.includes('User rejected') || error.message?.includes('canceled') || error.message?.includes('cancelled')) {
+            toast.error('Passkey authentication cancelled');
+          } else {
+            toast.error(error.message || 'Failed to link passkey wallet');
+          }
+          
+          isLinkingRef.current = false;
+          await disconnectPasskey();
+          setStep('select-wallet');
+        }
+      }
+    };
+
+    linkPasskeyWalletToAccount();
+  }, [step, isPasskeyConnected, passkeyWalletAddress, signPasskeyMessage, user, setUser, setIsNewUser, setShowWalletPopup, disconnectPasskey]);
+
   const handleConnect = async (walletName: string, isMobileAdapter?: boolean) => {
     let selectedWallet;
     
@@ -179,6 +243,25 @@ export const ConnectWalletPopup = () => {
     }
   };
 
+  const handlePasskeyConnect = async () => {
+    try {
+      setStep('connecting-passkey');
+      await connectPasskey();
+    } catch (error: any) {
+      console.error('Passkey connection error:', error);
+      
+      if (error.message?.includes('User rejected') || error.message?.includes('canceled') || error.message?.includes('cancelled')) {
+        toast.error('Passkey authentication cancelled');
+      } else if (error.message?.includes('not supported')) {
+        toast.error('Passkey not supported on this device');
+      } else {
+        toast.error('Failed to connect with Passkey');
+      }
+      
+      setStep('select-wallet');
+    }
+  };
+
   const handleSkip = () => {
     setStep('warning');
   };
@@ -202,23 +285,34 @@ export const ConnectWalletPopup = () => {
   };
 
   const walletOptions = [
+    // Passkey option - shown first for easy access
+    {
+      name: 'Passkey',
+      icon: '', // We'll use Fingerprint icon component
+      color: 'hover:bg-[#00D9FF]/20 hover:border-[#00D9FF]/50',
+      isPasskey: true,
+      isMobileAdapter: false,
+    },
     // Mobile Wallet Adapter - shows first on mobile devices
     ...(isMobile ? [{
       name: 'Mobile Wallet',
       icon: '', // We'll use Smartphone icon component instead
       color: 'hover:bg-[#9945FF]/20 hover:border-[#9945FF]/50',
+      isPasskey: false,
       isMobileAdapter: true,
     }] : []),
     {
       name: 'Phantom',
       icon: '/asset/phantom-logo.svg',
       color: 'hover:bg-[#AB9FF2]/20 hover:border-[#AB9FF2]/50',
+      isPasskey: false,
       isMobileAdapter: false,
     },
     {
       name: 'Solflare',
       icon: '/asset/solflare-logo.png',
       color: 'hover:bg-[#FFD700]/20 hover:border-[#FFD700]/50',
+      isPasskey: false,
       isMobileAdapter: false,
     },
   ];
@@ -405,12 +499,14 @@ export const ConnectWalletPopup = () => {
                     walletOptions.map((wallet) => (
                       <button
                         key={wallet.name}
-                        onClick={() => handleConnect(wallet.name, wallet.isMobileAdapter)}
+                        onClick={() => wallet.isPasskey ? handlePasskeyConnect() : handleConnect(wallet.name, wallet.isMobileAdapter)}
                         className={`w-full flex items-center justify-between p-3 sm:p-4 rounded-xl border border-white/5 bg-white/5 transition-all duration-300 group ${wallet.color}`}
                       >
                         <div className="flex items-center gap-3 sm:gap-4">
                           <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 flex items-center justify-center p-2 sm:p-2.5">
-                            {wallet.isMobileAdapter ? (
+                            {wallet.isPasskey ? (
+                              <Fingerprint className="w-6 h-6 text-cyan-400" />
+                            ) : wallet.isMobileAdapter ? (
                               <Smartphone className="w-6 h-6 text-purple-400" />
                             ) : (
                               <img src={wallet.icon} alt={wallet.name} className="w-full h-full object-contain" />
@@ -418,68 +514,86 @@ export const ConnectWalletPopup = () => {
                           </div>
                           <div className="text-left">
                             <span className="font-bold text-base sm:text-lg text-white block">{wallet.name}</span>
+                            {wallet.isPasskey && (
+                              <span className="text-xs text-gray-400">FaceID / TouchID / Windows Hello</span>
+                            )}
                             {wallet.isMobileAdapter && (
                               <span className="text-xs text-gray-400">Opens your wallet app</span>
                             )}
                           </div>
                         </div>
                         <div className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-gray-600 transition-all ${
+                          wallet.name === 'Passkey' ? 'group-hover:bg-[#00D9FF] group-hover:shadow-[0_0_10px_#00D9FF]' :
                           wallet.name === 'Phantom' ? 'group-hover:bg-[#AB9FF2] group-hover:shadow-[0_0_10px_#AB9FF2]' :
                           wallet.name === 'Mobile Wallet' ? 'group-hover:bg-[#9945FF] group-hover:shadow-[0_0_10px_#9945FF]' :
                           'group-hover:bg-[#FFD700] group-hover:shadow-[0_0_10px_#FFD700]'
                         }`} />
                       </button>
                     ))
-                  ) : wallets.filter(w => w.readyState === 'Installed' || w.readyState === 'Loadable').length > 0 ? (
-                    walletOptions.map((wallet) => {
-                      const isInstalled = wallets.some(
-                        w => w.adapter.name.toLowerCase().includes(wallet.name.toLowerCase()) &&
-                             (w.readyState === 'Installed' || w.readyState === 'Loadable')
-                      );
-
-                      if (!isInstalled) return null;
-
-                      return (
+                  ) : (
+                    <>
+                      {/* Always show Passkey option first */}
+                      {walletOptions.filter(w => w.isPasskey).map((wallet) => (
                         <button
                           key={wallet.name}
-                          onClick={() => handleConnect(wallet.name, wallet.isMobileAdapter)}
+                          onClick={handlePasskeyConnect}
                           className={`w-full flex items-center justify-between p-3 sm:p-4 rounded-xl border border-white/5 bg-white/5 transition-all duration-300 group ${wallet.color}`}
                         >
                           <div className="flex items-center gap-3 sm:gap-4">
                             <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 flex items-center justify-center p-2 sm:p-2.5">
-                              <img src={wallet.icon} alt={wallet.name} className="w-full h-full object-contain" />
+                              <Fingerprint className="w-6 h-6 text-cyan-400" />
                             </div>
-                            <span className="font-bold text-base sm:text-lg text-white">{wallet.name}</span>
+                            <div className="text-left">
+                              <span className="font-bold text-base sm:text-lg text-white block">{wallet.name}</span>
+                              <span className="text-xs text-gray-400">FaceID / TouchID / Windows Hello</span>
+                            </div>
                           </div>
-                          <div className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-gray-600 transition-all ${
-                            wallet.name === 'Phantom' ? 'group-hover:bg-[#AB9FF2] group-hover:shadow-[0_0_10px_#AB9FF2]' :
-                            'group-hover:bg-[#FFD700] group-hover:shadow-[0_0_10px_#FFD700]'
-                          }`} />
+                          <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-gray-600 transition-all group-hover:bg-[#00D9FF] group-hover:shadow-[0_0_10px_#00D9FF]" />
                         </button>
-                      );
-                    })
-                  ) : (
-                    <div className="text-gray-400 py-4">
-                      <p className="mb-4 text-sm sm:text-base">No wallet extension found. Please install:</p>
-                      <div className="flex gap-3 sm:gap-4 justify-center">
-                        <a
-                          href="https://phantom.app/"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-4 sm:px-6 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-full transition-all text-sm"
-                        >
-                          Phantom
-                        </a>
-                        <a
-                          href="https://solflare.com/"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-4 sm:px-6 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-full transition-all text-sm"
-                        >
-                          Solflare
-                        </a>
+                      ))}
+                      
+                      {/* Divider */}
+                      <div className="flex items-center gap-3 py-2">
+                        <div className="flex-1 h-px bg-white/10"></div>
+                        <span className="text-xs text-gray-500">or use wallet extension</span>
+                        <div className="flex-1 h-px bg-white/10"></div>
                       </div>
-                    </div>
+                      
+                      {/* Traditional wallet options */}
+                      {wallets.filter(w => w.readyState === 'Installed' || w.readyState === 'Loadable').length > 0 ? (
+                        walletOptions.filter(w => !w.isPasskey && !w.isMobileAdapter).map((wallet) => {
+                          const isInstalled = wallets.some(
+                            w => w.adapter.name.toLowerCase().includes(wallet.name.toLowerCase()) &&
+                                 (w.readyState === 'Installed' || w.readyState === 'Loadable')
+                          );
+
+                          if (!isInstalled) return null;
+
+                          return (
+                            <button
+                              key={wallet.name}
+                              onClick={() => handleConnect(wallet.name, wallet.isMobileAdapter)}
+                              className={`w-full flex items-center justify-between p-3 sm:p-4 rounded-xl border border-white/5 bg-white/5 transition-all duration-300 group ${wallet.color}`}
+                            >
+                              <div className="flex items-center gap-3 sm:gap-4">
+                                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 flex items-center justify-center p-2 sm:p-2.5">
+                                  <img src={wallet.icon} alt={wallet.name} className="w-full h-full object-contain" />
+                                </div>
+                                <span className="font-bold text-base sm:text-lg text-white">{wallet.name}</span>
+                              </div>
+                              <div className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-gray-600 transition-all ${
+                                wallet.name === 'Phantom' ? 'group-hover:bg-[#AB9FF2] group-hover:shadow-[0_0_10px_#AB9FF2]' :
+                                'group-hover:bg-[#FFD700] group-hover:shadow-[0_0_10px_#FFD700]'
+                              }`} />
+                            </button>
+                          );
+                        })
+                      ) : (
+                        <div className="text-gray-400 py-2">
+                          <p className="text-xs text-center text-gray-500">No wallet extension detected</p>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
 
@@ -499,6 +613,24 @@ export const ConnectWalletPopup = () => {
               className="py-6 sm:py-8"
             >
               <LoadingLightbulb text="Connecting wallet..." />
+            </motion.div>
+          )}
+
+          {step === 'connecting-passkey' && (
+            <motion.div
+              key="connecting-passkey"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="py-6 sm:py-8"
+            >
+              <div className="text-center">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-cyan-500/20 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 animate-pulse">
+                  <Fingerprint className="w-8 h-8 sm:w-10 sm:h-10 text-cyan-400" />
+                </div>
+                <h3 className="text-lg sm:text-xl font-bold text-white mb-2">Authenticating with Passkey</h3>
+                <p className="text-gray-400 text-sm sm:text-base">Use your FaceID, TouchID, or device PIN to continue...</p>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

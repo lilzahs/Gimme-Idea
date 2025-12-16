@@ -4,13 +4,19 @@ import { Inter, JetBrains_Mono, Space_Grotesk, Quantico } from 'next/font/google
 import { Toaster } from 'react-hot-toast';
 import { WalletProvider } from '../components/WalletProvider';
 import { AuthProvider } from '../contexts/AuthContext';
+import { LazorkitProvider } from '../contexts/LazorkitContext';
 import Navbar from '../components/Navbar';
 import { ConnectReminderModal } from '../components/ConnectReminderModal';
 import { ConnectWalletPopup } from '../components/ConnectWalletPopup';
 import { SubmissionModal } from '../components/SubmissionModal';
 import ErrorBoundary from '../components/ErrorBoundary';
 import Script from 'next/script';
-import React from 'react';
+import React, { useEffect } from 'react';
+
+// Buffer polyfill for LazorKit
+if (typeof window !== 'undefined') {
+  window.Buffer = window.Buffer || require('buffer').Buffer;
+}
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const mono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono' });
@@ -40,24 +46,26 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
 
       <ErrorBoundary>
         <WalletProvider>
-          <AuthProvider>
-            <Navbar />
-            <ConnectReminderModal />
-            <ConnectWalletPopup />
-            <SubmissionModal />
-            {children}
-            <Toaster
-              position="bottom-right"
-              toastOptions={{
-                style: {
-                  background: '#1A1A1A',
-                  color: '#fff',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: '12px',
-                },
-              }}
-            />
-          </AuthProvider>
+          <LazorkitProvider>
+            <AuthProvider>
+              <Navbar />
+              <ConnectReminderModal />
+              <ConnectWalletPopup />
+              <SubmissionModal />
+              {children}
+              <Toaster
+                position="bottom-right"
+                toastOptions={{
+                  style: {
+                    background: '#1A1A1A',
+                    color: '#fff',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '12px',
+                  },
+                }}
+              />
+            </AuthProvider>
+          </LazorkitProvider>
         </WalletProvider>
       </ErrorBoundary>
     </body>
