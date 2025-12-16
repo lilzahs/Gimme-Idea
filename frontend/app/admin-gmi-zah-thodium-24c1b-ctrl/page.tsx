@@ -19,7 +19,13 @@ import {
   AlertTriangle,
   Loader2,
   Lock,
-  KeyRound
+  KeyRound,
+  Lightbulb,
+  Search,
+  Bot,
+  RefreshCw,
+  CheckCircle,
+  XCircle
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiClient } from '@/lib/api-client';
@@ -27,23 +33,23 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import AdminBadge from '@/components/AdminBadge';
 
-// Access code for admin panel - hashed comparison
+// Access code for admin panel
 const ADMIN_ACCESS_CODE = 'gmi@2025--';
 const ACCESS_STORAGE_KEY = 'gmi_admin_access';
 
-interface Hackathon {
+interface Idea {
   id: string;
-  slug: string;
   title: string;
   description?: string;
-  startDate: string;
-  endDate: string;
-  prizePool?: string;
-  status: 'upcoming' | 'active' | 'voting' | 'completed';
-  imageUrl?: string;
-  tags: string[];
-  participantsCount: number;
+  category: string;
+  votes: number;
+  feedbackCount: number;
   createdAt: string;
+  author?: {
+    username: string;
+    wallet: string;
+  };
+  hasAIFeedback?: boolean;
 }
 
 interface ActivityLog {
@@ -70,10 +76,8 @@ function AccessCodeGate({ onSuccess }: { onSuccess: () => void }) {
     setIsChecking(true);
     setError('');
 
-    // Small delay to prevent brute force
     setTimeout(() => {
       if (code === ADMIN_ACCESS_CODE) {
-        // Store access in session (expires when browser closes)
         sessionStorage.setItem(ACCESS_STORAGE_KEY, btoa(Date.now().toString()));
         onSuccess();
       } else {
@@ -148,10 +152,6 @@ function AccessCodeGate({ onSuccess }: { onSuccess: () => void }) {
             </button>
           </form>
         </div>
-
-        <p className="text-xs text-gray-600 text-center mt-4">
-          Unauthorized access attempts are logged.
-        </p>
       </motion.div>
     </div>
   );
@@ -160,20 +160,22 @@ function AccessCodeGate({ onSuccess }: { onSuccess: () => void }) {
 export default function AdminDashboard() {
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
-  const [hackathons, setHackathons] = useState<Hackathon[]>([]);
+  const [ideas, setIdeas] = useState<Idea[]>([]);
   const [activityLog, setActivityLog] = useState<ActivityLog[]>([]);
   const [hasAccess, setHasAccess] = useState(false);
   const [checkingAccess, setCheckingAccess] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'overview' | 'hackathons' | 'activity'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'ideas' | 'ai-tools' | 'hackathons' | 'activity'>('overview');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [backfillResult, setBackfillResult] = useState<any>(null);
+  const [isBackfilling, setIsBackfilling] = useState(false);
 
-  // Check if user has valid access token in session
+  // Check if user has valid access token
   useEffect(() => {
     const storedAccess = sessionStorage.getItem(ACCESS_STORAGE_KEY);
     if (storedAccess) {
       try {
         const timestamp = parseInt(atob(storedAccess));
-        // Access valid for 24 hours
         if (Date.now() - timestamp < 24 * 60 * 60 * 1000) {
           setHasAccess(true);
         } else {
@@ -186,20 +188,20 @@ export default function AdminDashboard() {
     setCheckingAccess(false);
   }, []);
 
-  // Secret URL - no need to check isAdmin, URL itself is the security
+  // Fetch data
   useEffect(() => {
     const fetchData = async () => {
       if (!hasAccess) return;
       
       setIsLoading(true);
       try {
-        const [hackathonsRes, activityRes] = await Promise.all([
-          apiClient.getHackathons(),
+        const [ideasRes, activityRes] = await Promise.all([
+          apiClient.getProjects({ type: 'idea', limit: 100 }),
           apiClient.getAdminActivityLog(20),
         ]);
 
-        if (hackathonsRes.success && hackathonsRes.data) {
-          setHackathons(hackathonsRes.data);
+        if (ideasRes.success && ideasRes.data) {
+          setIdeas(ideasRes.data as any);
         }
         if (activityRes.success && activityRes.data) {
           setActivityLog(activityRes.data);
@@ -214,7 +216,38 @@ export default function AdminDashboard() {
     fetchData();
   }, [hasAccess]);
 
-  // Show loading while checking access
+  const handleDeleteIdea = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this idea?')) return;
+    
+    try {
+      const res = await apiClient.deleteProject(id);
+      if (res.success) {
+        setIdeas(ideas.filter(i => i.id !== id));
+      }
+    } catch (error) {
+      console.error('Failed to delete idea:', error);
+    }
+  };
+
+  const handleBackfillAI = async () => {
+    setIsBackfilling(true);
+    setBackfillResult(null);
+    
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+      const res = await fetch(`${API_URL}/ai/backfill-feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+      setBackfillResult(data);
+    } catch (error) {
+      setBackfillResult({ success: false, error: 'Failed to backfill' });
+    } finally {
+      setIsBackfilling(false);
+    }
+  };
+
   if (checkingAccess) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -223,7 +256,6 @@ export default function AdminDashboard() {
     );
   }
 
-  // Show access code gate if no access
   if (!hasAccess) {
     return <AccessCodeGate onSuccess={() => setHasAccess(true)} />;
   }
@@ -236,54 +268,20 @@ export default function AdminDashboard() {
     );
   }
 
+  const filteredIdeas = ideas.filter(idea => 
+    idea.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    idea.category.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const ideasWithAI = ideas.filter(i => i.feedbackCount > 0).length;
+  const ideasWithoutAI = ideas.length - ideasWithAI;
+
   const stats = [
-    { 
-      label: 'Total Hackathons', 
-      value: hackathons.length, 
-      icon: Trophy, 
-      color: 'text-amber-400',
-      bgColor: 'bg-amber-500/10',
-    },
-    { 
-      label: 'Active Now', 
-      value: hackathons.filter(h => h.status === 'active').length, 
-      icon: Activity, 
-      color: 'text-green-400',
-      bgColor: 'bg-green-500/10',
-    },
-    { 
-      label: 'Total Participants', 
-      value: hackathons.reduce((acc, h) => acc + h.participantsCount, 0), 
-      icon: Users, 
-      color: 'text-blue-400',
-      bgColor: 'bg-blue-500/10',
-    },
-    { 
-      label: 'Admin Actions', 
-      value: activityLog.length, 
-      icon: ShieldCheck, 
-      color: 'text-purple-400',
-      bgColor: 'bg-purple-500/10',
-    },
+    { label: 'Total Ideas', value: ideas.length, icon: Lightbulb, color: 'text-amber-400', bgColor: 'bg-amber-500/10' },
+    { label: 'With AI Feedback', value: ideasWithAI, icon: Bot, color: 'text-green-400', bgColor: 'bg-green-500/10' },
+    { label: 'Missing AI', value: ideasWithoutAI, icon: AlertTriangle, color: 'text-red-400', bgColor: 'bg-red-500/10' },
+    { label: 'Admin Actions', value: activityLog.length, icon: ShieldCheck, color: 'text-purple-400', bgColor: 'bg-purple-500/10' },
   ];
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active': return 'bg-green-500/20 text-green-400 border-green-500/30';
-      case 'upcoming': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-      case 'voting': return 'bg-amber-500/20 text-amber-400 border-amber-500/30';
-      case 'completed': return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
-      default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
-    }
-  };
-
-  const getActionIcon = (action: string) => {
-    if (action.includes('delete')) return <Trash2 className="w-4 h-4 text-red-400" />;
-    if (action.includes('create')) return <Plus className="w-4 h-4 text-green-400" />;
-    if (action.includes('update') || action.includes('score')) return <Edit className="w-4 h-4 text-blue-400" />;
-    if (action.includes('verify')) return <ShieldCheck className="w-4 h-4 text-amber-400" />;
-    return <Activity className="w-4 h-4 text-gray-400" />;
-  };
 
   return (
     <div className="min-h-screen pt-28 pb-20 px-4">
@@ -296,16 +294,9 @@ export default function AdminDashboard() {
               <AdminBadge variant="inline" />
             </div>
             <p className="text-gray-400">
-              Welcome back, <span className="text-white font-medium">{user?.username}</span>
+              Welcome back, <span className="text-white font-medium">{user?.username || 'Admin'}</span>
             </p>
           </div>
-          <Link 
-            href="/admin/hackathons/new"
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg text-white font-medium hover:opacity-90 transition-opacity"
-          >
-            <Plus className="w-5 h-5" />
-            New Hackathon
-          </Link>
         </div>
 
         {/* Stats Grid */}
@@ -328,16 +319,18 @@ export default function AdminDashboard() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6 border-b border-white/10 pb-4">
+        <div className="flex gap-2 mb-6 border-b border-white/10 pb-4 overflow-x-auto">
           {[
             { id: 'overview', label: 'Overview', icon: Eye },
+            { id: 'ideas', label: 'Ideas', icon: Lightbulb },
+            { id: 'ai-tools', label: 'AI Tools', icon: Bot },
             { id: 'hackathons', label: 'Hackathons', icon: Trophy },
-            { id: 'activity', label: 'Activity Log', icon: Activity },
+            { id: 'activity', label: 'Activity', icon: Activity },
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
                 activeTab === tab.id
                   ? 'bg-white/10 text-white'
                   : 'text-gray-400 hover:text-white hover:bg-white/5'
@@ -349,191 +342,200 @@ export default function AdminDashboard() {
           ))}
         </div>
 
-        {/* Content */}
+        {/* Overview Tab */}
         {activeTab === 'overview' && (
           <div className="grid lg:grid-cols-2 gap-6">
-            {/* Recent Hackathons */}
             <div className="bg-[#111] border border-white/5 rounded-xl p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white">Recent Hackathons</h3>
-                <button 
-                  onClick={() => setActiveTab('hackathons')}
-                  className="text-sm text-gray-400 hover:text-white transition-colors"
-                >
-                  View all
-                </button>
-              </div>
+              <h3 className="text-lg font-semibold text-white mb-4">Recent Ideas</h3>
               <div className="space-y-3">
-                {hackathons.slice(0, 3).map((hackathon) => (
+                {ideas.slice(0, 5).map((idea) => (
+                  <div key={idea.id} className="flex items-center gap-4 p-3 bg-white/5 rounded-lg">
+                    <div className="flex-grow">
+                      <div className="font-medium text-white mb-1 truncate">{idea.title}</div>
+                      <div className="text-xs text-gray-500">{idea.category}</div>
+                    </div>
+                    <Link href={`/idea/${idea.id}`} className="p-2 hover:bg-white/10 rounded-lg">
+                      <Eye className="w-4 h-4 text-gray-400" />
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-[#111] border border-white/5 rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-white mb-4">AI Status</h3>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-400">Ideas with AI feedback</span>
+                  <span className="text-green-400 font-medium">{ideasWithAI}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-400">Ideas without AI feedback</span>
+                  <span className="text-red-400 font-medium">{ideasWithoutAI}</span>
+                </div>
+                <div className="w-full bg-white/10 rounded-full h-2 mt-4">
                   <div 
-                    key={hackathon.id}
-                    className="flex items-center gap-4 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors cursor-pointer"
-                  >
-                    <div className="flex-grow">
-                      <div className="font-medium text-white mb-1">{hackathon.title}</div>
-                      <div className="flex items-center gap-2 text-xs text-gray-500">
-                        <Calendar className="w-3 h-3" />
-                        {new Date(hackathon.startDate).toLocaleDateString()}
-                      </div>
-                    </div>
-                    <span className={`px-2 py-1 text-xs rounded-full border ${getStatusColor(hackathon.status)}`}>
-                      {hackathon.status}
-                    </span>
-                  </div>
-                ))}
-                {hackathons.length === 0 && (
-                  <p className="text-gray-500 text-sm text-center py-4">No hackathons yet</p>
-                )}
-              </div>
-            </div>
-
-            {/* Recent Activity */}
-            <div className="bg-[#111] border border-white/5 rounded-xl p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white">Recent Activity</h3>
-                <button 
-                  onClick={() => setActiveTab('activity')}
-                  className="text-sm text-gray-400 hover:text-white transition-colors"
-                >
-                  View all
-                </button>
-              </div>
-              <div className="space-y-3">
-                {activityLog.slice(0, 5).map((log) => (
-                  <div key={log.id} className="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
-                    {getActionIcon(log.action)}
-                    <div className="flex-grow">
-                      <div className="text-sm text-white">{log.action.replace(/_/g, ' ')}</div>
-                      <div className="text-xs text-gray-500">
-                        {new Date(log.createdAt).toLocaleString()}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                {activityLog.length === 0 && (
-                  <p className="text-gray-500 text-sm text-center py-4">No activity yet</p>
-                )}
+                    className="bg-green-500 h-2 rounded-full" 
+                    style={{ width: `${ideas.length > 0 ? (ideasWithAI / ideas.length) * 100 : 0}%` }}
+                  />
+                </div>
+                <p className="text-xs text-gray-500 text-center">
+                  {ideas.length > 0 ? Math.round((ideasWithAI / ideas.length) * 100) : 0}% coverage
+                </p>
               </div>
             </div>
           </div>
         )}
 
-        {activeTab === 'hackathons' && (
+        {/* Ideas Tab */}
+        {activeTab === 'ideas' && (
           <div className="bg-[#111] border border-white/5 rounded-xl overflow-hidden">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-white/10">
-                  <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Hackathon</th>
-                  <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Date</th>
-                  <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Status</th>
-                  <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Participants</th>
-                  <th className="text-right px-6 py-4 text-sm font-medium text-gray-400">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {hackathons.map((hackathon) => (
-                  <tr key={hackathon.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="font-medium text-white">{hackathon.title}</div>
-                      <div className="text-sm text-gray-500">{hackathon.prizePool}</div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-400">
-                      {new Date(hackathon.startDate).toLocaleDateString()} - {new Date(hackathon.endDate).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 text-xs rounded-full border ${getStatusColor(hackathon.status)}`}>
-                        {hackathon.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-400">
-                      <div className="flex items-center gap-1">
-                        <Users className="w-4 h-4" />
-                        {hackathon.participantsCount}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center justify-end gap-2">
-                        <Link
-                          href={`/hackathons/${hackathon.slug}`}
-                          className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-                          title="View"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Link>
-                        <Link
-                          href={`/admin/hackathons/${hackathon.id}/edit`}
-                          className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-                          title="Edit"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Link>
-                        <Link
-                          href={`/admin/hackathons/${hackathon.id}/submissions`}
-                          className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-                          title="Submissions"
-                        >
-                          <Trophy className="w-4 h-4" />
-                        </Link>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {hackathons.length === 0 && (
-              <div className="text-center py-12">
-                <Trophy className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                <p className="text-gray-400">No hackathons created yet</p>
-                <Link
-                  href="/admin/hackathons/new"
-                  className="inline-flex items-center gap-2 mt-4 text-purple-400 hover:text-purple-300"
-                >
-                  <Plus className="w-4 h-4" />
-                  Create your first hackathon
-                </Link>
+            <div className="p-4 border-b border-white/10">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search ideas..."
+                  className="w-full bg-white/5 border border-white/10 rounded-lg pl-11 pr-4 py-2 text-white placeholder:text-gray-600 focus:border-purple-500 focus:outline-none"
+                />
               </div>
-            )}
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-white/10">
+                    <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Title</th>
+                    <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Category</th>
+                    <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Votes</th>
+                    <th className="text-left px-6 py-4 text-sm font-medium text-gray-400">Feedback</th>
+                    <th className="text-right px-6 py-4 text-sm font-medium text-gray-400">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredIdeas.map((idea) => (
+                    <tr key={idea.id} className="border-b border-white/5 hover:bg-white/5">
+                      <td className="px-6 py-4">
+                        <div className="font-medium text-white truncate max-w-xs">{idea.title}</div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-400">{idea.category}</td>
+                      <td className="px-6 py-4 text-sm text-gray-400">{idea.votes}</td>
+                      <td className="px-6 py-4 text-sm text-gray-400">{idea.feedbackCount}</td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center justify-end gap-2">
+                          <Link href={`/idea/${idea.id}`} className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg">
+                            <Eye className="w-4 h-4" />
+                          </Link>
+                          <button 
+                            onClick={() => handleDeleteIdea(idea.id)}
+                            className="p-2 text-gray-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
+        {/* AI Tools Tab */}
+        {activeTab === 'ai-tools' && (
+          <div className="space-y-6">
+            <div className="bg-[#111] border border-white/5 rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-white mb-4">Backfill AI Feedback</h3>
+              <p className="text-gray-400 mb-4">
+                Generate AI feedback for all ideas that don't have it yet. This will use the OpenAI API.
+              </p>
+              <button
+                onClick={handleBackfillAI}
+                disabled={isBackfilling}
+                className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 text-white rounded-lg transition-colors"
+              >
+                {isBackfilling ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="w-4 h-4" />
+                    Run Backfill
+                  </>
+                )}
+              </button>
+
+              {backfillResult && (
+                <div className={`mt-4 p-4 rounded-lg ${backfillResult.success ? 'bg-green-500/10 border border-green-500/20' : 'bg-red-500/10 border border-red-500/20'}`}>
+                  {backfillResult.success ? (
+                    <>
+                      <div className="flex items-center gap-2 mb-2">
+                        <CheckCircle className="w-5 h-5 text-green-400" />
+                        <span className="font-medium text-green-400">Backfill Complete</span>
+                      </div>
+                      <div className="text-sm text-gray-400 space-y-1">
+                        <p>Processed: {backfillResult.data?.processed || 0}</p>
+                        <p>Success: {backfillResult.data?.success || 0}</p>
+                        <p>Failed: {backfillResult.data?.failed || 0}</p>
+                        <p>Skipped: {backfillResult.data?.skipped || 0}</p>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <XCircle className="w-5 h-5 text-red-400" />
+                      <span className="text-red-400">{backfillResult.error || 'Failed'}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="bg-[#111] border border-white/5 rounded-xl p-6">
+              <h3 className="text-lg font-semibold text-white mb-4">Ideas Without AI Feedback</h3>
+              <div className="space-y-2">
+                {ideas.filter(i => i.feedbackCount === 0).slice(0, 10).map((idea) => (
+                  <div key={idea.id} className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
+                    <span className="text-white truncate">{idea.title}</span>
+                    <Link href={`/idea/${idea.id}`} className="text-purple-400 text-sm hover:underline">
+                      View
+                    </Link>
+                  </div>
+                ))}
+                {ideas.filter(i => i.feedbackCount === 0).length === 0 && (
+                  <p className="text-gray-500 text-center py-4">All ideas have AI feedback!</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Hackathons Tab */}
+        {activeTab === 'hackathons' && (
+          <div className="bg-[#111] border border-white/5 rounded-xl p-6 text-center">
+            <Trophy className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+            <p className="text-gray-400">Hackathon management coming soon</p>
+          </div>
+        )}
+
+        {/* Activity Tab */}
         {activeTab === 'activity' && (
           <div className="bg-[#111] border border-white/5 rounded-xl p-6">
             <div className="space-y-4">
               {activityLog.map((log) => (
                 <div key={log.id} className="flex items-start gap-4 p-4 bg-white/5 rounded-lg">
-                  <div className="p-2 rounded-lg bg-white/5">
-                    {getActionIcon(log.action)}
-                  </div>
+                  <Activity className="w-4 h-4 text-gray-400 mt-1" />
                   <div className="flex-grow">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium text-white capitalize">
-                        {log.action.replace(/_/g, ' ')}
-                      </span>
-                      <span className="text-xs text-gray-500">on {log.targetType}</span>
-                    </div>
-                    {log.details && Object.keys(log.details).length > 0 && (
-                      <div className="text-sm text-gray-400 mb-2">
-                        {JSON.stringify(log.details)}
-                      </div>
-                    )}
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                      <Clock className="w-3 h-3" />
-                      {new Date(log.createdAt).toLocaleString()}
-                      {log.admin && (
-                        <>
-                          <span>•</span>
-                          <span>by {log.admin.username}</span>
-                        </>
-                      )}
-                    </div>
+                    <div className="text-sm text-white capitalize">{log.action.replace(/_/g, ' ')}</div>
+                    <div className="text-xs text-gray-500">{new Date(log.createdAt).toLocaleString()}</div>
                   </div>
                 </div>
               ))}
               {activityLog.length === 0 && (
-                <div className="text-center py-12">
-                  <Activity className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                  <p className="text-gray-400">No admin activity logged yet</p>
-                </div>
+                <p className="text-gray-500 text-center py-4">No activity yet</p>
               )}
             </div>
           </div>

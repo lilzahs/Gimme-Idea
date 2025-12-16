@@ -837,4 +837,190 @@ Respond with JSON only:
       return { success: false, error: "Failed to generate AI reply" };
     }
   }
+
+  /**
+   * Backfill AI feedback for all ideas that don't have AI comments yet
+   */
+  async backfillMissingAIFeedback(): Promise<{
+    processed: number;
+    success: number;
+    failed: number;
+    skipped: number;
+    details: string[];
+  }> {
+    const supabase = this.supabaseService.getAdminClient();
+    const result = {
+      processed: 0,
+      success: 0,
+      failed: 0,
+      skipped: 0,
+      details: [] as string[],
+    };
+
+    this.logger.log("Starting AI feedback backfill...");
+
+    try {
+      // Get all ideas
+      const { data: ideas, error: ideasError } = await supabase
+        .from("projects")
+        .select("id, title, problem, solution, opportunity")
+        .eq("type", "idea")
+        .not("problem", "is", null)
+        .not("solution", "is", null);
+
+      if (ideasError) {
+        throw new Error(`Failed to fetch ideas: ${ideasError.message}`);
+      }
+
+      if (!ideas || ideas.length === 0) {
+        return { ...result, details: ["No ideas found"] };
+      }
+
+      this.logger.log(`Found ${ideas.length} ideas to check`);
+
+      // Get all existing AI comments
+      const { data: aiComments, error: commentsError } = await supabase
+        .from("comments")
+        .select("project_id")
+        .eq("is_ai_generated", true);
+
+      if (commentsError) {
+        throw new Error(
+          `Failed to fetch AI comments: ${commentsError.message}`
+        );
+      }
+
+      // Create a set of project IDs that already have AI feedback
+      const projectsWithAI = new Set(
+        (aiComments || []).map((c) => c.project_id)
+      );
+
+      // Filter ideas that don't have AI feedback
+      const ideasWithoutFeedback = ideas.filter(
+        (idea) => !projectsWithAI.has(idea.id)
+      );
+
+      this.logger.log(`${ideasWithoutFeedback.length} ideas need AI feedback`);
+
+      // Get or create AI bot user
+      let { data: aiUser } = await supabase
+        .from("users")
+        .select("id")
+        .eq("email", "gimmeidea.contact@gmail.com")
+        .single();
+
+      if (!aiUser) {
+        // Try by wallet
+        const { data: aiUserByWallet } = await supabase
+          .from("users")
+          .select("id")
+          .eq("wallet", "FzcnaZMYcoAYpLgr7Wym2b8hrKYk3VXsRxWSLuvZKLJm")
+          .single();
+
+        aiUser = aiUserByWallet;
+      }
+
+      if (!aiUser) {
+        throw new Error("AI bot user not found");
+      }
+
+      // Process each idea (with delay to avoid rate limiting)
+      for (const idea of ideasWithoutFeedback) {
+        result.processed++;
+
+        // Skip if content is too short
+        const totalLength =
+          (idea.problem || "").length + (idea.solution || "").length;
+        if (totalLength < 50) {
+          result.skipped++;
+          result.details.push(`${idea.id}: Skipped - content too short`);
+          continue;
+        }
+
+        try {
+          // Generate AI feedback
+          const feedback = await this.generateIdeaFeedback({
+            title: idea.title,
+            problem: idea.problem,
+            solution: idea.solution,
+            opportunity: idea.opportunity,
+          });
+
+          // Save AI score to project
+          await supabase
+            .from("projects")
+            .update({ ai_score: feedback.score })
+            .eq("id", idea.id);
+
+          // Format comment content
+          let commentContent = feedback.comment;
+
+          if (feedback.strengths && feedback.strengths.length > 0) {
+            commentContent += `\n\n**💪 Strengths:**\n${feedback.strengths
+              .map((s) => `• ${s}`)
+              .join("\n")}`;
+          }
+
+          if (feedback.weaknesses && feedback.weaknesses.length > 0) {
+            commentContent += `\n\n**⚠️ Areas to Improve:**\n${feedback.weaknesses
+              .map((w) => `• ${w}`)
+              .join("\n")}`;
+          }
+
+          if (feedback.suggestions && feedback.suggestions.length > 0) {
+            commentContent += `\n\n**💡 Suggestions:**\n${feedback.suggestions
+              .map((s) => `• ${s}`)
+              .join("\n")}`;
+          }
+
+          // Create AI comment
+          const { error: commentError } = await supabase
+            .from("comments")
+            .insert({
+              project_id: idea.id,
+              user_id: aiUser.id,
+              content: commentContent,
+              is_anonymous: false,
+              likes: 0,
+              tips_amount: 0,
+              is_ai_generated: true,
+              ai_model: "gpt-4o-mini",
+              created_at: new Date().toISOString(),
+            });
+
+          if (commentError) {
+            throw new Error(commentError.message);
+          }
+
+          // Increment feedback count
+          await supabase.rpc("increment_feedback_count", {
+            project_id: idea.id,
+          });
+
+          result.success++;
+          result.details.push(`${idea.id}: Success - Score ${feedback.score}`);
+
+          this.logger.log(
+            `AI feedback created for ${idea.id} with score ${feedback.score}`
+          );
+
+          // Add delay to avoid rate limiting (1 second between requests)
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+        } catch (error: any) {
+          result.failed++;
+          result.details.push(`${idea.id}: Failed - ${error.message}`);
+          this.logger.error(`Failed to process idea ${idea.id}:`, error);
+        }
+      }
+
+      this.logger.log(
+        `Backfill complete: ${result.success} success, ${result.failed} failed, ${result.skipped} skipped`
+      );
+
+      return result;
+    } catch (error: any) {
+      this.logger.error("Backfill failed:", error);
+      throw error;
+    }
+  }
 }

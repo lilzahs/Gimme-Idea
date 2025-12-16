@@ -594,19 +594,19 @@ export class ProjectsService {
 
       // Only add structured sections if they have meaningful content
       if (feedback.strengths && feedback.strengths.length > 0) {
-        commentContent += `\n\n**💪 Điểm mạnh:**\n${feedback.strengths
+        commentContent += `\n\n**💪 Strengths:**\n${feedback.strengths
           .map((s) => `• ${s}`)
           .join("\n")}`;
       }
 
       if (feedback.weaknesses && feedback.weaknesses.length > 0) {
-        commentContent += `\n\n**⚠️ Cần cải thiện:**\n${feedback.weaknesses
+        commentContent += `\n\n**⚠️ Areas to Improve:**\n${feedback.weaknesses
           .map((w) => `• ${w}`)
           .join("\n")}`;
       }
 
       if (feedback.suggestions && feedback.suggestions.length > 0) {
-        commentContent += `\n\n**💡 Gợi ý:**\n${feedback.suggestions
+        commentContent += `\n\n**💡 Suggestions:**\n${feedback.suggestions
           .map((s) => `• ${s}`)
           .join("\n")}`;
       }

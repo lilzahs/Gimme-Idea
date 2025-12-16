@@ -334,4 +334,26 @@ export class AIController {
       };
     }
   }
+
+  /**
+   * POST /api/ai/backfill-feedback
+   * Generate AI feedback for all ideas that don't have AI comments yet
+   * Admin only endpoint
+   */
+  @Post("backfill-feedback")
+  async backfillFeedback(): Promise<ApiResponse<any>> {
+    try {
+      const result = await this.aiService.backfillMissingAIFeedback();
+      return {
+        success: true,
+        data: result,
+        message: `Processed ${result.processed} ideas, ${result.success} successful, ${result.failed} failed`,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || "Failed to backfill AI feedback",
+      };
+    }
+  }
 }
