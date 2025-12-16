@@ -301,53 +301,65 @@ export default function HomeFeed() {
             {idea.title}
           </h2>
 
-          {/* Problem / Solution / Opportunity */}
-          <div className="space-y-3">
-            {idea.problem && (
-              <div className="bg-red-500/5 border border-red-500/10 rounded-xl p-3 sm:p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs font-bold text-red-400 uppercase tracking-wide">🎯 Problem</span>
+          {/* Problem / Solution / Opportunity OR Description fallback */}
+          {(idea.problem || idea.solution || idea.opportunity) ? (
+            <div className="space-y-3">
+              {idea.problem && (
+                <div className="bg-red-500/5 border border-red-500/10 rounded-xl p-3 sm:p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xs font-bold text-red-400 uppercase tracking-wide">🎯 Problem</span>
+                  </div>
+                  <p className="text-sm text-gray-300 leading-relaxed">
+                    <TruncatedText 
+                      text={idea.problem} 
+                      maxLength={120}
+                      onSeeMore={() => handleCardClick(idea)}
+                    />
+                  </p>
                 </div>
-                <p className="text-sm text-gray-300 leading-relaxed">
-                  <TruncatedText 
-                    text={idea.problem} 
-                    maxLength={120}
-                    onSeeMore={() => handleCardClick(idea)}
-                  />
-                </p>
-              </div>
-            )}
+              )}
 
-            {idea.solution && (
-              <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-3 sm:p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs font-bold text-emerald-400 uppercase tracking-wide">💡 Solution</span>
+              {idea.solution && (
+                <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-3 sm:p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xs font-bold text-emerald-400 uppercase tracking-wide">💡 Solution</span>
+                  </div>
+                  <p className="text-sm text-gray-300 leading-relaxed">
+                    <TruncatedText 
+                      text={idea.solution} 
+                      maxLength={120}
+                      onSeeMore={() => handleCardClick(idea)}
+                    />
+                  </p>
                 </div>
-                <p className="text-sm text-gray-300 leading-relaxed">
-                  <TruncatedText 
-                    text={idea.solution} 
-                    maxLength={120}
-                    onSeeMore={() => handleCardClick(idea)}
-                  />
-                </p>
-              </div>
-            )}
+              )}
 
-            {idea.opportunity && (
-              <div className="bg-purple-500/5 border border-purple-500/10 rounded-xl p-3 sm:p-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs font-bold text-purple-400 uppercase tracking-wide">🚀 Opportunity</span>
+              {idea.opportunity && (
+                <div className="bg-purple-500/5 border border-purple-500/10 rounded-xl p-3 sm:p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xs font-bold text-purple-400 uppercase tracking-wide">🚀 Opportunity</span>
+                  </div>
+                  <p className="text-sm text-gray-300 leading-relaxed">
+                    <TruncatedText 
+                      text={idea.opportunity} 
+                      maxLength={120}
+                      onSeeMore={() => handleCardClick(idea)}
+                    />
+                  </p>
                 </div>
-                <p className="text-sm text-gray-300 leading-relaxed">
-                  <TruncatedText 
-                    text={idea.opportunity} 
-                    maxLength={120}
-                    onSeeMore={() => handleCardClick(idea)}
-                  />
-                </p>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          ) : idea.description ? (
+            <div className="bg-white/5 border border-white/10 rounded-xl p-3 sm:p-4">
+              <p className="text-sm text-gray-300 leading-relaxed">
+                <TruncatedText 
+                  text={idea.description} 
+                  maxLength={200}
+                  onSeeMore={() => handleCardClick(idea)}
+                />
+              </p>
+            </div>
+          ) : null}
 
           {/* Tags */}
           {idea.tags && idea.tags.length > 0 && (
@@ -440,7 +452,7 @@ export default function HomeFeed() {
         </div>
       </div>
 
-      <div className="pt-24 sm:pt-32 px-4 sm:px-6 max-w-3xl mx-auto">
+      <div className="pt-24 sm:pt-32 px-4 sm:px-6 max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
@@ -542,7 +554,7 @@ export default function HomeFeed() {
             </button>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {ideas.map((idea) => (
               <PostCard key={idea.id} idea={idea} />
             ))}
