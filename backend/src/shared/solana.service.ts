@@ -91,7 +91,7 @@ export class SolanaService implements OnModuleInit {
       // For passkey wallets, we trust the connection was authenticated via WebAuthn
       // The signature verification happens at the LazorKit portal level
       // Here we just verify the message content matches what we expect
-      
+
       if (!signedPayload || !signature) {
         console.log("Missing signedPayload or signature");
         return false;
@@ -100,12 +100,12 @@ export class SolanaService implements OnModuleInit {
       // The signedPayload should contain parts of our original message
       // This is a simplified verification - the actual WebAuthn verification
       // happens on the LazorKit infrastructure
-      
+
       // For now, we verify that the signature and signedPayload exist
       // and trust LazorKit's authentication flow
       console.log("Passkey verification: trusting LazorKit auth flow");
       console.log("=================================");
-      
+
       return true;
     } catch (error) {
       console.error("Passkey signature verification error:", error);

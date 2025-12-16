@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Wallet, AlertCircle, RefreshCw, ArrowRight, Smartphone } from 'lucide-react';
+import { X, Wallet, AlertCircle, RefreshCw, ArrowRight, Smartphone, Fingerprint } from 'lucide-react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePasskeyWallet } from '@/contexts/LazorkitContext';
 import { apiClient } from '@/lib/api-client';
 import { LoadingLightbulb } from './LoadingLightbulb';
 import toast from 'react-hot-toast';
@@ -34,6 +35,7 @@ export const WalletRequiredModal: React.FC<WalletRequiredModalProps> = ({
 }) => {
   const { user, setUser, refreshUser } = useAuth();
   const { wallets, select, connect, publicKey, signMessage, connected, disconnect } = useWallet();
+  const { isPasskeyConnected, passkeyWalletAddress, connectPasskey, disconnectPasskey, signPasskeyMessage, isPasskeyConnecting } = usePasskeyWallet();
   const [isProcessing, setIsProcessing] = useState(false);
   const [step, setStep] = useState<'prompt' | 'select' | 'connecting'>('prompt');
   const [isMobile, setIsMobile] = useState(false);
@@ -148,31 +150,58 @@ export const WalletRequiredModal: React.FC<WalletRequiredModalProps> = ({
   }, [connected, publicKey, user?.wallet, onSuccess, onClose, disconnect]);
 
   const handleReconnect = async () => {
+    // Instead of auto-reconnect, go to wallet selection
+    setStep('select');
+  };
+
+  // Handle Passkey reconnect
+  const handlePasskeyReconnect = async () => {
+    if (!user?.wallet) return;
+
+    setIsProcessing(true);
+    try {
+      await connectPasskey();
+      
+      // Check if passkey wallet matches user's linked wallet
+      if (passkeyWalletAddress === user.wallet) {
+        toast.success('Passkey wallet reconnected successfully!');
+        onSuccess?.();
+        onClose();
+      } else if (passkeyWalletAddress) {
+        toast.error('Connected passkey wallet does not match your profile.');
+        await disconnectPasskey();
+      }
+    } catch (error: any) {
+      console.error('Passkey reconnect error:', error);
+      if (!error.message?.includes('User rejected') && !error.message?.includes('cancelled')) {
+        toast.error('Failed to reconnect with Passkey');
+      }
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Handle specific wallet reconnect
+  const handleWalletReconnect = async (walletName: string, isMobileAdapter?: boolean) => {
     if (!user?.wallet) return;
 
     setIsProcessing(true);
     try {
       let availableWallet;
       
-      // On mobile, prefer Mobile Wallet Adapter
-      if (isMobile) {
+      if (isMobileAdapter) {
         availableWallet = wallets.find(w => 
           w.adapter.name.toLowerCase().includes('mobile') ||
           w.adapter.name.toLowerCase().includes('solana mobile')
         );
-      }
-      
-      // Fallback to regular wallets
-      if (!availableWallet) {
-        availableWallet = wallets.find(w => 
-          w.readyState === 'Installed' || w.readyState === 'Loadable'
+      } else {
+        availableWallet = wallets.find(w =>
+          w.adapter.name.toLowerCase().includes(walletName.toLowerCase())
         );
       }
       
       if (!availableWallet) {
-        toast.error(isMobile 
-          ? 'No wallet found. Please install Phantom or Solflare app.'
-          : 'No wallet extension found. Please install Phantom or Solflare.');
+        toast.error(`${walletName} wallet not found. Please install it first.`);
         setIsProcessing(false);
         return;
       }
@@ -244,9 +273,11 @@ export const WalletRequiredModal: React.FC<WalletRequiredModalProps> = ({
       icon: '', // We'll use Smartphone icon component instead
       color: 'hover:bg-[#9945FF]/20',
       isMobileAdapter: true,
+      isPasskey: false,
     }] : []),
-    { name: 'Phantom', icon: '/asset/phantom-logo.svg', color: 'hover:bg-[#AB9FF2]/20', isMobileAdapter: false },
-    { name: 'Solflare', icon: '/asset/solflare-logo.png', color: 'hover:bg-[#FFD700]/20', isMobileAdapter: false },
+    { name: 'Phantom', icon: '/asset/phantom-logo.svg', color: 'hover:bg-[#AB9FF2]/20', isMobileAdapter: false, isPasskey: false },
+    { name: 'Solflare', icon: '/asset/solflare-logo.png', color: 'hover:bg-[#FFD700]/20', isMobileAdapter: false, isPasskey: false },
+    { name: 'Passkey', icon: '', color: 'hover:bg-green-500/20', isMobileAdapter: false, isPasskey: true },
   ];
 
   if (!isOpen) return null;
@@ -338,8 +369,9 @@ export const WalletRequiredModal: React.FC<WalletRequiredModalProps> = ({
                       <>Processing...</>
                     ) : (
                       <>
-                        <RefreshCw className="w-4 h-4" />
-                        Reconnect Wallet
+                        <Wallet className="w-4 h-4" />
+                        Select Wallet
+                        <ArrowRight className="w-4 h-4" />
                       </>
                     )}
                   </button>
@@ -369,8 +401,23 @@ export const WalletRequiredModal: React.FC<WalletRequiredModalProps> = ({
                 <Wallet className="w-7 h-7 sm:w-8 sm:h-8 text-purple-400" />
               </div>
               
-              <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">Select Wallet</h2>
-              <p className="text-gray-400 text-sm sm:text-base mb-4 sm:mb-6">Choose your preferred Solana wallet</p>
+              <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">
+                {mode === 'reconnect' ? 'Reconnect Wallet' : 'Select Wallet'}
+              </h2>
+              <p className="text-gray-400 text-sm sm:text-base mb-4 sm:mb-6">
+                {mode === 'reconnect' 
+                  ? 'Choose the wallet you want to reconnect with'
+                  : 'Choose your preferred Solana wallet'}
+              </p>
+
+              {user?.wallet && mode === 'reconnect' && (
+                <div className="bg-white/5 border border-white/10 rounded-xl p-3 mb-4 text-left">
+                  <p className="text-[10px] sm:text-xs text-gray-500 mb-1">Your linked wallet:</p>
+                  <p className="text-xs sm:text-sm font-mono text-white">
+                    {user.wallet.slice(0, 6)}...{user.wallet.slice(-4)}
+                  </p>
+                </div>
+              )}
 
               <div className="space-y-2 sm:space-y-3">
                 {/* On mobile, show all options including Mobile Wallet Adapter */}
@@ -378,13 +425,24 @@ export const WalletRequiredModal: React.FC<WalletRequiredModalProps> = ({
                   walletOptions.map((wallet) => (
                     <button
                       key={wallet.name}
-                      onClick={() => handleConnectWallet(wallet.name, wallet.isMobileAdapter)}
-                      className={`w-full flex items-center justify-between p-3 sm:p-4 rounded-xl border border-white/5 bg-white/5 transition-all duration-300 group ${wallet.color}`}
+                      onClick={() => {
+                        if (wallet.isPasskey) {
+                          mode === 'reconnect' ? handlePasskeyReconnect() : handleConnectWallet(wallet.name, false);
+                        } else {
+                          mode === 'reconnect' 
+                            ? handleWalletReconnect(wallet.name, wallet.isMobileAdapter)
+                            : handleConnectWallet(wallet.name, wallet.isMobileAdapter);
+                        }
+                      }}
+                      disabled={isProcessing || isPasskeyConnecting}
+                      className={`w-full flex items-center justify-between p-3 sm:p-4 rounded-xl border border-white/5 bg-white/5 transition-all duration-300 group ${wallet.color} disabled:opacity-50`}
                     >
                       <div className="flex items-center gap-3 sm:gap-4">
                         <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 flex items-center justify-center p-2 sm:p-2.5">
                           {wallet.isMobileAdapter ? (
                             <Smartphone className="w-6 h-6 text-purple-400" />
+                          ) : wallet.isPasskey ? (
+                            <Fingerprint className="w-6 h-6 text-green-400" />
                           ) : (
                             <img src={wallet.icon} alt={wallet.name} className="w-full h-full object-contain" />
                           )}
@@ -394,12 +452,40 @@ export const WalletRequiredModal: React.FC<WalletRequiredModalProps> = ({
                           {wallet.isMobileAdapter && (
                             <span className="text-xs text-gray-400">Opens your wallet app</span>
                           )}
+                          {wallet.isPasskey && (
+                            <span className="text-xs text-gray-400">Use Face ID / Touch ID</span>
+                          )}
                         </div>
                       </div>
                     </button>
                   ))
                 ) : (
                   walletOptions.map((wallet) => {
+                    // Passkey is always available
+                    if (wallet.isPasskey) {
+                      return (
+                        <button
+                          key={wallet.name}
+                          onClick={() => {
+                            mode === 'reconnect' ? handlePasskeyReconnect() : handleConnectWallet(wallet.name, false);
+                          }}
+                          disabled={isProcessing || isPasskeyConnecting}
+                          className={`w-full flex items-center justify-between p-3 sm:p-4 rounded-xl border border-white/5 bg-white/5 transition-all duration-300 group ${wallet.color} disabled:opacity-50`}
+                        >
+                          <div className="flex items-center gap-3 sm:gap-4">
+                            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 flex items-center justify-center p-2 sm:p-2.5">
+                              <Fingerprint className="w-6 h-6 text-green-400" />
+                            </div>
+                            <div className="text-left">
+                              <span className="font-bold text-base sm:text-lg text-white block">{wallet.name}</span>
+                              <span className="text-xs text-gray-400">Use Face ID / Touch ID</span>
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    }
+
+                    // Regular wallets - check if installed
                     const isInstalled = wallets.some(
                       w => w.adapter.name.toLowerCase().includes(wallet.name.toLowerCase()) &&
                            (w.readyState === 'Installed' || w.readyState === 'Loadable')
@@ -410,8 +496,13 @@ export const WalletRequiredModal: React.FC<WalletRequiredModalProps> = ({
                     return (
                       <button
                         key={wallet.name}
-                        onClick={() => handleConnectWallet(wallet.name, wallet.isMobileAdapter)}
-                        className={`w-full flex items-center justify-between p-3 sm:p-4 rounded-xl border border-white/5 bg-white/5 transition-all duration-300 group ${wallet.color}`}
+                        onClick={() => {
+                          mode === 'reconnect' 
+                            ? handleWalletReconnect(wallet.name, wallet.isMobileAdapter)
+                            : handleConnectWallet(wallet.name, wallet.isMobileAdapter);
+                        }}
+                        disabled={isProcessing}
+                        className={`w-full flex items-center justify-between p-3 sm:p-4 rounded-xl border border-white/5 bg-white/5 transition-all duration-300 group ${wallet.color} disabled:opacity-50`}
                       >
                         <div className="flex items-center gap-3 sm:gap-4">
                           <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/10 flex items-center justify-center p-2 sm:p-2.5">
