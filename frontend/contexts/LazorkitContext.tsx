@@ -9,7 +9,7 @@ const LAZORKIT_CONFIG = {
   rpcUrl: process.env.NEXT_PUBLIC_SOLANA_RPC_URL || 'https://api.devnet.solana.com',
   portalUrl: 'https://portal.lazor.sh',
   paymasterConfig: {
-    paymasterUrl: 'https://lazorkit-paymaster.onrender.com',
+    paymasterUrl: process.env.NEXT_PUBLIC_LAZORKIT_PAYMASTER_URL || 'https://kora.devnet.lazorkit.com/',
   },
 };
 
