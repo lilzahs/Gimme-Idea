@@ -91,6 +91,7 @@ export const apiClient = {
 
   // Projects
   getProjects: (params?: {
+    type?: string;
     category?: string;
     stage?: string;
     search?: string;
