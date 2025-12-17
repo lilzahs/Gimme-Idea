@@ -280,28 +280,23 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
 
         {/* Main Content */}
         <main className="flex-1 overflow-hidden flex flex-col relative w-full">
-          <div className="h-full flex flex-col p-4 md:p-6 space-y-4 md:space-y-6 overflow-y-auto md:overflow-hidden">
+          {/* 1x6 Image Banner - Moved to top of main content */}
+          {hackathon.image_url && (
+             <div className="relative w-full aspect-[6/1] rounded-b-xl overflow-hidden shadow-2xl border-x border-b border-white/10 shrink-0 hidden md:block">
+               <Image
+                 src={hackathon.image_url}
+                 alt={`${hackathon.title} Banner`}
+                 layout="fill"
+                 objectFit="cover"
+                 className="opacity-80 hover:opacity-100 transition-opacity duration-300"
+               />
+               <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
+             </div>
+          )}
+          
+          <div className="h-full flex flex-col p-2 md:p-4 space-y-2 md:space-y-4 overflow-y-auto md:overflow-hidden">
             
-            {/* Header */}
-            <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 shrink-0">
-              <div className="space-y-1 md:space-y-2 flex-1 min-w-0">
-                 <div className="flex items-center gap-3">
-                    <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold border ${hackathon.status === 'active' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-blue-500/10 text-blue-500 border-blue-500/20'}`}>
-                       {hackathon.status === 'active' ? 'Live Event' : 'Upcoming'}
-                    </span>
-                    <span className="text-gray-500 text-xs flex items-center gap-1">
-                       <Calendar className="w-3 h-3" /> 
-                       {eventStartDate && format(new Date(eventStartDate), 'MMM dd')} - {eventEndDate && format(new Date(eventEndDate), 'MMM dd, yyyy')}
-                    </span>
-                 </div>
-                 <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-white font-quantico leading-tight truncate">
-                    {hackathon.title}
-                 </h1>
-                 <p className="text-gray-400 max-w-xl text-xs leading-relaxed line-clamp-2">
-                   Build the future of decentralized technology. Join thousands of developers to compete for the grand prize.
-                 </p>
-              </div>
-            </header>
+            {/* NO HEADER HERE - title/description moved inside Overview grid */}
 
             {/* Dynamic Content */}
             <div className="flex-1 min-h-0">
@@ -319,22 +314,26 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                     {activeSection === 'overview' && (
                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
                           
-                          {/* LEFT COLUMN: Banner + Terminal (Span 9) */}
+                          {/* LEFT COLUMN: Title, Description, Terminal (Span 9) */}
                           <div className="lg:col-span-9 flex flex-col gap-6 h-full min-h-0">
-                             
-                             {/* 1x6 Image Banner */}
-                             {hackathon.image_url && (
-                                <div className="relative w-full aspect-[6/1] rounded-xl overflow-hidden shadow-2xl border border-white/10 shrink-0 hidden md:block">
-                                  <Image
-                                    src={hackathon.image_url}
-                                    alt={`${hackathon.title} Banner`}
-                                    layout="fill"
-                                    objectFit="cover"
-                                    className="opacity-80 hover:opacity-100 transition-opacity duration-300"
-                                  />
-                                  <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent" />
-                                </div>
-                             )}
+                             {/* Title and Description (Moved here from old header) */}
+                             <div>
+                                 <div className="flex items-center gap-3 mb-2">
+                                    <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold border ${hackathon.status === 'active' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-blue-500/10 text-blue-500 border-blue-500/20'}`}>
+                                       {hackathon.status === 'active' ? 'Live Event' : 'Upcoming'}
+                                    </span>
+                                    <span className="text-gray-500 text-xs flex items-center gap-1">
+                                       <Calendar className="w-3 h-3" /> 
+                                       {eventStartDate && format(new Date(eventStartDate), 'MMM dd')} - {eventEndDate && format(new Date(eventEndDate), 'MMM dd, yyyy')}
+                                    </span>
+                                 </div>
+                                 <h1 className="text-lg md:text-xl lg:text-2xl font-bold text-white font-quantico leading-tight">
+                                    {hackathon.title}
+                                 </h1>
+                                 <p className="text-gray-400 max-w-xl text-[10px] leading-relaxed line-clamp-2">
+                                   Build the future of decentralized technology. Join thousands of developers to compete for the grand prize.
+                                 </p>
+                             </div>
 
                              {/* Terminal (Gold Theme) */}
                              <div className="flex-1 flex flex-col bg-black border border-gold/30 rounded-xl p-4 md:p-6 font-mono text-xs shadow-[0_0_20px_rgba(255,215,0,0.1)] overflow-hidden min-h-[300px]">
@@ -382,7 +381,6 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                    </div>
                                 </div>
                              </div>
-                          </div>
 
                           {/* RIGHT COLUMN: Sidebar Widgets (Span 3) */}
                           <div className="lg:col-span-3 flex flex-col gap-6 h-full overflow-y-auto pr-2 pb-20 md:pb-0">
