@@ -8,7 +8,7 @@ import {
   AlertCircle, MoreHorizontal, Github, Disc, Link as LinkIcon,
   Monitor, Mic, SwatchBook, Code, ShieldCheck, Smartphone, UserPlus, 
   RefreshCw, Lock, Search, Plus, Settings, LogOut, UserMinus,
-  LayoutDashboard, Rocket, BookOpen, Menu as MenuIcon, X, Sparkles
+  LayoutDashboard, Rocket, BookOpen, Menu as MenuIcon, X, Sparkles, Activity
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -32,9 +32,16 @@ const DEFAULT_NEW_TEAM = {
 };
 
 const MOCK_USER_IDEAS = [
-  { id: 'idea-1', title: 'Decentralized Uber', description: 'A peer-to-peer ride sharing protocol on Solana. Eliminating middlemen fees.', category: 'DePIN', tags: ['Mobility', 'Solana'], date: '2 days ago' },
-  { id: 'idea-2', title: 'NFT Ticketing', description: 'Eliminating scalpers using dynamic NFTs for event access with verifiable ownership.', category: 'NFT', tags: ['Events', 'Utility'], date: '1 week ago' },
-  { id: 'idea-3', title: 'DAO Governance Tool', description: 'AI-powered proposal summarizer for DAOs to increase voter participation.', category: 'DAO', tags: ['AI', 'Governance'], date: '2 weeks ago' },
+  { id: 'idea-1', title: 'Decentralized Uber', description: 'A peer-to-peer ride sharing protocol on Solana. Eliminating middlemen fees.', category: 'DePIN', tags: ['Mobility', 'Solana'], date: '2 days ago', author: 'Alex' },
+  { id: 'idea-2', title: 'NFT Ticketing', description: 'Eliminating scalpers using dynamic NFTs for event access with verifiable ownership.', category: 'NFT', tags: ['Events', 'Utility'], date: '1 week ago', author: 'Sarah' },
+  { id: 'idea-3', title: 'DAO Governance Tool', description: 'AI-powered proposal summarizer for DAOs to increase voter participation.', category: 'DAO', tags: ['AI', 'Governance'], date: '2 weeks ago', author: 'Mike' },
+];
+
+const MOCK_ACTIVITY = [
+   { user: 'David', action: 'joined the hackathon', time: '2m ago' },
+   { user: 'Team Alpha', action: 'submitted a project', time: '15m ago' },
+   { user: 'Elena', action: 'is looking for a team', time: '1h ago' },
+   { user: 'System', action: 'released new track details', time: '3h ago' },
 ];
 
 export default function HackathonDashboard({ params }: { params: { id: string } }) {
@@ -326,9 +333,12 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                        {eventStartDate && format(new Date(eventStartDate), 'MMM dd')} - {eventEndDate && format(new Date(eventEndDate), 'MMM dd, yyyy')}
                     </span>
                  </div>
-                 <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white font-quantico leading-tight truncate">
+                 <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-white font-quantico leading-tight truncate">
                     {hackathon.title}
                  </h1>
+                 <p className="text-gray-400 max-w-xl text-xs leading-relaxed line-clamp-2">
+                   Build the future of decentralized technology. Join thousands of developers to compete for the grand prize.
+                 </p>
               </div>
 
               <div className="flex items-center gap-3 bg-surface border border-white/5 p-3 rounded-xl min-w-[200px] shrink-0">
@@ -382,8 +392,8 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                           </div>
 
                           <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
-                             {/* Terminal (Span 8) - Fill Height */}
-                             <div className="lg:col-span-8 flex flex-col bg-black border border-gold/30 rounded-xl p-4 md:p-6 font-mono text-xs shadow-[0_0_20px_rgba(255,215,0,0.1)] overflow-hidden min-h-[300px]">
+                             {/* Terminal (Span 7) - Reduced width */}
+                             <div className="lg:col-span-7 flex flex-col bg-black border border-gold/30 rounded-xl p-4 md:p-6 font-mono text-xs shadow-[0_0_20px_rgba(255,215,0,0.1)] overflow-hidden min-h-[300px]">
                                 <div className="flex gap-1.5 mb-2 shrink-0">
                                    <div className="w-2.5 h-2.5 rounded-full bg-red-500/50" />
                                    <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/50" />
@@ -462,37 +472,50 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                 </div>
                              </div>
 
-                             {/* Quick Stats (Span 4) */}
-                             <div className="lg:col-span-4 flex flex-col gap-4">
-                                <div className="bg-gradient-to-br from-surface to-surfaceHighlight border border-white/5 rounded-xl p-4 md:p-6">
-                                   <h3 className="text-gray-400 text-xs uppercase tracking-wider mb-2">Total Prizes</h3>
-                                   <div className="text-2xl md:text-3xl font-bold text-gold font-quantico truncate">$150,000</div>
-                                   <p className="text-[10px] text-gray-500 mt-1">Paid in USDC & Sponsor Tokens</p>
-                                </div>
+                             {/* Right Column: Trending Ideas & Activity (Span 5) */}
+                             <div className="lg:col-span-5 flex flex-col gap-4 min-h-0 overflow-y-auto md:overflow-hidden">
                                 
-                                <div className="bg-surface border border-white/5 rounded-xl p-4 md:p-6 flex-1 flex flex-col justify-center">
-                                   <h3 className="text-gray-400 text-xs uppercase tracking-wider mb-4">Participation</h3>
-                                   <div className="space-y-4">
-                                      <div>
-                                         <div className="flex items-center justify-between mb-1">
-                                            <span className="text-white font-bold">1,240</span>
-                                            <span className="text-[10px] text-gray-500">Builders</span>
+                                {/* Featured Ideas */}
+                                <div className="flex-1 bg-surface border border-white/5 rounded-xl p-4 flex flex-col min-h-0">
+                                   <h3 className="text-gray-400 text-xs uppercase tracking-wider mb-3 flex items-center gap-2">
+                                      <Sparkles className="w-3 h-3 text-gold" /> Trending Ideas
+                                   </h3>
+                                   <div className="space-y-3 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10">
+                                      {MOCK_USER_IDEAS.map((idea, i) => (
+                                         <div key={i} className="group bg-white/5 border border-white/5 p-3 rounded-lg hover:border-gold/30 hover:bg-white/10 transition-all cursor-pointer">
+                                            <div className="flex justify-between items-start mb-1">
+                                               <span className="text-[10px] bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded">{idea.category}</span>
+                                               <span className="text-[10px] text-gray-500">{idea.date}</span>
+                                            </div>
+                                            <h4 className="font-bold text-white text-sm mb-1 group-hover:text-gold transition-colors">{idea.title}</h4>
+                                            <p className="text-[10px] text-gray-400 line-clamp-2">{idea.description}</p>
+                                            <div className="mt-2 flex items-center gap-2">
+                                               <div className="w-4 h-4 rounded-full bg-gradient-to-br from-blue-500 to-green-500 text-[8px] flex items-center justify-center text-white font-bold">{idea.author.charAt(0)}</div>
+                                               <span className="text-[10px] text-gray-500">by {idea.author}</span>
+                                            </div>
                                          </div>
-                                         <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                                            <div className="h-full bg-blue-500 w-[65%]" />
-                                         </div>
-                                      </div>
-                                      <div>
-                                         <div className="flex items-center justify-between mb-1">
-                                            <span className="text-white font-bold">342</span>
-                                            <span className="text-[10px] text-gray-500">Projects</span>
-                                         </div>
-                                         <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
-                                            <div className="h-full bg-purple-500 w-[40%]" />
-                                         </div>
-                                      </div>
+                                      ))}
                                    </div>
                                 </div>
+
+                                {/* Live Activity */}
+                                <div className="bg-surface border border-white/5 rounded-xl p-4 h-1/3 flex flex-col">
+                                   <h3 className="text-gray-400 text-xs uppercase tracking-wider mb-3 flex items-center gap-2">
+                                      <Activity className="w-3 h-3 text-green-400" /> Live Activity
+                                   </h3>
+                                   <div className="space-y-3 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/10">
+                                      {MOCK_ACTIVITY.map((act, i) => (
+                                         <div key={i} className="flex items-center gap-2 text-xs">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shrink-0" />
+                                            <p className="text-gray-400 truncate">
+                                               <span className="text-white font-bold">{act.user}</span> {act.action}
+                                            </p>
+                                            <span className="text-[10px] text-gray-600 ml-auto whitespace-nowrap">{act.time}</span>
+                                         </div>
+                                      ))}
+                                   </div>
+                                </div>
+
                              </div>
                           </div>
                        </div>
