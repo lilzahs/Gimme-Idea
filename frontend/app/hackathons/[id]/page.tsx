@@ -356,7 +356,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                    <div key={step.id} className="relative z-10 flex flex-col items-center gap-3">
                                       <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all duration-500
                                          ${step.status === 'active' ? 'bg-gold border-gold scale-125 shadow-[0_0_15px_var(--color-gold)]' : 
-                                           step.status === 'done' ? 'bg-green-500 border-green-500' : 'bg-surface border-gray-600'}
+                                           step.status === 'done' ? 'bg-gold border-gold' : 'bg-surface border-gray-600'}
                                       `}>
                                          {step.status === 'done' && <CheckCircle2 className="w-3 h-3 text-black" />}
                                       </div>
@@ -370,25 +370,25 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                           </div>
 
                           <div className="grid lg:grid-cols-3 gap-6">
-                             {/* Terminal / Announcements (Span 2) - RESTORED ORIGINAL */}
-                             <div className="lg:col-span-2 bg-black border border-green-500/30 rounded-xl p-6 font-mono text-xs shadow-[0_0_20px_rgba(34,197,94,0.1)] h-[500px] flex flex-col">
+                             {/* Terminal / Announcements (Span 2) - Gold Themed */}
+                             <div className="lg:col-span-2 bg-black border border-gold/30 rounded-lg p-6 font-mono text-xs shadow-[0_0_20px_rgba(255,215,0,0.1)] h-[500px] flex flex-col">
                                 <div className="flex gap-1.5 mb-4">
                                    <div className="w-3 h-3 rounded-full bg-red-500/50" />
                                    <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
-                                   <div className="w-3 h-3 rounded-full bg-green-500/50" />
+                                   <div className="w-3 h-3 rounded-full bg-gold/50" /> {/* Changed from green */}
                                 </div>
                                 <div className="flex-1 flex flex-col space-y-4 overflow-hidden">
-                                   <div className="border-b border-green-500/20 pb-2 flex justify-between shrink-0">
-                                      <div><span className="text-green-600">$</span> <span className="text-green-400">cat system_announcements.log</span></div>
-                                      <div className="text-xs text-green-800">Connection: SECURE</div>
+                                   <div className="border-b border-gold/20 pb-2 flex justify-between shrink-0"> {/* Changed from green */}
+                                      <div><span className="text-gold">$</span> <span className="text-gold">cat system_announcements.log</span></div> {/* Changed from green */}
+                                      <div className="text-xs text-gold/80">Connection: SECURE</div> {/* Changed from green */}
                                    </div>
                                    
-                                   <div className="flex-1 overflow-y-auto space-y-3 text-green-300/80 pr-2">
+                                   <div className="flex-1 overflow-y-auto space-y-3 text-gold/80 pr-2"> {/* Changed from green */}
                                       {hackathon.announcements?.map((log: any) => {
                                          // Effect Logic
                                          let effectClass = '';
                                          if (log.config?.effect === 'pulse') effectClass = 'animate-pulse font-bold';
-                                         if (log.config?.effect === 'typewriter') effectClass = 'border-r-2 border-green-500 pr-1 animate-pulse';
+                                         if (log.config?.effect === 'typewriter') effectClass = 'border-r-2 border-gold pr-1 animate-pulse'; // Changed from green
                                          if (log.config?.effect === 'glitch') effectClass = 'text-shadow-glitch';
                                 
                                          // Widget Logic
@@ -410,7 +410,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                            <div key={log.id} className="group">
                                                <span className="opacity-50 text-xs mr-2">[{format(new Date(log.date), 'MM-dd HH:mm')}]</span>
                                                <span className={`
-                                                   ${log.type === 'warning' ? 'text-yellow-400' : log.type === 'success' ? 'text-green-400' : 'text-gray-300'}
+                                                   ${log.type === 'warning' ? 'text-yellow-400' : log.type === 'success' ? 'text-gold' : 'text-gray-300'} {/* Changed from green */}
                                                    ${effectClass}
                                                `}
                                                style={log.config?.effect === 'glitch' ? { textShadow: '2px 0 red, -2px 0 blue' } : {}}
@@ -430,8 +430,8 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                    </div>
            
                                    {/* Input Line */}
-                                   <div className="flex items-center gap-2 pt-2 border-t border-green-500/20 shrink-0">
-                                      <span className="text-green-500">$</span>
+                                   <div className="flex items-center gap-2 pt-2 border-t border-gold/20 shrink-0"> {/* Changed from green */}
+                                      <span className="text-gold">$</span> {/* Changed from green */}
                                       <div className="relative flex-1">
                                          <motion.input
                                            type="text"
@@ -439,7 +439,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                            onChange={(e) => setTerminalInput(e.target.value)}
                                            onKeyDown={handleTerminalSubmit}
                                            className={`border outline-none font-mono w-full px-2 py-1 rounded
-                                             ${isTerminalShaking ? 'bg-red-900/20 border-red-500 text-red-500 placeholder-red-500/50' : 'bg-transparent border-transparent text-green-500'}
+                                             ${isTerminalShaking ? 'bg-red-900/20 border-red-500 text-red-500 placeholder-red-500/50' : 'bg-transparent border-transparent text-gold'} {/* Changed from green */}
                                            `}
                                            animate={isTerminalShaking ? { x: [-10, 10, -10, 10, 0], y: [-5, 5, -5, 5, 0] } : {}}
                                            transition={{ duration: 0.4 }}
@@ -649,7 +649,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                       <div>
                                          <h2 className="text-2xl font-bold text-white">{userTeam.name}</h2>
                                          <div className="flex gap-2 mt-1">
-                                            <span className="text-xs text-green-400 bg-green-500/10 px-2 py-0.5 rounded border border-green-500/20">Ready to Ship</span>
+                                            <span className="text-xs text-gold bg-gold/10 px-2 py-0.5 rounded border border-gold/20">Ready to Ship</span> {/* Changed from green */}
                                             {userTeam.tags.map((t: string) => <span key={t} className="text-xs text-gray-500 bg-white/5 px-2 py-0.5 rounded">{t}</span>)}
                                          </div>
                                       </div>
@@ -749,8 +749,8 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                             </button>
                                          </form>
                                       ) : (
-                                         <div className="text-center py-10 bg-green-500/10 border border-green-500/30 rounded-xl">
-                                            <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-4" />
+                                         <div className="text-center py-10 bg-gold/10 border border-gold/30 rounded-xl"> {/* Changed from green */}
+                                            <CheckCircle2 className="w-12 h-12 text-gold mx-auto mb-4" /> {/* Changed from green */}
                                             <h3 className="text-2xl font-bold text-white font-quantico">Submitted!</h3>
                                             <p className="text-gray-400 mt-2">Your project is now under review by the judges.</p>
                                             <button onClick={() => setIsSubmitted(false)} className="text-sm text-gray-500 hover:text-white underline mt-6">Edit Submission</button>
