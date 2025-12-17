@@ -119,7 +119,8 @@ body {
 }
 
 /* Stars */
-.stars {
+.stars,
+.stars-container {
   position: fixed;
   top: 0;
   left: 0;
@@ -187,4 +188,39 @@ body {
   100% {
     transform: translateX(100%);
   }
+}
+
+/* Glitch effect animations */
+@keyframes glitch-1 {
+  0%, 100% { transform: translate(0); }
+  20% { transform: translate(-2px, 1px); }
+  40% { transform: translate(2px, -1px); }
+  60% { transform: translate(-1px, 2px); }
+  80% { transform: translate(1px, -2px); }
+}
+
+@keyframes glitch-2 {
+  0%, 100% { transform: translate(0); }
+  20% { transform: translate(2px, -1px); }
+  40% { transform: translate(-2px, 1px); }
+  60% { transform: translate(1px, -2px); }
+  80% { transform: translate(-1px, 2px); }
+}
+
+@keyframes scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+.animate-glitch-1 {
+  animation: glitch-1 0.3s ease-in-out infinite;
+}
+
+.animate-glitch-2 {
+  animation: glitch-2 0.3s ease-in-out infinite;
+  animation-delay: 0.1s;
+}
+
+.animate-scan {
+  animation: scan 2s linear infinite;
 }
