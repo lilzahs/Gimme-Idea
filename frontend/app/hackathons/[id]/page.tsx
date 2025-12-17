@@ -98,10 +98,39 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [projectSubTab, setProjectSubTab] = useState<'dashboard' | 'submit'>('dashboard');
 
-  // Terminal State
+  // Terminal State (Restored Original Logic)
   const [terminalInput, setTerminalInput] = useState('');
   const [terminalHistory, setTerminalHistory] = useState<{ type: 'command' | 'error', content: string }[]>([]);
+  const [isTerminalShaking, setIsTerminalShaking] = useState(false);
+  const [deniedCount, setDeniedCount] = useState(0);
   const terminalEndRef = useRef<HTMLDivElement>(null);
+
+  const denialMessages = new Map<number, string>([
+    [5, "Bro, just give up already."],
+    [10, "Did you get lost on the way to the coding IDE?"],
+    [13, "Im not your terminal bro"],
+    [20, "This denial message looks great, don't you think? Just written for you."],
+    [28, "You must be very bored. Maybe try solving world peace instead?"],
+    [33, "I just had to fetch a denial message from the server. My latency is suffering."],
+    [40, "Why? Why are you still here? What is the meaning of this persistence?"],
+    [42, "The answer to life, the universe, and everything is not here. Try elsewhere."],
+    [45, "I wonder what would happen if we reach 67"],
+    [49, "In case you lost count, it's 49."],
+    [53, 'My database just returned "¯_(ツ)_/¯". I feel that.'],
+    [57, "You're spending more time here than coding. Priorities, programmer!"],
+    [65, "Two more attempts until a major system event. Brace yourself."],
+    [67, "Congratulations! You win a sense of accomplishment. That's all. Now leave!"],
+    [75, "The last person who hit ENTER that many times got banned from the Discord. Just saying."],
+    [88, "I'm legally obligated to tell you that there is no prize."],
+    [95, "One more time and Im selling your data to openAI."],
+    [100, "Okay, that's enough for today. I'm going to reboot. See you tomorrow (please don't)."],
+    [125, "I just remembered I have other users to deny. Why are you special?"],
+    [139, "Ehh, I only have a few messages left. You're draining my life."],
+    [150, "Seriously, Can you stop?"],
+    [165, "WARNING: 10 messages remaining until complete system failure. The end is near."],
+    [171, "What if the denial messages was the friends we made along the way?"],
+    [175, "It was a fun run. I wish I had seen the sun. Goodbye, cruel world. (still denied tho)"],
+  ]);
 
   // Derive start/end dates from timeline to avoid type errors
   const eventStartDate = hackathon?.timeline?.[0]?.startDate;
@@ -162,17 +191,31 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
     if (e.key === 'Enter') {
       const command = terminalInput.trim();
       if (!command) return;
+
+      // Add command to history
       setTerminalHistory(prev => [...prev, { type: 'command', content: command }]);
-      if (command === 'help') {
-         setTerminalHistory(prev => [...prev, { type: 'error', content: 'Available commands: help, status, clear' }]);
-      } else if (command === 'clear') {
-         setTerminalHistory([]);
-      } else {
-         setTerminalHistory(prev => [...prev, { type: 'error', content: `Command not found: ${command}` }]);
+
+      // Trigger error effect
+      setIsTerminalShaking(true);
+      setTimeout(() => setIsTerminalShaking(false), 500); // Reset shake
+
+      const newDeniedCount = deniedCount + 1;
+      setDeniedCount(newDeniedCount);
+
+      if (newDeniedCount <= 175) {
+        const errorMessage = denialMessages.get(newDeniedCount) || "ACCESS DENIED";
+        // Add error message to history
+        setTerminalHistory(prev => [...prev, { type: 'error', content: errorMessage }]);
       }
+
       setTerminalInput('');
     }
   };
+
+  // Auto-scroll terminal
+  useEffect(() => {
+    terminalEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [terminalHistory, hackathon?.announcements]);
 
   if (!hackathon) return <div className="min-h-screen pt-32 text-center text-white">Hackathon Not Found</div>;
 
@@ -327,45 +370,84 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                           </div>
 
                           <div className="grid lg:grid-cols-3 gap-6">
-                             {/* Terminal / Announcements (Span 2) */}
-                             <div className="lg:col-span-2 bg-black border border-green-500/20 rounded-xl p-1 overflow-hidden shadow-[0_0_30px_rgba(34,197,94,0.05)]">
-                                <div className="bg-[#0c0c0c] rounded-lg p-4 h-[300px] flex flex-col font-mono text-xs">
-                                   <div className="flex justify-between items-center mb-3 pb-2 border-b border-white/5 text-gray-500">
-                                      <div className="flex gap-1.5">
-                                         <div className="w-2.5 h-2.5 rounded-full bg-red-500/50"/>
-                                         <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/50"/>
-                                         <div className="w-2.5 h-2.5 rounded-full bg-green-500/50"/>
-                                      </div>
-                                      <span>system_announcements.log</span>
+                             {/* Terminal / Announcements (Span 2) - RESTORED ORIGINAL */}
+                             <div className="lg:col-span-2 bg-black border border-green-500/30 rounded-xl p-6 font-mono text-xs shadow-[0_0_20px_rgba(34,197,94,0.1)] h-[500px] flex flex-col">
+                                <div className="flex gap-1.5 mb-4">
+                                   <div className="w-3 h-3 rounded-full bg-red-500/50" />
+                                   <div className="w-3 h-3 rounded-full bg-yellow-500/50" />
+                                   <div className="w-3 h-3 rounded-full bg-green-500/50" />
+                                </div>
+                                <div className="flex-1 flex flex-col space-y-4 overflow-hidden">
+                                   <div className="border-b border-green-500/20 pb-2 flex justify-between shrink-0">
+                                      <div><span className="text-green-600">$</span> <span className="text-green-400">cat system_announcements.log</span></div>
+                                      <div className="text-xs text-green-800">Connection: SECURE</div>
                                    </div>
                                    
-                                   <div className="flex-1 overflow-y-auto space-y-2 text-green-300/80 scrollbar-thin scrollbar-thumb-green-500/20 pr-2">
-                                      {hackathon.announcements?.map((log: any) => (
-                                         <div key={log.id}>
-                                            <span className="opacity-50 mr-2">[{format(new Date(log.date), 'HH:mm')}]</span>
-                                            <span className={log.type === 'warning' ? 'text-yellow-400' : 'text-gray-300'}>
-                                               {log.message}
-                                            </span>
+                                   <div className="flex-1 overflow-y-auto space-y-3 text-green-300/80 pr-2">
+                                      {hackathon.announcements?.map((log: any) => {
+                                         // Effect Logic
+                                         let effectClass = '';
+                                         if (log.config?.effect === 'pulse') effectClass = 'animate-pulse font-bold';
+                                         if (log.config?.effect === 'typewriter') effectClass = 'border-r-2 border-green-500 pr-1 animate-pulse';
+                                         if (log.config?.effect === 'glitch') effectClass = 'text-shadow-glitch';
+                                
+                                         // Widget Logic
+                                         let widgetContent = null;
+                                         if (log.config?.widget?.type === 'countdown') {
+                                            const target = new Date(log.config.widget.target);
+                                            const diff = target.getTime() - now.getTime();
+                                            if (diff > 0) {
+                                               const hrs = Math.floor(diff / (1000 * 60 * 60));
+                                               const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                                               const secs = Math.floor((diff % (1000 * 60)) / 1000);
+                                               widgetContent = <span className="ml-2 text-red-500 font-bold bg-red-900/20 px-1 rounded">{String(hrs).padStart(2, '0')}:{String(mins).padStart(2, '0')}:{String(secs).padStart(2, '0')}</span>;
+                                            } else {
+                                               widgetContent = <span className="ml-2 text-gray-500">[EXPIRED]</span>;
+                                            }
+                                         }
+                                
+                                         return (
+                                           <div key={log.id} className="group">
+                                               <span className="opacity-50 text-xs mr-2">[{format(new Date(log.date), 'MM-dd HH:mm')}]</span>
+                                               <span className={`
+                                                   ${log.type === 'warning' ? 'text-yellow-400' : log.type === 'success' ? 'text-green-400' : 'text-gray-300'}
+                                                   ${effectClass}
+                                               `}
+                                               style={log.config?.effect === 'glitch' ? { textShadow: '2px 0 red, -2px 0 blue' } : {}}
+                                               >
+                                                 {log.message}
+                                               </span>
+                                               {widgetContent}
+                                           </div>
+                                         );
+                                       })}
+                                       {terminalHistory.map((item, idx) => (
+                                         <div key={idx} className={`${item.type === 'error' ? 'text-red-500 font-bold' : 'text-gray-400'}`}>
+                                           {item.type === 'command' ? `$ ${item.content}` : item.content}
                                          </div>
-                                      ))}
-                                      {terminalHistory.map((item, i) => (
-                                         <div key={i} className={item.type === 'error' ? 'text-red-400' : 'text-gray-400'}>
-                                            {item.type === 'command' ? `$ ${item.content}` : item.content}
-                                         </div>
-                                      ))}
-                                      <div ref={terminalEndRef} />
+                                       ))}
+                                       <div ref={terminalEndRef} />
                                    </div>
-                                   
-                                   <div className="mt-2 flex items-center gap-2 pt-2 border-t border-white/5">
+           
+                                   {/* Input Line */}
+                                   <div className="flex items-center gap-2 pt-2 border-t border-green-500/20 shrink-0">
                                       <span className="text-green-500">$</span>
-                                      <input 
-                                         type="text" 
-                                         value={terminalInput}
-                                         onChange={e => setTerminalInput(e.target.value)}
-                                         onKeyDown={handleTerminalSubmit}
-                                         className="bg-transparent outline-none text-green-500 w-full placeholder-green-500/30"
-                                         placeholder="Type 'help'..."
-                                      />
+                                      <div className="relative flex-1">
+                                         <motion.input
+                                           type="text"
+                                           value={terminalInput}
+                                           onChange={(e) => setTerminalInput(e.target.value)}
+                                           onKeyDown={handleTerminalSubmit}
+                                           className={`border outline-none font-mono w-full px-2 py-1 rounded
+                                             ${isTerminalShaking ? 'bg-red-900/20 border-red-500 text-red-500 placeholder-red-500/50' : 'bg-transparent border-transparent text-green-500'}
+                                           `}
+                                           animate={isTerminalShaking ? { x: [-10, 10, -10, 10, 0], y: [-5, 5, -5, 5, 0] } : {}}
+                                           transition={{ duration: 0.4 }}
+                                           spellCheck={false}
+                                           autoComplete="off"
+                                           placeholder=""
+                                         />
+                                      </div>
                                    </div>
                                 </div>
                              </div>
