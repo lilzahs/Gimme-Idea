@@ -31,6 +31,23 @@ const DEFAULT_NEW_TEAM = {
   maxMembers: 5
 };
 
+// Moved SidebarItem definition outside the component
+const SidebarItem = ({ id, label, icon: Icon, activeSection, setActiveSection, setIsMobileMenuOpen }: 
+  { id: string, label: string, icon: any, activeSection: string, setActiveSection: (id: string) => void, setIsMobileMenuOpen: (isOpen: boolean) => void }) => (
+  <button
+    onClick={() => { setActiveSection(id); setIsMobileMenuOpen(false); }}
+    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200
+      ${activeSection === id 
+        ? 'bg-gold/10 text-gold border border-gold/20' 
+        : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
+      }`}
+  >
+    <Icon className={`w-4 h-4 ${activeSection === id ? 'text-gold' : 'text-gray-500'}`} />
+    {label}
+  </button>
+);
+
+
 export default function HackathonDashboard({ params }: { params: { id: string } }) {
   const { id } = params;
   const hackathon = HACKATHONS_MOCK_DATA.find(h => h.id === id);
@@ -201,20 +218,6 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
 
   if (!hackathon) return <div className="min-h-screen pt-32 text-center text-white">Hackathon Not Found</div>;
 
-  const SidebarItem = ({ id, label, icon: Icon }: { id: string, label: string, icon: any }) => (
-    <button
-      onClick={() => { setActiveSection(id); setIsMobileMenuOpen(false); }}
-      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200
-        ${activeSection === id 
-          ? 'bg-gold/10 text-gold border border-gold/20' 
-          : 'text-gray-400 hover:text-white hover:bg-white/5 border border-transparent'
-        }`}
-    >
-      <Icon className={`w-4 h-4 ${activeSection === id ? 'text-gold' : 'text-gray-500'}`} />
-      {label}
-    </button>
-  );
-
   return (
     <div className="h-screen w-screen text-gray-300 font-sans text-sm relative selection:bg-gold/30 overflow-hidden flex flex-col">
       {/* Background */}
@@ -256,13 +259,13 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
           </div>
           <nav className="flex-1 px-3 space-y-1 overflow-y-auto pt-4 md:pt-0">
             <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider px-2 mb-2 mt-2">Menu</div>
-            <SidebarItem id="overview" label="Overview" icon={LayoutDashboard} />
-            <SidebarItem id="tracks" label="Tracks & Prizes" icon={Target} />
-            <SidebarItem id="participants" label="Find Squad" icon={Users} />
+            <SidebarItem id="overview" label="Overview" icon={LayoutDashboard} activeSection={activeSection} setActiveSection={setActiveSection} setIsMobileMenuOpen={setIsMobileMenuOpen} />
+            <SidebarItem id="tracks" label="Tracks & Prizes" icon={Target} activeSection={activeSection} setActiveSection={setActiveSection} setIsMobileMenuOpen={setIsMobileMenuOpen} />
+            <SidebarItem id="participants" label="Find Squad" icon={Users} activeSection={activeSection} setActiveSection={setActiveSection} setIsMobileMenuOpen={setIsMobileMenuOpen} />
             <div className="my-4 border-t border-white/5" />
             <div className="text-[10px] text-gray-500 font-bold uppercase tracking-wider px-2 mb-2">My Zone</div>
-            <SidebarItem id="project" label="My Project" icon={Rocket} />
-            <SidebarItem id="resources" label="Resources" icon={BookOpen} />
+            <SidebarItem id="project" label="My Project" icon={Rocket} activeSection={activeSection} setActiveSection={setActiveSection} setIsMobileMenuOpen={setIsMobileMenuOpen} />
+            <SidebarItem id="resources" label="Resources" icon={BookOpen} activeSection={activeSection} setActiveSection={setActiveSection} setIsMobileMenuOpen={setIsMobileMenuOpen} />
           </nav>
           <div className="p-4 border-t border-white/5 bg-black/20">
              <div className="flex items-center gap-3">
@@ -296,8 +299,6 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
           
           <div className="h-full flex flex-col p-2 md:p-4 space-y-2 md:space-y-4 overflow-y-auto md:overflow-hidden">
             
-            {/* NO HEADER HERE - title/description moved inside Overview grid */}
-
             {/* Dynamic Content */}
             <div className="flex-1 min-h-0">
                <AnimatePresence mode="wait">
@@ -310,229 +311,241 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                     className="h-full"
                   >
                     
-                    {/* === OVERVIEW WITH LEGACY ELEMENTS === */}
-                    {activeSection === 'overview' && (
-                       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
-                          
-                          {/* LEFT COLUMN: Title, Description, Terminal (Span 9) */}
-                          <div className="lg:col-span-9 flex flex-col gap-6 h-full min-h-0">
-                             {/* Title and Description (Moved here from old header) */}
-                             <div>
-                                 <div className="flex items-center gap-3 mb-2">
-                                    <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold border ${hackathon.status === 'active' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-blue-500/10 text-blue-500 border-blue-500/20'}`}>
-                                       {hackathon.status === 'active' ? 'Live Event' : 'Upcoming'}
-                                    </span>
-                                    <span className="text-gray-500 text-xs flex items-center gap-1">
-                                       <Calendar className="w-3 h-3" /> 
-                                       {eventStartDate && format(new Date(eventStartDate), 'MMM dd')} - {eventEndDate && format(new Date(eventEndDate), 'MMM dd, yyyy')}
-                                    </span>
-                                 </div>
-                                 <h1 className="text-lg md:text-xl lg:text-2xl font-bold text-white font-quantico leading-tight">
-                                    {hackathon.title}
-                                 </h1>
-                                 <p className="text-gray-400 max-w-xl text-[10px] leading-relaxed line-clamp-2">
-                                   Build the future of decentralized technology. Join thousands of developers to compete for the grand prize.
-                                 </p>
-                             </div>
-
-                             {/* Terminal (Gold Theme) */}
-                             <div className="flex-1 flex flex-col bg-black border border-gold/30 rounded-xl p-4 md:p-6 font-mono text-xs shadow-[0_0_20px_rgba(255,215,0,0.1)] overflow-hidden min-h-[300px]">
-                                <div className="flex gap-1.5 mb-2 shrink-0">
-                                   <div className="w-2.5 h-2.5 rounded-full bg-red-500/50" />
-                                   <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/50" />
-                                   <div className="w-2.5 h-2.5 rounded-full bg-gold/50" />
-                                </div>
-                                <div className="flex-1 flex flex-col space-y-2 overflow-hidden min-h-0">
-                                   <div className="border-b border-gold/20 pb-2 flex justify-between shrink-0">
-                                      <div><span className="text-gold">$</span> <span className="text-gold">cat system_announcements.log</span></div>
-                                      <div className="text-[10px] text-gold/80">SECURE_CONNECTION</div>
-                                   </div>
-                                   <div className="flex-1 overflow-y-auto space-y-2 text-gold/80 pr-2 scrollbar-thin scrollbar-thumb-gold/20">
-                                      {hackathon.announcements?.map((log: any) => (
-                                         <div key={log.id} className="group">
-                                            <span className="opacity-50 text-[10px] mr-2">[{format(new Date(log.date), 'HH:mm')}]</span>
-                                            <span className="text-gold">{log.message}</span>
+                    {/* Render content based on activeSection */}
+                    {(() => {
+                        switch (activeSection) {
+                            case 'overview':
+                                return (
+                                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
+                                      
+                                      {/* LEFT COLUMN: Title, Description, Terminal (Span 9) */}
+                                      <div className="lg:col-span-9 flex flex-col gap-6 h-full min-h-0">
+                                         {/* Title and Description (Moved here from old header) */}
+                                         <div>
+                                             <div className="flex items-center gap-3 mb-2">
+                                                <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold border ${hackathon.status === 'active' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 'bg-blue-500/10 text-blue-500 border-blue-500/20'}`}>
+                                                   {hackathon.status === 'active' ? 'Live Event' : 'Upcoming'}
+                                                </span>
+                                                <span className="text-gray-500 text-xs flex items-center gap-1">
+                                                   <Calendar className="w-3 h-3" /> 
+                                                   {eventStartDate && format(new Date(eventStartDate), 'MMM dd')} - {eventEndDate && format(new Date(eventEndDate), 'MMM dd, yyyy')}
+                                                </span>
+                                             </div>
+                                             <h1 className="text-lg md:text-xl lg:text-2xl font-bold text-white font-quantico leading-tight">
+                                                {hackathon.title}
+                                             </h1>
+                                             <p className="text-gray-400 max-w-xl text-[10px] leading-relaxed line-clamp-2">
+                                               Build the future of decentralized technology. Join thousands of developers to compete for the grand prize.
+                                             </p>
                                          </div>
-                                      ))}
-                                      {terminalHistory.map((item, idx) => (
-                                         <div key={idx} className={item.type === 'error' ? 'text-red-500' : 'text-gold'}>
-                                            {item.type === 'command' ? `$ ${item.content}` : item.content}
-                                         </div>
-                                      ))}
-                                      <div ref={terminalEndRef} />
-                                   </div>
-                                   <div className="flex items-center gap-2 pt-2 border-t border-gold/20 shrink-0">
-                                      <span className="text-gold">$</span>
-                                      <div className="relative flex-1">
-                                         <motion.input
-                                           type="text"
-                                           value={terminalInput}
-                                           onChange={(e) => setTerminalInput(e.target.value)}
-                                           onKeyDown={handleTerminalSubmit}
-                                           className={`border outline-none font-mono w-full px-2 py-1 rounded
-                                             ${isTerminalShaking ? 'bg-red-900/20 border-red-500 text-red-500 placeholder-red-500/50' : 'bg-transparent border-transparent text-gold'}
-                                           `}
-                                           animate={isTerminalShaking ? { x: [-10, 10, -10, 10, 0], y: [-5, 5, -5, 5, 0] } : {}}
-                                           transition={{ duration: 0.4 }}
-                                           spellCheck={false}
-                                           autoComplete="off"
-                                         />
-                                      </div>
-                                   </div>
-                                </div>
-                             </div>
 
-                          {/* RIGHT COLUMN: Sidebar Widgets (Span 3) */}
-                          <div className="lg:col-span-3 flex flex-col gap-6 h-full overflow-y-auto pr-2 pb-20 md:pb-0">
-                             
-                             {/* 1. Countdown Card */}
-                             <div className="bg-surface border border-white/5 rounded-xl p-4 shrink-0">
-                                <div className="space-y-1">
-                                   <p className="text-[10px] text-gray-500 uppercase tracking-wider">{countdown.label}</p>
-                                   <div className="flex items-center gap-2 text-gold bg-gold/5 px-3 py-2 rounded-lg border border-gold/10 justify-center">
-                                      <Clock className="w-4 h-4" />
-                                      <span className="font-mono font-bold text-xs md:text-sm">{countdown.text}</span>
-                                   </div>
-                                </div>
-                             </div>
-
-                             {/* 2. Vertical Timeline (Legacy Style) */}
-                             {hackathon.timeline && hackathon.timeline.length > 0 && (
-                                <div className="bg-surface border border-white/5 rounded-xl p-4 shrink-0">
-                                   <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Timeline</h3>
-                                   <div className="relative border-l border-white/10 ml-2 space-y-6">
-                                      {dynamicTimeline.map((step, index) => (
-                                         <div key={step.id} className="relative pl-6 group cursor-default">
-                                            <div className="absolute -left-[5px] top-1 w-2.5 h-2.5 flex items-center justify-center">
-                                               {step.status === 'active' && (
-                                                  <div className="absolute w-[250%] h-[250%] bg-gold rounded-full animate-ping opacity-50" />
-                                               )}
-                                               <div className={`relative w-full h-full rounded-full border-2 transition-all z-10
-                                                  ${step.status === 'done' ? 'bg-green-500 border-green-500' :
-                                                    step.status === 'active' ? 'bg-gold border-gold scale-125' :
-                                                    'bg-surface border-gray-600'}`}
-                                               />
+                                         {/* Terminal (Gold Theme) */}
+                                         <div className="flex-1 flex flex-col bg-black border border-gold/30 rounded-xl p-4 md:p-6 font-mono text-xs shadow-[0_0_20px_rgba(255,215,0,0.1)] overflow-hidden min-h-[300px]">
+                                            <div className="flex gap-1.5 mb-2 shrink-0">
+                                               <div className="w-2.5 h-2.5 rounded-full bg-red-500/50" />
+                                               <div className="w-2.5 h-2.5 rounded-full bg-yellow-500/50" />
+                                               <div className="w-2.5 h-2.5 rounded-full bg-gold/50" />
                                             </div>
-                                            <div className={`${step.status === 'active' ? 'text-white' : 'text-gray-500'}`}>
-                                               <p className="font-medium text-xs">{step.title}</p>
-                                               <p className="text-[10px] font-mono opacity-70">
-                                                  {format(new Date(step.startDate), 'MMM dd')}
-                                               </p>
-                                            </div>
-                                         </div>
-                                      ))}
-                                   </div>
-                                </div>
-                             )}
-
-                             {/* 3. Tasks (Legacy Logic) */}
-                             <div className="bg-surface border border-white/5 rounded-xl p-4 flex-1">
-                                {(() => {
-                                   const activeStep = dynamicTimeline.find(step => step.status === 'active');
-                                   const currentTasks = hackathon.tasks?.filter(t => t.phaseId === activeStep?.id) || [];
-                                   
-                                   return (
-                                      <>
-                                         <div className="flex justify-between items-center mb-4">
-                                            <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Your Tasks</h3>
-                                            <span className="text-[10px] bg-green-900/30 text-green-400 px-1.5 py-0.5 rounded">
-                                               {currentTasks.filter(t => t.done).length}/{currentTasks.length}
-                                            </span>
-                                         </div>
-                                         <div className="space-y-3">
-                                            {currentTasks.length > 0 ? currentTasks.map((task) => (
-                                               <div key={task.id} className="flex items-start gap-3 group">
-                                                  <button className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center transition-colors
-                                                     ${task.done ? 'bg-green-500 border-green-500 text-black' : 'border-gray-600 hover:border-gray-400'}`}>
-                                                     {task.done && <CheckCircle2 className="w-3 h-3" />}
-                                                  </button>
-                                                  <span className={`text-xs ${task.done ? 'text-gray-500 line-through' : 'text-gray-300'}`}>
-                                                     {task.text}
-                                                  </span>
+                                            <div className="flex-1 flex flex-col space-y-2 overflow-hidden min-h-0">
+                                               <div className="border-b border-gold/20 pb-2 flex justify-between shrink-0">
+                                                  <div><span className="text-gold">$</span> <span className="text-gold">cat system_announcements.log</span></div>
+                                                  <div className="text-[10px] text-gold/80">SECURE_CONNECTION</div>
                                                </div>
-                                            )) : (
-                                               <p className="text-xs text-gray-500 italic">No tasks for this phase.</p>
-                                            )}
+                                               <div className="flex-1 overflow-y-auto space-y-2 text-gold/80 pr-2 scrollbar-thin scrollbar-thumb-gold/20">
+                                                  {hackathon.announcements?.map((log: any) => (
+                                                     <div key={log.id} className="group">
+                                                        <span className="opacity-50 text-[10px] mr-2">[{format(new Date(log.date), 'HH:mm')}]</span>
+                                                        <span className="text-gold">{log.message}</span>
+                                                     </div>
+                                                  ))}
+                                                  {terminalHistory.map((item, idx) => (
+                                                     <div key={idx} className={item.type === 'error' ? 'text-red-500' : 'text-gold'}>
+                                                        {item.type === 'command' ? `$ ${item.content}` : item.content}
+                                                     </div>
+                                                  ))}
+                                                  <div ref={terminalEndRef} />
+                                               </div>
+                                               <div className="flex items-center gap-2 pt-2 border-t border-gold/20 shrink-0">
+                                                  <span className="text-gold">$</span>
+                                                  <div className="relative flex-1">
+                                                     <motion.input
+                                                       type="text"
+                                                       value={terminalInput}
+                                                       onChange={(e) => setTerminalInput(e.target.value)}
+                                                       onKeyDown={handleTerminalSubmit}
+                                                       className={`border outline-none font-mono w-full px-2 py-1 rounded
+                                                         ${isTerminalShaking ? 'bg-red-900/20 border-red-500 text-red-500 placeholder-red-500/50' : 'bg-transparent border-transparent text-gold'}
+                                                       `}
+                                                       animate={isTerminalShaking ? { x: [-10, 10, -10, 10, 0], y: [-5, 5, -5, 5, 0] } : {}}
+                                                       transition={{ duration: 0.4 }}
+                                                       spellCheck={false}
+                                                       autoComplete="off"
+                                                     />
+                                                  </div>
+                                               </div>
+                                            </div>
                                          </div>
-                                      </>
-                                   );
-                                })()}
-                             </div>
-
-                          </div>
-                       </div>
-                    )}
-
-                    {/* OTHER TABS (Same as before) */}
-                    {activeSection === 'tracks' && (
-                       <div className="grid lg:grid-cols-3 gap-6 h-full overflow-y-auto pr-2 pb-20 md:pb-0">
-                          {/* Tracks Content... */}
-                          <div className="lg:col-span-2 space-y-4">
-                             <div className="grid md:grid-cols-2 gap-4">
-                                {hackathon.tracks?.map((track, i) => (
-                                   <div key={i} className="group bg-surface border border-white/5 p-4 rounded-xl hover:border-gold/30 transition-all">
-                                      <div className={`w-8 h-8 rounded-lg bg-black/40 ${track.color} flex items-center justify-center mb-2`}>
-                                         <Target className="w-4 h-4" />
                                       </div>
-                                      <h3 className="font-bold text-white mb-1">{track.title}</h3>
-                                      <p className="text-xs text-gray-400">Build innovative solutions for {track.title}.</p>
-                                   </div>
-                                ))}
-                             </div>
-                          </div>
-                          <div className="space-y-4">
-                             <div className="bg-surface border border-white/5 rounded-xl overflow-hidden">
-                                {hackathon.prizes?.map((prize, i) => (
-                                   <div key={i} className="flex items-center justify-between p-3 border-b border-white/5 last:border-0 hover:bg-white/5">
-                                      <span className="text-white font-medium text-xs">{prize.rank}</span>
-                                      <span className="text-gold font-mono font-bold text-xs">{prize.reward}</span>
-                                   </div>
-                                ))}
-                             </div>
-                          </div>
-                       </div>
-                    )}
 
-                    {activeSection === 'participants' && (
-                       <div className="flex flex-col h-full gap-4 pb-20 md:pb-0">
-                          <div className="relative max-w-lg">
-                             <input type="text" placeholder="Search..." className="w-full bg-surface border border-white/10 rounded-xl pl-4 pr-4 py-2.5 text-sm text-white focus:border-gold/50 outline-none" />
-                          </div>
-                          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto pr-2">
-                             {(hackathon.teams || []).map((team: any) => (
-                                <div key={team.id} className="bg-surface border border-white/5 rounded-xl p-4 hover:border-gold/30 transition-all">
-                                   <div className="flex justify-between items-start mb-2">
-                                      <h3 className="text-sm font-bold text-white">{team.name}</h3>
-                                      <span className="text-[10px] bg-white/5 px-1.5 py-0.5 rounded text-gray-400">{team.members}/{team.maxMembers}</span>
-                                   </div>
-                                   <div className="flex flex-wrap gap-1">
-                                      {team.tags.map((tag: string) => <span key={tag} className="text-[9px] bg-black/40 text-gray-400 px-1.5 py-0.5 rounded border border-white/5">{tag}</span>)}
-                                   </div>
-                                </div>
-                             ))}
-                          </div>
-                       </div>
-                    )}
+                                      {/* RIGHT COLUMN: Sidebar Widgets (Span 3) */}
+                                      <div className="lg:col-span-3 flex flex-col gap-6 h-full overflow-y-auto pr-2 pb-20 md:pb-0">
+                                         
+                                         {/* 1. Countdown Card */}
+                                         <div className="bg-surface border border-white/5 rounded-xl p-4 shrink-0">
+                                            <div className="space-y-1">
+                                               <p className="text-[10px] text-gray-500 uppercase tracking-wider">{countdown.label}</p>
+                                               <div className="flex items-center gap-2 text-gold bg-gold/5 px-3 py-2 rounded-lg border border-gold/10 justify-center">
+                                                  <Clock className="w-4 h-4" />
+                                                  <span className="font-mono font-bold text-xs md:text-sm">{countdown.text}</span>
+                                               </div>
+                                            </div>
+                                         </div>
 
-                    {activeSection === 'project' && (
-                       <div className="h-full flex flex-col items-center justify-center text-center p-8 bg-surface border border-white/5 rounded-xl">
-                          <Rocket className="w-8 h-8 text-gold mb-4" />
-                          <h2 className="text-xl font-bold text-white mb-2">Start Building</h2>
-                          <p className="text-gray-400 text-sm mb-4">Create or join a team to submit your project.</p>
-                          <button onClick={() => setUserTeam(DEFAULT_NEW_TEAM)} className="bg-gold text-black font-bold px-5 py-2 rounded-lg text-xs hover:bg-gold/90">Create Team</button>
-                       </div>
-                    )}
+                                         {/* 2. Vertical Timeline (Legacy Style) */}
+                                         {hackathon.timeline && hackathon.timeline.length > 0 && (
+                                            <div className="bg-surface border border-white/5 rounded-xl p-4 shrink-0">
+                                               <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Timeline</h3>
+                                               <div className="relative border-l border-white/10 ml-2 space-y-6">
+                                                  {dynamicTimeline.map((step, index) => (
+                                                     <div key={step.id} className="relative pl-6 group cursor-default">
+                                                        <div className="absolute -left-[5px] top-1 w-2.5 h-2.5 flex items-center justify-center">
+                                                           {step.status === 'active' && (
+                                                              <div className="absolute w-[250%] h-[250%] bg-gold rounded-full animate-ping opacity-50" />
+                                                           )}
+                                                           <div className={`relative w-full h-full rounded-full border-2 transition-all z-10
+                                                              ${step.status === 'done' ? 'bg-green-500 border-green-500' :
+                                                                step.status === 'active' ? 'bg-gold border-gold scale-125' :
+                                                                'bg-surface border-gray-600'}`}
+                                                           />
+                                                        </div>
+                                                        <div className={`${step.status === 'active' ? 'text-white' : 'text-gray-500'}`}>
+                                                           <p className="font-medium text-xs">{step.title}</p>
+                                                           <p className="text-[10px] font-mono opacity-70">
+                                                              {format(new Date(step.startDate), 'MMM dd')}
+                                                           </p>
+                                                        </div>
+                                                     </div>
+                                                  ))}
+                                               </div>
+                                            </div>
+                                         )}
 
-                    {activeSection === 'resources' && (
-                       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 h-full overflow-y-auto pb-20 md:pb-0">
-                          {hackathon.resources?.map((res, i) => (
-                             <a key={i} href={res.link} target="_blank" className="bg-surface border border-white/5 p-4 rounded-xl hover:bg-white/5 transition-all block">
-                                <h3 className="font-bold text-white mb-1 text-sm">{res.name}</h3>
-                                <p className="text-[10px] text-gray-500">External Link</p>
-                             </a>
-                          ))}
-                       </div>
-                    )}
+                                         {/* 3. Tasks (Legacy Logic) */}
+                                         <div className="bg-surface border border-white/5 rounded-xl p-4 flex-1">
+                                            {(() => {
+                                               const activeStep = dynamicTimeline.find(step => step.status === 'active');
+                                               const currentTasks = hackathon.tasks?.filter(t => t.phaseId === activeStep?.id) || [];
+                                               
+                                               return (
+                                                  <>
+                                                     <div className="flex justify-between items-center mb-4">
+                                                        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Your Tasks</h3>
+                                                        <span className="text-[10px] bg-green-900/30 text-green-400 px-1.5 py-0.5 rounded">
+                                                           {currentTasks.filter(t => t.done).length}/{currentTasks.length}
+                                                        </span>
+                                                     </div>
+                                                     <div className="space-y-3">
+                                                        {currentTasks.length > 0 ? currentTasks.map((task) => (
+                                                           <div key={task.id} className="flex items-start gap-3 group">
+                                                              <button className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center transition-colors
+                                                                 ${task.done ? 'bg-green-500 border-green-500 text-black' : 'border-gray-600 hover:border-gray-400'}`}>
+                                                                 {task.done && <CheckCircle2 className="w-3 h-3" />}
+                                                              </button>
+                                                              <span className={`text-xs ${task.done ? 'text-gray-500 line-through' : 'text-gray-300'}`}>
+                                                                 {task.text}
+                                                              </span>
+                                                           </div>
+                                                        )) : (
+                                                           <p className="text-xs text-gray-500 italic">No tasks for this phase.</p>
+                                                        )}
+                                                     </div>
+                                                  </>
+                                               );
+                                            })()}
+                                         </div>
+
+                                      </div>
+                                   </div>
+                                );
+
+                            case 'tracks':
+                                return (
+                                   <div className="grid lg:grid-cols-3 gap-6 h-full overflow-y-auto pr-2 pb-20 md:pb-0">
+                                      {/* Tracks Content... */}
+                                      <div className="lg:col-span-2 space-y-4">
+                                         <div className="grid md:grid-cols-2 gap-4">
+                                            {hackathon.tracks?.map((track, i) => (
+                                               <div key={i} className="group bg-surface border border-white/5 p-4 rounded-xl hover:border-gold/30 transition-all">
+                                                  <div className={`w-8 h-8 rounded-lg bg-black/40 ${track.color} flex items-center justify-center mb-2`}>
+                                                     <Target className="w-4 h-4" />
+                                                  </div>
+                                                  <h3 className="font-bold text-white mb-1">{track.title}</h3>
+                                                  <p className="text-xs text-gray-400">Build innovative solutions for {track.title}.</p>
+                                               </div>
+                                            ))}
+                                         </div>
+                                      </div>
+                                      <div className="space-y-4">
+                                         <div className="bg-surface border border-white/5 rounded-xl overflow-hidden">
+                                            {hackathon.prizes?.map((prize, i) => (
+                                               <div key={i} className="flex items-center justify-between p-3 border-b border-white/5 last:border-0 hover:bg-white/5">
+                                                  <span className="text-white font-medium text-xs">{prize.rank}</span>
+                                                  <span className="text-gold font-mono font-bold text-xs">{prize.reward}</span>
+                                               </div>
+                                            ))}
+                                         </div>
+                                      </div>
+                                   </div>
+                                );
+
+                            case 'participants':
+                                return (
+                                   <div className="flex flex-col h-full gap-4 pb-20 md:pb-0">
+                                      <div className="relative max-w-lg">
+                                         <input type="text" placeholder="Search..." className="w-full bg-surface border border-white/10 rounded-xl pl-4 pr-4 py-2.5 text-sm text-white focus:border-gold/50 outline-none" />
+                                      </div>
+                                      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto pr-2">
+                                         {(hackathon.teams || []).map((team: any) => (
+                                            <div key={team.id} className="bg-surface border border-white/5 rounded-xl p-4 hover:border-gold/30 transition-all">
+                                               <div className="flex justify-between items-start mb-2">
+                                                  <h3 className="text-sm font-bold text-white">{team.name}</h3>
+                                                  <span className="text-[10px] bg-white/5 px-1.5 py-0.5 rounded text-gray-400">{team.members}/{team.maxMembers}</span>
+                                               </div>
+                                               <div className="flex flex-wrap gap-1">
+                                                  {team.tags.map((tag: string) => <span key={tag} className="text-[9px] bg-black/40 text-gray-400 px-1.5 py-0.5 rounded border border-white/5">{tag}</span>)}
+                                               </div>
+                                            </div>
+                                         ))}
+                                      </div>
+                                   </div>
+                                );
+                            
+                            case 'project':
+                                return (
+                                   <div className="h-full flex flex-col items-center justify-center text-center p-8 bg-surface border border-white/5 rounded-xl">
+                                      <Rocket className="w-8 h-8 text-gold mb-4" />
+                                      <h2 className="text-xl font-bold text-white mb-2">Start Building</h2>
+                                      <p className="text-gray-400 text-sm mb-4">Create or join a team to submit your project.</p>
+                                      <button onClick={() => setUserTeam(DEFAULT_NEW_TEAM)} className="bg-gold text-black font-bold px-5 py-2 rounded-lg text-xs hover:bg-gold/90">Create Team</button>
+                                   </div>
+                                );
+                            
+                            case 'resources':
+                                return (
+                                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 h-full overflow-y-auto pr-2 pb-20 md:pb-0">
+                                      {hackathon.resources?.map((res, i) => (
+                                         <a key={i} href={res.link} target="_blank" className="bg-surface border border-white/5 p-4 rounded-xl hover:bg-white/5 transition-all block">
+                                            <h3 className="font-bold text-white mb-1 text-sm">{res.name}</h3>
+                                            <p className="text-[10px] text-gray-500">External Link</p>
+                                         </a>
+                                      ))}
+                                   </div>
+                                );
+                            
+                            default:
+                                return <div className="text-center text-gray-500 pt-10">Select a section from the sidebar.</div>;
+                        }
+                    })()}
 
                   </motion.div>
                </AnimatePresence>
