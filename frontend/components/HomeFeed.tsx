@@ -8,8 +8,8 @@ import Image from 'next/image';
 
 // All orbiting items configuration (from inside to outside)
 const getOrbitItems = (isMobile: boolean) => {
-  const baseSize = isMobile ? 42 : 65;
-  const sizeDecrement = isMobile ? 2 : 3;
+  const baseSize = isMobile ? 48 : 70;
+  const sizeDecrement = isMobile ? 2 : 2;
   
   return [
     {
@@ -21,7 +21,7 @@ const getOrbitItems = (isMobile: boolean) => {
       color: '#FFD700',
       glowColor: 'rgba(255, 215, 0, 0.5)',
       size: baseSize,
-      orbitRadius: isMobile ? 90 : 160,
+      orbitRadius: isMobile ? 85 : 140,
       orbitSpeed: 35,
       startAngle: 0,
       route: '/idea',
@@ -36,7 +36,7 @@ const getOrbitItems = (isMobile: boolean) => {
       color: '#14F195',
       glowColor: 'rgba(20, 241, 149, 0.5)',
       size: baseSize - sizeDecrement,
-      orbitRadius: isMobile ? 140 : 240,
+      orbitRadius: isMobile ? 130 : 210,
       orbitSpeed: 45,
       startAngle: 60,
       route: '/feeds',
@@ -51,7 +51,7 @@ const getOrbitItems = (isMobile: boolean) => {
       color: '#FF6B6B',
       glowColor: 'rgba(255, 107, 107, 0.5)',
       size: baseSize - sizeDecrement * 2,
-      orbitRadius: isMobile ? 190 : 320,
+      orbitRadius: isMobile ? 175 : 280,
       orbitSpeed: 55,
       startAngle: 120,
       route: '/hackathons',
@@ -66,7 +66,7 @@ const getOrbitItems = (isMobile: boolean) => {
       gradient: 'linear-gradient(135deg, #3366ff 0%, #00ccff 60%, #99ff66 100%)',
       glowColor: 'rgba(51, 102, 255, 0.6)',
       size: baseSize - sizeDecrement * 3,
-      orbitRadius: isMobile ? 240 : 400,
+      orbitRadius: isMobile ? 220 : 350,
       orbitSpeed: 70,
       startAngle: 180,
       route: 'https://dsuc.fun',
@@ -81,7 +81,7 @@ const getOrbitItems = (isMobile: boolean) => {
       gradient: 'linear-gradient(135deg, #EF4444 0%, #FACC15 100%)',
       glowColor: 'rgba(239, 68, 68, 0.5)',
       size: baseSize - sizeDecrement * 4,
-      orbitRadius: isMobile ? 290 : 480,
+      orbitRadius: isMobile ? 265 : 420,
       orbitSpeed: 90,
       startAngle: 240,
       route: 'https://vn.superteam.fun',
@@ -96,7 +96,7 @@ const getOrbitItems = (isMobile: boolean) => {
       gradient: 'linear-gradient(135deg, #9945FF 0%, #14F195 50%, #00D1FF 100%)',
       glowColor: 'rgba(153, 69, 255, 0.5)',
       size: baseSize - sizeDecrement * 5,
-      orbitRadius: isMobile ? 340 : 560,
+      orbitRadius: isMobile ? 310 : 490,
       orbitSpeed: 110,
       startAngle: 300,
       route: 'https://solana.com',
@@ -124,7 +124,8 @@ export default function HomeFeed() {
   const isPausedRef = useRef(false);
 
   const ORBIT_ITEMS = getOrbitItems(isMobile);
-  const centerSize = isMobile ? 70 : 110;
+  const centerSize = isMobile ? 75 : 100;
+  const ellipseRatio = 0.4; // Consistent ellipse ratio
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -133,17 +134,16 @@ export default function HomeFeed() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Generate diverse stars like real universe
+  // Generate subtle stars like other pages
   useEffect(() => {
-    const shapes = ['circle', 'diamond', 'cross', 'sparkle'];
-    const newStars = Array.from({ length: 150 }).map((_, i) => ({
+    const newStars = Array.from({ length: 50 }).map((_, i) => ({
       id: i,
       top: `${Math.random() * 100}%`,
       left: `${Math.random() * 100}%`,
-      size: Math.random() * 4 + 1, // Bigger stars (1-5px)
-      duration: `${Math.random() * 4 + 2}s`,
-      opacity: Math.random() * 0.8 + 0.2,
-      shape: shapes[Math.floor(Math.random() * shapes.length)]
+      size: Math.random() * 2 + 1, // Small stars (1-3px)
+      duration: `${Math.random() * 3 + 2}s`,
+      opacity: Math.random() * 0.5 + 0.2,
+      shape: 'circle'
     }));
     setStars(newStars);
   }, []);
@@ -185,12 +185,11 @@ export default function HomeFeed() {
 
   const getItemPosition = useCallback((item: ReturnType<typeof getOrbitItems>[0]) => {
     const angle = (orbitAngles[item.id] ?? item.startAngle) * (Math.PI / 180);
-    const ellipseRatio = isMobile ? 0.6 : 0.5;
     return { 
       x: Math.cos(angle) * item.orbitRadius, 
       y: Math.sin(angle) * item.orbitRadius * ellipseRatio 
     };
-  }, [orbitAngles, isMobile]);
+  }, [orbitAngles, ellipseRatio]);
 
   const handleClick = (route: string, external?: boolean) => {
     if (external) {
@@ -221,7 +220,7 @@ export default function HomeFeed() {
             {stars.map((star) => (
               <div
                 key={star.id}
-                className={`star star-${star.shape}`}
+                className="star star-circle"
                 style={{
                   top: star.top,
                   left: star.left,
@@ -233,11 +232,8 @@ export default function HomeFeed() {
               />
             ))}
             <div className="shooting-star" style={{ top: '10%', left: '90%' }} />
-            <div className="shooting-star" style={{ top: '40%', left: '5%', animationDelay: '2s' }} />
-            <div className="shooting-star" style={{ top: '25%', left: '70%', animationDelay: '4s' }} />
-            <div className="shooting-star" style={{ top: '70%', left: '20%', animationDelay: '6s' }} />
-            <div className="shooting-star" style={{ top: '55%', left: '85%', animationDelay: '8s' }} />
-            <div className="shooting-star" style={{ top: '85%', left: '45%', animationDelay: '10s' }} />
+            <div className="shooting-star" style={{ top: '40%', left: '5%', animationDelay: '3s' }} />
+            <div className="shooting-star" style={{ top: '70%', left: '75%', animationDelay: '7s' }} />
           </div>
         </div>
 
@@ -267,7 +263,7 @@ export default function HomeFeed() {
                 className="absolute left-1/2 top-1/2 rounded-full border border-white/[0.06] pointer-events-none"
                 style={{ 
                   width: item.orbitRadius * 2, 
-                  height: item.orbitRadius * 0.5,
+                  height: item.orbitRadius * 2 * ellipseRatio,
                   transform: 'translate(-50%, -50%)'
                 }} 
               />
@@ -458,7 +454,7 @@ export default function HomeFeed() {
           {stars.map((star) => (
             <div
               key={star.id}
-              className={`star star-${star.shape}`}
+              className="star star-circle"
               style={{
                 top: star.top,
                 left: star.left,
@@ -470,8 +466,7 @@ export default function HomeFeed() {
             />
           ))}
           <div className="shooting-star" style={{ top: '15%', left: '85%' }} />
-          <div className="shooting-star" style={{ top: '45%', left: '5%', animationDelay: '2.5s' }} />
-          <div className="shooting-star" style={{ top: '75%', left: '70%', animationDelay: '5s' }} />
+          <div className="shooting-star" style={{ top: '55%', left: '10%', animationDelay: '4s' }} />
         </div>
       </div>
 
