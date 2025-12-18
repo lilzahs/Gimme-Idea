@@ -79,13 +79,13 @@ export default function ImportIdeaModal({ isOpen, onClose, onSelectIdea }: Impor
     return (
         <AnimatePresence>
             {isOpen && (
-                <>
+                <div className="fixed inset-0 z-[100] flex items-center justify-center">
                     {/* Backdrop */}
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100]"
+                        className="absolute inset-0 bg-black/80 backdrop-blur-sm"
                         onClick={onClose}
                     />
 
@@ -95,7 +95,7 @@ export default function ImportIdeaModal({ isOpen, onClose, onSelectIdea }: Impor
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
                         transition={{ duration: 0.2 }}
-                        className="fixed inset-4 md:inset-auto md:left-1/2 md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-2xl md:max-h-[80vh] bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-2xl z-[101] flex flex-col overflow-hidden"
+                        className="relative w-[calc(100%-2rem)] max-w-2xl max-h-[80vh] bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-2xl z-[101] flex flex-col overflow-hidden"
                     >
                         {/* Header */}
                         <div className="flex items-center justify-between p-6 border-b border-white/5">
@@ -169,8 +169,8 @@ export default function ImportIdeaModal({ isOpen, onClose, onSelectIdea }: Impor
                                             key={idea.id}
                                             onClick={() => handleSelectIdea(idea)}
                                             className={`group relative p-4 rounded-xl border cursor-pointer transition-all ${selectedIdea?.id === idea.id
-                                                    ? 'bg-gold/10 border-gold shadow-lg shadow-gold/5'
-                                                    : 'bg-black/20 border-white/5 hover:border-white/20 hover:bg-white/5'
+                                                ? 'bg-gold/10 border-gold shadow-lg shadow-gold/5'
+                                                : 'bg-black/20 border-white/5 hover:border-white/20 hover:bg-white/5'
                                                 }`}
                                         >
                                             <div className="flex justify-between items-start mb-2">
@@ -179,8 +179,8 @@ export default function ImportIdeaModal({ isOpen, onClose, onSelectIdea }: Impor
                                                 </span>
                                                 <div
                                                     className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${selectedIdea?.id === idea.id
-                                                            ? 'bg-gold border-gold'
-                                                            : 'border-gray-600 group-hover:border-gray-400'
+                                                        ? 'bg-gold border-gold'
+                                                        : 'border-gray-600 group-hover:border-gray-400'
                                                         }`}
                                                 >
                                                     {selectedIdea?.id === idea.id && (
@@ -224,8 +224,8 @@ export default function ImportIdeaModal({ isOpen, onClose, onSelectIdea }: Impor
                                         onClick={handleConfirmImport}
                                         disabled={!selectedIdea}
                                         className={`px-6 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${selectedIdea
-                                                ? 'bg-gold text-black hover:bg-gold/90'
-                                                : 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                                            ? 'bg-gold text-black hover:bg-gold/90'
+                                            : 'bg-gray-800 text-gray-500 cursor-not-allowed'
                                             }`}
                                     >
                                         <FileUp className="w-4 h-4" />
@@ -235,7 +235,7 @@ export default function ImportIdeaModal({ isOpen, onClose, onSelectIdea }: Impor
                             </div>
                         </div>
                     </motion.div>
-                </>
+                </div>
             )}
         </AnimatePresence>
     );
