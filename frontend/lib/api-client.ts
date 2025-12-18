@@ -786,12 +786,6 @@ export const apiClient = {
       }
     ),
 
-  // Unregister from a hackathon
-  unregisterFromHackathon: (hackathonId: string) =>
-    apiFetch<void>(`/hackathons/${hackathonId}/register`, {
-      method: "DELETE",
-    }),
-
   // Check if user is registered for a hackathon
   getMyRegistration: (hackathonId: string) =>
     apiFetch<{ isRegistered: boolean; registration?: { id: string; teamName?: string; registeredAt: string } }>(

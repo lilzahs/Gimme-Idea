@@ -133,19 +133,6 @@ export class HackathonsController {
     }
 
     /**
-     * Unregister from a hackathon
-     * DELETE /hackathons/:hackathonId/register
-     */
-    @Delete(":hackathonId/register")
-    @UseGuards(AuthGuard)
-    async unregisterFromHackathon(
-        @Param("hackathonId") hackathonId: string,
-        @CurrentUser("userId") userId: string
-    ) {
-        return this.hackathonsService.unregisterFromHackathon(hackathonId, userId);
-    }
-
-    /**
      * Check if user is registered
      * GET /hackathons/:hackathonId/registration
      */

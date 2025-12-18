@@ -213,28 +213,6 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
       }
    };
 
-   const handleUnregister = async () => {
-      const confirm = window.confirm("Are you sure you want to unregister from this hackathon?");
-      if (!confirm) return;
-
-      setIsRegistering(true);
-      try {
-         const response = await apiClient.unregisterFromHackathon(id);
-         if (response.success) {
-            setIsRegistered(false);
-            setRegistrationData(null);
-            alert('Successfully unregistered from the hackathon');
-         } else {
-            alert(response.error || 'Failed to unregister');
-         }
-      } catch (err: any) {
-         console.error('Unregister error:', err);
-         alert(err.message || 'Failed to unregister');
-      } finally {
-         setIsRegistering(false);
-      }
-   };
-
    // =============================================
    // TEAM FUNCTIONS (API Connected)
    // =============================================
@@ -246,6 +224,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
       setTeamError(null);
       try {
          const response = await apiClient.getMyTeam(id);
+         console.log('[Team] getMyTeam response:', response);
          if (response.success && response.data) {
             setUserTeam(response.data.team || null);
             setUserTeamRole(response.data.role || null);
@@ -964,17 +943,10 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                                             <span className="text-sm font-bold text-green-500">Registered</span>
                                                          </div>
                                                          {registrationData?.registeredAt && (
-                                                            <p className="text-[10px] text-gray-500 mb-3">
+                                                            <p className="text-[10px] text-gray-500">
                                                                Since {format(new Date(registrationData.registeredAt), 'MMM dd, yyyy')}
                                                             </p>
                                                          )}
-                                                         <button
-                                                            onClick={handleUnregister}
-                                                            disabled={isRegistering}
-                                                            className="w-full py-1.5 bg-white/5 text-gray-400 font-medium rounded-lg text-[10px] hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/30 border border-white/10 transition-all flex items-center justify-center gap-1 disabled:opacity-50"
-                                                         >
-                                                            <UserMinus className="w-3 h-3" /> Leave Hackathon
-                                                         </button>
                                                       </div>
                                                    ) : (
                                                       <div>

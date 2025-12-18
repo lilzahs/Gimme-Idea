@@ -688,52 +688,6 @@ export class HackathonsService {
     }
 
     /**
-     * Unregister from a hackathon
-     */
-    async unregisterFromHackathon(
-        hackathonIdOrSlug: string,
-        userId: string
-    ): Promise<ApiResponse<void>> {
-        const supabase = this.supabaseService.getAdminClient();
-
-        // Resolve hackathon ID
-        const hackathonId = await this.resolveHackathonId(hackathonIdOrSlug);
-        if (!hackathonId) {
-            throw new NotFoundException(`Hackathon not found: ${hackathonIdOrSlug}`);
-        }
-
-        // Check if registered
-        const { data: existing } = await supabase
-            .from("hackathon_registrations")
-            .select("id")
-            .eq("hackathon_id", hackathonId)
-            .eq("user_id", userId)
-            .single();
-
-        if (!existing) {
-            throw new NotFoundException("You are not registered for this hackathon");
-        }
-
-        // Delete registration
-        const { error } = await supabase
-            .from("hackathon_registrations")
-            .delete()
-            .eq("id", existing.id);
-
-        if (error) {
-            this.logger.error(`Failed to unregister: ${error.message}`);
-            throw new Error(`Failed to unregister: ${error.message}`);
-        }
-
-        this.logger.log(`User ${userId} unregistered from hackathon ${hackathonId}`);
-
-        return {
-            success: true,
-            message: "Successfully unregistered from hackathon",
-        };
-    }
-
-    /**
      * Get user's registration for a hackathon
      */
     async getMyRegistration(
@@ -998,14 +952,15 @@ export class HackathonsService {
         // Resolve hackathon ID
         const hackathonId = await this.resolveHackathonId(hackathonIdOrSlug);
         if (!hackathonId) {
-            return { success: true, data: null };
+            return { success: true, data: { team: null, role: null } };
         }
 
-        // Find user's team
+        // Find user's team membership
         const { data: membership } = await supabase
             .from("hackathon_team_members")
             .select(`
                 team_id,
+                role,
                 hackathon_teams!inner(hackathon_id)
             `)
             .eq("user_id", userId)
@@ -1013,10 +968,19 @@ export class HackathonsService {
             .single();
 
         if (!membership) {
-            return { success: true, data: null };
+            return { success: true, data: { team: null, role: null } };
         }
 
-        return this.getTeamById(membership.team_id, userId);
+        // Get full team data
+        const teamResponse = await this.getTeamById(membership.team_id, userId);
+
+        return {
+            success: true,
+            data: {
+                team: teamResponse.data,
+                role: membership.role as 'leader' | 'member'
+            }
+        };
     }
 
     /**
