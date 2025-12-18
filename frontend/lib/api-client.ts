@@ -22,6 +22,11 @@ async function apiFetch<T>(
   const token =
     typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
 
+  console.log(
+    `[API] ${options.method || "GET"} ${endpoint}`,
+    token ? "with token" : "no token"
+  );
+
   const headers: HeadersInit = {
     "Content-Type": "application/json",
     ...options.headers,
@@ -39,8 +44,11 @@ async function apiFetch<T>(
 
     const data = await response.json();
 
+    console.log(`[API] ${endpoint} response:`, response.status, data.success);
+
     // Handle 401 Unauthorized - clear token and trigger re-auth
     if (response.status === 401) {
+      console.warn("[API] 401 Unauthorized - clearing token");
       if (typeof window !== "undefined") {
         localStorage.removeItem("auth_token");
         // Clear any other auth-related storage
@@ -64,6 +72,7 @@ async function apiFetch<T>(
 
     // If response contains token, save it
     if (data.data?.token) {
+      console.log("[API] Saving new token from response");
       localStorage.setItem("auth_token", data.data.token);
     }
 

@@ -50,13 +50,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const processEmailLogin = useCallback(async (supabaseUser: SupabaseUser, isNewLogin: boolean = false): Promise<User | null> => {
     try {
+      console.log('[Auth] Processing email login for:', supabaseUser.email);
+      
       const response = await apiClient.loginWithEmail({
         email: supabaseUser.email || '',
         authId: supabaseUser.id,
         username: supabaseUser.user_metadata?.name || supabaseUser.user_metadata?.full_name,
       });
 
+      console.log('[Auth] Login response:', response.success, response.error);
+
       if (response.success && response.data) {
+        // Token should be saved automatically by apiFetch, but let's ensure it
+        if (response.data.token) {
+          localStorage.setItem('auth_token', response.data.token);
+          console.log('[Auth] Token saved successfully');
+        }
+        
         const userData: User = {
           id: response.data.user.id,
           wallet: response.data.user.wallet || '',
@@ -90,14 +100,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } else {
         // API call failed - just clear user state, don't sign out from Supabase
         // This allows the user to retry or the app to retry
-        console.warn('Login API failed:', response.error);
+        console.warn('[Auth] Login API failed:', response.error);
         setUser(null);
         setIsAdmin(false);
         localStorage.removeItem('auth_token');
         return null;
       }
     } catch (error) {
-      console.error('Email login error:', error);
+      console.error('[Auth] Email login error:', error);
       setUser(null);
       setIsAdmin(false);
       localStorage.removeItem('auth_token');
@@ -188,18 +198,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Get initial session and validate it with retry logic
     const initializeAuth = async () => {
+      console.log('[Auth] Initializing auth...');
+      
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
         
+        console.log('[Auth] Supabase session:', session ? 'found' : 'not found', error?.message);
+        
         if (error) {
-          console.error('Error getting session:', error);
+          console.error('[Auth] Error getting session:', error);
           setIsLoading(false);
           return;
         }
 
         if (session?.user) {
+          console.log('[Auth] User from Supabase:', session.user.email);
           setSession(session);
           setSupabaseUser(session.user);
+          
+          // Check if we already have a valid token
+          const existingToken = localStorage.getItem('auth_token');
+          console.log('[Auth] Existing token:', existingToken ? 'found' : 'not found');
           
           // Try to validate session with backend with retry
           let result = await processEmailLogin(session.user, false);
@@ -207,7 +226,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // If first attempt fails, wait a bit and retry once
           // This handles the case where backend is slow to respond
           if (!result) {
-            console.log('First login attempt failed, retrying in 1s...');
+            console.log('[Auth] First login attempt failed, retrying in 1s...');
             await new Promise(resolve => setTimeout(resolve, 1000));
             result = await processEmailLogin(session.user, false);
           }
@@ -216,17 +235,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Backend validation failed after retry
             // User will see logged-in state from Supabase but won't have app data
             // They can manually logout or refresh to try again
-            console.warn('Backend login failed after retry - user may need to re-login');
+            console.warn('[Auth] Backend login failed after retry - user may need to re-login');
+          } else {
+            console.log('[Auth] Login successful, token saved:', !!localStorage.getItem('auth_token'));
           }
         } else {
           // No session, make sure everything is cleared
+          console.log('[Auth] No Supabase session found');
           setUser(null);
           setSupabaseUser(null);
           setSession(null);
           localStorage.removeItem('auth_token');
         }
       } catch (error) {
-        console.error('Auth initialization error:', error);
+        console.error('[Auth] Auth initialization error:', error);
         // On error, just clear user data but keep Supabase session
         setUser(null);
         localStorage.removeItem('auth_token');
