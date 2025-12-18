@@ -311,7 +311,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   fetchProjects: async (filters) => {
     try {
       set({ isLoading: true });
-      const limit = filters?.limit || 50; // Increased default limit
+      const limit = filters?.limit || 9; // Load 9 ideas initially for faster load
       const offset = filters?.offset || 0;
       const append = filters?.append || false;
 

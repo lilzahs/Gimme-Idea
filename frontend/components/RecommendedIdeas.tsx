@@ -171,8 +171,6 @@ export const RecommendedIdeas = () => {
           const medal = medals[index];
           const MedalIcon = medal.icon;
           const summary = createSummary(idea.problem, idea.solution);
-          // Random timing for scanline (staggered between cards)
-          const scanDelay = index * 1.5; // Stagger start time
           
           return (
             <motion.div
@@ -205,33 +203,6 @@ export const RecommendedIdeas = () => {
                 transition-all duration-500`}
               style={{ border: `1px solid ${medal.color}40` }}
             >
-              {/* Continuous scanline effect - like regular idea cards */}
-              <motion.div 
-                className="absolute inset-0 overflow-hidden pointer-events-none rounded-2xl z-10"
-              >
-                {/* Horizontal scan lines pattern */}
-                <div 
-                  className="absolute inset-0"
-                  style={{
-                    background: `repeating-linear-gradient(0deg, transparent, transparent 2px, ${medal.color}03 2px, ${medal.color}03 4px)`
-                  }}
-                />
-                {/* Moving scanline gradient */}
-                <motion.div 
-                  className="absolute left-0 right-0 h-16"
-                  style={{
-                    background: `linear-gradient(to bottom, ${medal.color}15, transparent)`
-                  }}
-                  animate={{ top: ['-64px', '100%'] }}
-                  transition={{ 
-                    duration: 3, 
-                    repeat: Infinity, 
-                    ease: 'linear',
-                    delay: scanDelay 
-                  }}
-                />
-              </motion.div>
-
               {/* Continuous glitch border effects */}
               <motion.div
                 className="absolute inset-0 rounded-2xl pointer-events-none"

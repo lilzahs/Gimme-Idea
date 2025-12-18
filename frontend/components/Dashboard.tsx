@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { ProjectCard } from './ProjectCard';
+import { IdeaCard } from './IdeaCard';
 import { RecommendedIdeas } from './RecommendedIdeas';
 import { useAppStore } from '../lib/store';
 import { useRouter } from 'next/navigation';
@@ -207,7 +208,11 @@ export default function Dashboard({ mode }: DashboardProps) {
                     ease: "easeOut"
                   }}
                 >
-                  <ProjectCard project={project} />
+                  {mode === 'idea' ? (
+                    <IdeaCard project={project} />
+                  ) : (
+                    <ProjectCard project={project} />
+                  )}
                 </motion.div>
               ))}
             </div>
