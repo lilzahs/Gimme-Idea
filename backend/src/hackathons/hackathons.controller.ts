@@ -203,4 +203,188 @@ export class HackathonsController {
             userId
         );
     }
+
+    // =============================================
+    // TEAMS
+    // =============================================
+
+    /**
+     * Get all teams in a hackathon
+     * GET /hackathons/:hackathonId/teams
+     */
+    @Get(":hackathonId/teams")
+    async getHackathonTeams(
+        @Param("hackathonId") hackathonId: string,
+        @Query("search") search?: string,
+        @Query("isOpen") isOpen?: string,
+        @Query("limit") limit?: number,
+        @Query("offset") offset?: number
+    ) {
+        return this.hackathonsService.getHackathonTeams(hackathonId, {
+            search,
+            isOpen: isOpen === "true" ? true : isOpen === "false" ? false : undefined,
+            limit,
+            offset,
+        });
+    }
+
+    /**
+     * Get user's team in a hackathon
+     * GET /hackathons/:hackathonId/my-team
+     */
+    @Get(":hackathonId/my-team")
+    @UseGuards(AuthGuard)
+    async getMyTeam(
+        @Param("hackathonId") hackathonId: string,
+        @CurrentUser("userId") userId: string
+    ) {
+        return this.hackathonsService.getMyTeam(hackathonId, userId);
+    }
+
+    /**
+     * Create a team in a hackathon
+     * POST /hackathons/:hackathonId/teams
+     */
+    @Post(":hackathonId/teams")
+    @UseGuards(AuthGuard)
+    async createTeam(
+        @Param("hackathonId") hackathonId: string,
+        @Body() body: { name: string; description?: string; avatarUrl?: string; maxMembers?: number; isOpen?: boolean },
+        @CurrentUser("userId") userId: string
+    ) {
+        return this.hackathonsService.createTeam(hackathonId, userId, body);
+    }
+
+    /**
+     * Get team by ID
+     * GET /hackathons/teams/:teamId
+     */
+    @Get("teams/:teamId")
+    async getTeamById(
+        @Param("teamId") teamId: string,
+        @CurrentUser("userId") userId?: string
+    ) {
+        return this.hackathonsService.getTeamById(teamId, userId);
+    }
+
+    /**
+     * Update a team
+     * PUT /hackathons/teams/:teamId
+     */
+    @Put("teams/:teamId")
+    @UseGuards(AuthGuard)
+    async updateTeam(
+        @Param("teamId") teamId: string,
+        @Body() body: { name?: string; description?: string; avatarUrl?: string; maxMembers?: number; isOpen?: boolean },
+        @CurrentUser("userId") userId: string
+    ) {
+        return this.hackathonsService.updateTeam(teamId, userId, body);
+    }
+
+    /**
+     * Delete a team
+     * DELETE /hackathons/teams/:teamId
+     */
+    @Delete("teams/:teamId")
+    @UseGuards(AuthGuard)
+    async deleteTeam(
+        @Param("teamId") teamId: string,
+        @CurrentUser("userId") userId: string
+    ) {
+        return this.hackathonsService.deleteTeam(teamId, userId);
+    }
+
+    /**
+     * Leave a team
+     * POST /hackathons/teams/:teamId/leave
+     */
+    @Post("teams/:teamId/leave")
+    @UseGuards(AuthGuard)
+    async leaveTeam(
+        @Param("teamId") teamId: string,
+        @CurrentUser("userId") userId: string
+    ) {
+        return this.hackathonsService.leaveTeam(teamId, userId);
+    }
+
+    /**
+     * Kick a member from team
+     * DELETE /hackathons/teams/:teamId/members/:memberId
+     */
+    @Delete("teams/:teamId/members/:memberId")
+    @UseGuards(AuthGuard)
+    async kickMember(
+        @Param("teamId") teamId: string,
+        @Param("memberId") memberId: string,
+        @CurrentUser("userId") userId: string
+    ) {
+        return this.hackathonsService.kickMember(teamId, memberId, userId);
+    }
+
+    // =============================================
+    // TEAM INVITES
+    // =============================================
+
+    /**
+     * Invite a user to team
+     * POST /hackathons/teams/:teamId/invite
+     */
+    @Post("teams/:teamId/invite")
+    @UseGuards(AuthGuard)
+    async inviteToTeam(
+        @Param("teamId") teamId: string,
+        @Body() body: { inviteeId: string; message?: string },
+        @CurrentUser("userId") userId: string
+    ) {
+        return this.hackathonsService.inviteToTeam(teamId, userId, body.inviteeId, body.message);
+    }
+
+    /**
+     * Get user's pending invites
+     * GET /hackathons/teams/invites/my
+     */
+    @Get("teams/invites/my")
+    @UseGuards(AuthGuard)
+    async getMyInvites(@CurrentUser("userId") userId: string) {
+        return this.hackathonsService.getMyInvites(userId);
+    }
+
+    /**
+     * Accept an invite
+     * POST /hackathons/teams/invites/:inviteId/accept
+     */
+    @Post("teams/invites/:inviteId/accept")
+    @UseGuards(AuthGuard)
+    async acceptInvite(
+        @Param("inviteId") inviteId: string,
+        @CurrentUser("userId") userId: string
+    ) {
+        return this.hackathonsService.respondToInvite(inviteId, userId, "accept");
+    }
+
+    /**
+     * Reject an invite
+     * POST /hackathons/teams/invites/:inviteId/reject
+     */
+    @Post("teams/invites/:inviteId/reject")
+    @UseGuards(AuthGuard)
+    async rejectInvite(
+        @Param("inviteId") inviteId: string,
+        @CurrentUser("userId") userId: string
+    ) {
+        return this.hackathonsService.respondToInvite(inviteId, userId, "reject");
+    }
+
+    /**
+     * Cancel an invite
+     * DELETE /hackathons/teams/invites/:inviteId
+     */
+    @Delete("teams/invites/:inviteId")
+    @UseGuards(AuthGuard)
+    async cancelInvite(
+        @Param("inviteId") inviteId: string,
+        @CurrentUser("userId") userId: string
+    ) {
+        return this.hackathonsService.cancelInvite(inviteId, userId);
+    }
 }

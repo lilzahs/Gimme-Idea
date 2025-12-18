@@ -838,4 +838,692 @@ export class HackathonsService {
             },
         };
     }
+
+    // =============================================
+    // HACKATHON TEAMS
+    // =============================================
+
+    /**
+     * Create a new team
+     */
+    async createTeam(
+        hackathonIdOrSlug: string,
+        userId: string,
+        data: { name: string; description?: string; avatarUrl?: string; maxMembers?: number; isOpen?: boolean }
+    ): Promise<ApiResponse<any>> {
+        const supabase = this.supabaseService.getAdminClient();
+
+        // Resolve hackathon ID
+        const hackathonId = await this.resolveHackathonId(hackathonIdOrSlug);
+        if (!hackathonId) {
+            throw new NotFoundException(`Hackathon not found: ${hackathonIdOrSlug}`);
+        }
+
+        // Check if user is registered for this hackathon
+        const { data: registration } = await supabase
+            .from("hackathon_registrations")
+            .select("id")
+            .eq("hackathon_id", hackathonId)
+            .eq("user_id", userId)
+            .single();
+
+        if (!registration) {
+            throw new ForbiddenException("You must be registered for this hackathon to create a team");
+        }
+
+        // Check if user is already in a team
+        const { data: existingTeam } = await supabase
+            .from("hackathon_team_members")
+            .select("team_id, hackathon_teams!inner(hackathon_id)")
+            .eq("user_id", userId)
+            .eq("hackathon_teams.hackathon_id", hackathonId)
+            .single();
+
+        if (existingTeam) {
+            throw new ConflictException("You are already in a team for this hackathon");
+        }
+
+        // Create team (trigger will auto-add leader as member)
+        const { data: team, error } = await supabase
+            .from("hackathon_teams")
+            .insert({
+                hackathon_id: hackathonId,
+                name: data.name,
+                description: data.description,
+                avatar_url: data.avatarUrl,
+                leader_id: userId,
+                max_members: data.maxMembers || 5,
+                is_open: data.isOpen || false,
+            })
+            .select()
+            .single();
+
+        if (error) {
+            if (error.code === "23505") {
+                throw new ConflictException("A team with this name already exists in this hackathon");
+            }
+            this.logger.error(`Failed to create team: ${error.message}`);
+            throw new Error(`Failed to create team: ${error.message}`);
+        }
+
+        this.logger.log(`User ${userId} created team ${team.id} in hackathon ${hackathonId}`);
+
+        return this.getTeamById(team.id, userId);
+    }
+
+    /**
+     * Get team by ID
+     */
+    async getTeamById(teamId: string, currentUserId?: string): Promise<ApiResponse<any>> {
+        const supabase = this.supabaseService.getAdminClient();
+
+        const { data: team, error } = await supabase
+            .from("hackathon_teams")
+            .select(`
+                id,
+                hackathon_id,
+                name,
+                description,
+                avatar_url,
+                leader_id,
+                max_members,
+                is_open,
+                created_at,
+                updated_at,
+                leader:users!hackathon_teams_leader_id_fkey(id, username, avatar)
+            `)
+            .eq("id", teamId)
+            .single();
+
+        if (error || !team) {
+            throw new NotFoundException("Team not found");
+        }
+
+        // Get members
+        const { data: members } = await supabase
+            .from("hackathon_team_members")
+            .select(`
+                id,
+                role,
+                joined_at,
+                user:users!hackathon_team_members_user_id_fkey(id, username, avatar)
+            `)
+            .eq("team_id", teamId)
+            .order("joined_at", { ascending: true });
+
+        const leaderData = Array.isArray(team.leader) ? team.leader[0] : team.leader;
+        const memberCount = members?.length || 0;
+
+        return {
+            success: true,
+            data: {
+                id: team.id,
+                hackathonId: team.hackathon_id,
+                name: team.name,
+                description: team.description,
+                avatarUrl: team.avatar_url,
+                leaderId: team.leader_id,
+                maxMembers: team.max_members,
+                memberCount,
+                isOpen: team.is_open,
+                isFull: memberCount >= team.max_members,
+                createdAt: team.created_at,
+                updatedAt: team.updated_at,
+                leader: leaderData ? {
+                    id: leaderData.id,
+                    username: leaderData.username,
+                    avatar: leaderData.avatar,
+                } : null,
+                members: members?.map((m) => {
+                    const userData = Array.isArray(m.user) ? m.user[0] : m.user;
+                    return {
+                        id: m.id,
+                        userId: userData?.id,
+                        username: userData?.username,
+                        avatar: userData?.avatar,
+                        role: m.role,
+                        joinedAt: m.joined_at,
+                    };
+                }) || [],
+            },
+        };
+    }
+
+    /**
+     * Get user's team in a hackathon
+     */
+    async getMyTeam(hackathonIdOrSlug: string, userId: string): Promise<ApiResponse<any>> {
+        const supabase = this.supabaseService.getAdminClient();
+
+        // Resolve hackathon ID
+        const hackathonId = await this.resolveHackathonId(hackathonIdOrSlug);
+        if (!hackathonId) {
+            return { success: true, data: null };
+        }
+
+        // Find user's team
+        const { data: membership } = await supabase
+            .from("hackathon_team_members")
+            .select(`
+                team_id,
+                hackathon_teams!inner(hackathon_id)
+            `)
+            .eq("user_id", userId)
+            .eq("hackathon_teams.hackathon_id", hackathonId)
+            .single();
+
+        if (!membership) {
+            return { success: true, data: null };
+        }
+
+        return this.getTeamById(membership.team_id, userId);
+    }
+
+    /**
+     * Get all teams in a hackathon
+     */
+    async getHackathonTeams(
+        hackathonIdOrSlug: string,
+        options?: { search?: string; isOpen?: boolean; limit?: number; offset?: number }
+    ): Promise<ApiResponse<{ teams: any[]; total: number }>> {
+        const supabase = this.supabaseService.getAdminClient();
+
+        // Resolve hackathon ID
+        const hackathonId = await this.resolveHackathonId(hackathonIdOrSlug);
+        if (!hackathonId) {
+            return { success: true, data: { teams: [], total: 0 } };
+        }
+
+        let query = supabase
+            .from("hackathon_teams")
+            .select(`
+                id,
+                hackathon_id,
+                name,
+                description,
+                avatar_url,
+                leader_id,
+                max_members,
+                is_open,
+                created_at,
+                leader:users!hackathon_teams_leader_id_fkey(id, username, avatar)
+            `, { count: "exact" })
+            .eq("hackathon_id", hackathonId);
+
+        if (options?.search) {
+            query = query.ilike("name", `%${options.search}%`);
+        }
+
+        if (options?.isOpen !== undefined) {
+            query = query.eq("is_open", options.isOpen);
+        }
+
+        const limit = options?.limit || 20;
+        const offset = options?.offset || 0;
+        query = query.order("created_at", { ascending: false }).range(offset, offset + limit - 1);
+
+        const { data: teams, error, count } = await query;
+
+        if (error) {
+            this.logger.error(`Failed to get teams: ${error.message}`);
+            throw new Error(`Failed to get teams: ${error.message}`);
+        }
+
+        // Get member counts for all teams
+        const teamIds = teams?.map((t) => t.id) || [];
+        const { data: memberCounts } = await supabase
+            .from("hackathon_team_members")
+            .select("team_id")
+            .in("team_id", teamIds);
+
+        const countMap = new Map<string, number>();
+        memberCounts?.forEach((m) => {
+            const current = countMap.get(m.team_id) || 0;
+            countMap.set(m.team_id, current + 1);
+        });
+
+        return {
+            success: true,
+            data: {
+                teams: teams?.map((t) => {
+                    const leaderData = Array.isArray(t.leader) ? t.leader[0] : t.leader;
+                    const memberCount = countMap.get(t.id) || 0;
+                    return {
+                        id: t.id,
+                        hackathonId: t.hackathon_id,
+                        name: t.name,
+                        description: t.description,
+                        avatarUrl: t.avatar_url,
+                        leaderId: t.leader_id,
+                        maxMembers: t.max_members,
+                        memberCount,
+                        isOpen: t.is_open,
+                        isFull: memberCount >= t.max_members,
+                        createdAt: t.created_at,
+                        leader: leaderData ? {
+                            id: leaderData.id,
+                            username: leaderData.username,
+                            avatar: leaderData.avatar,
+                        } : null,
+                    };
+                }) || [],
+                total: count || 0,
+            },
+        };
+    }
+
+    /**
+     * Update a team
+     */
+    async updateTeam(
+        teamId: string,
+        userId: string,
+        data: { name?: string; description?: string; avatarUrl?: string; maxMembers?: number; isOpen?: boolean }
+    ): Promise<ApiResponse<any>> {
+        const supabase = this.supabaseService.getAdminClient();
+
+        // Verify leadership
+        const { data: team } = await supabase
+            .from("hackathon_teams")
+            .select("leader_id")
+            .eq("id", teamId)
+            .single();
+
+        if (!team) {
+            throw new NotFoundException("Team not found");
+        }
+
+        if (team.leader_id !== userId) {
+            throw new ForbiddenException("Only the team leader can update the team");
+        }
+
+        // Update
+        const updateData: any = {};
+        if (data.name !== undefined) updateData.name = data.name;
+        if (data.description !== undefined) updateData.description = data.description;
+        if (data.avatarUrl !== undefined) updateData.avatar_url = data.avatarUrl;
+        if (data.maxMembers !== undefined) updateData.max_members = data.maxMembers;
+        if (data.isOpen !== undefined) updateData.is_open = data.isOpen;
+
+        const { error } = await supabase
+            .from("hackathon_teams")
+            .update(updateData)
+            .eq("id", teamId);
+
+        if (error) {
+            this.logger.error(`Failed to update team: ${error.message}`);
+            throw new Error(`Failed to update team: ${error.message}`);
+        }
+
+        return this.getTeamById(teamId, userId);
+    }
+
+    /**
+     * Delete a team
+     */
+    async deleteTeam(teamId: string, userId: string): Promise<ApiResponse<void>> {
+        const supabase = this.supabaseService.getAdminClient();
+
+        // Verify leadership
+        const { data: team } = await supabase
+            .from("hackathon_teams")
+            .select("leader_id")
+            .eq("id", teamId)
+            .single();
+
+        if (!team) {
+            throw new NotFoundException("Team not found");
+        }
+
+        if (team.leader_id !== userId) {
+            throw new ForbiddenException("Only the team leader can delete the team");
+        }
+
+        const { error } = await supabase
+            .from("hackathon_teams")
+            .delete()
+            .eq("id", teamId);
+
+        if (error) {
+            this.logger.error(`Failed to delete team: ${error.message}`);
+            throw new Error(`Failed to delete team: ${error.message}`);
+        }
+
+        return { success: true, message: "Team deleted successfully" };
+    }
+
+    /**
+     * Leave a team
+     */
+    async leaveTeam(teamId: string, userId: string): Promise<ApiResponse<void>> {
+        const supabase = this.supabaseService.getAdminClient();
+
+        // Get team and membership
+        const { data: team } = await supabase
+            .from("hackathon_teams")
+            .select("leader_id")
+            .eq("id", teamId)
+            .single();
+
+        if (!team) {
+            throw new NotFoundException("Team not found");
+        }
+
+        // Leader cannot leave, must delete team or transfer leadership
+        if (team.leader_id === userId) {
+            throw new ForbiddenException("Team leader cannot leave. Delete the team or transfer leadership first.");
+        }
+
+        const { error } = await supabase
+            .from("hackathon_team_members")
+            .delete()
+            .eq("team_id", teamId)
+            .eq("user_id", userId);
+
+        if (error) {
+            this.logger.error(`Failed to leave team: ${error.message}`);
+            throw new Error(`Failed to leave team: ${error.message}`);
+        }
+
+        return { success: true, message: "Successfully left the team" };
+    }
+
+    /**
+     * Kick a member from team
+     */
+    async kickMember(teamId: string, memberId: string, userId: string): Promise<ApiResponse<void>> {
+        const supabase = this.supabaseService.getAdminClient();
+
+        // Verify leadership
+        const { data: team } = await supabase
+            .from("hackathon_teams")
+            .select("leader_id")
+            .eq("id", teamId)
+            .single();
+
+        if (!team) {
+            throw new NotFoundException("Team not found");
+        }
+
+        if (team.leader_id !== userId) {
+            throw new ForbiddenException("Only the team leader can kick members");
+        }
+
+        if (memberId === userId) {
+            throw new ForbiddenException("Cannot kick yourself");
+        }
+
+        const { error } = await supabase
+            .from("hackathon_team_members")
+            .delete()
+            .eq("team_id", teamId)
+            .eq("user_id", memberId);
+
+        if (error) {
+            this.logger.error(`Failed to kick member: ${error.message}`);
+            throw new Error(`Failed to kick member: ${error.message}`);
+        }
+
+        return { success: true, message: "Member removed from team" };
+    }
+
+    // =============================================
+    // TEAM INVITES
+    // =============================================
+
+    /**
+     * Invite a user to team
+     */
+    async inviteToTeam(
+        teamId: string,
+        inviterId: string,
+        inviteeId: string,
+        message?: string
+    ): Promise<ApiResponse<any>> {
+        const supabase = this.supabaseService.getAdminClient();
+
+        // Get team info
+        const { data: team } = await supabase
+            .from("hackathon_teams")
+            .select("id, hackathon_id, max_members")
+            .eq("id", teamId)
+            .single();
+
+        if (!team) {
+            throw new NotFoundException("Team not found");
+        }
+
+        // Check if inviter is a member of the team
+        const { data: inviterMembership } = await supabase
+            .from("hackathon_team_members")
+            .select("id")
+            .eq("team_id", teamId)
+            .eq("user_id", inviterId)
+            .single();
+
+        if (!inviterMembership) {
+            throw new ForbiddenException("You must be a team member to invite others");
+        }
+
+        // Check if team is full
+        const { count: memberCount } = await supabase
+            .from("hackathon_team_members")
+            .select("*", { count: "exact", head: true })
+            .eq("team_id", teamId);
+
+        if ((memberCount || 0) >= team.max_members) {
+            throw new ConflictException("Team is full");
+        }
+
+        // Check if invitee is already in a team for this hackathon
+        const { data: existingTeam } = await supabase
+            .from("hackathon_team_members")
+            .select("team_id, hackathon_teams!inner(hackathon_id)")
+            .eq("user_id", inviteeId)
+            .eq("hackathon_teams.hackathon_id", team.hackathon_id)
+            .single();
+
+        if (existingTeam) {
+            throw new ConflictException("User is already in a team for this hackathon");
+        }
+
+        // Check if there's already a pending invite
+        const { data: existingInvite } = await supabase
+            .from("hackathon_team_invites")
+            .select("id")
+            .eq("team_id", teamId)
+            .eq("invitee_id", inviteeId)
+            .eq("status", "pending")
+            .single();
+
+        if (existingInvite) {
+            throw new ConflictException("There's already a pending invite for this user");
+        }
+
+        // Create invite
+        const { data: invite, error } = await supabase
+            .from("hackathon_team_invites")
+            .insert({
+                team_id: teamId,
+                inviter_id: inviterId,
+                invitee_id: inviteeId,
+                message,
+            })
+            .select()
+            .single();
+
+        if (error) {
+            this.logger.error(`Failed to create invite: ${error.message}`);
+            throw new Error(`Failed to create invite: ${error.message}`);
+        }
+
+        return {
+            success: true,
+            data: invite,
+            message: "Invitation sent successfully",
+        };
+    }
+
+    /**
+     * Get user's pending invites
+     */
+    async getMyInvites(userId: string): Promise<ApiResponse<any[]>> {
+        const supabase = this.supabaseService.getAdminClient();
+
+        const { data: invites, error } = await supabase
+            .from("hackathon_team_invites")
+            .select(`
+                id,
+                message,
+                status,
+                created_at,
+                expires_at,
+                team:hackathon_teams!hackathon_team_invites_team_id_fkey(
+                    id,
+                    name,
+                    hackathon_id
+                ),
+                inviter:users!hackathon_team_invites_inviter_id_fkey(
+                    id,
+                    username,
+                    avatar
+                )
+            `)
+            .eq("invitee_id", userId)
+            .eq("status", "pending")
+            .order("created_at", { ascending: false });
+
+        if (error) {
+            this.logger.error(`Failed to get invites: ${error.message}`);
+            throw new Error(`Failed to get invites: ${error.message}`);
+        }
+
+        return {
+            success: true,
+            data: invites?.map((inv) => {
+                const teamData = Array.isArray(inv.team) ? inv.team[0] : inv.team;
+                const inviterData = Array.isArray(inv.inviter) ? inv.inviter[0] : inv.inviter;
+                return {
+                    id: inv.id,
+                    teamId: teamData?.id,
+                    teamName: teamData?.name,
+                    hackathonId: teamData?.hackathon_id,
+                    inviterId: inviterData?.id,
+                    inviterName: inviterData?.username,
+                    inviterAvatar: inviterData?.avatar,
+                    message: inv.message,
+                    status: inv.status,
+                    createdAt: inv.created_at,
+                    expiresAt: inv.expires_at,
+                };
+            }) || [],
+        };
+    }
+
+    /**
+     * Respond to an invite
+     */
+    async respondToInvite(
+        inviteId: string,
+        userId: string,
+        action: "accept" | "reject"
+    ): Promise<ApiResponse<void>> {
+        const supabase = this.supabaseService.getAdminClient();
+
+        // Get invite
+        const { data: invite } = await supabase
+            .from("hackathon_team_invites")
+            .select("id, team_id, invitee_id, status, expires_at")
+            .eq("id", inviteId)
+            .single();
+
+        if (!invite) {
+            throw new NotFoundException("Invite not found");
+        }
+
+        if (invite.invitee_id !== userId) {
+            throw new ForbiddenException("This invite is not for you");
+        }
+
+        if (invite.status !== "pending") {
+            throw new ConflictException("This invite has already been responded to");
+        }
+
+        // Check if expired
+        if (new Date(invite.expires_at) < new Date()) {
+            await supabase
+                .from("hackathon_team_invites")
+                .update({ status: "expired" })
+                .eq("id", inviteId);
+            throw new ConflictException("This invite has expired");
+        }
+
+        if (action === "accept") {
+            // Add user to team
+            const { error: memberError } = await supabase
+                .from("hackathon_team_members")
+                .insert({
+                    team_id: invite.team_id,
+                    user_id: userId,
+                    role: "member",
+                });
+
+            if (memberError) {
+                this.logger.error(`Failed to add member: ${memberError.message}`);
+                throw new Error(`Failed to join team: ${memberError.message}`);
+            }
+        }
+
+        // Update invite status
+        const { error } = await supabase
+            .from("hackathon_team_invites")
+            .update({
+                status: action === "accept" ? "accepted" : "rejected",
+                responded_at: new Date().toISOString(),
+            })
+            .eq("id", inviteId);
+
+        if (error) {
+            this.logger.error(`Failed to update invite: ${error.message}`);
+            throw new Error(`Failed to respond to invite: ${error.message}`);
+        }
+
+        return {
+            success: true,
+            message: action === "accept" ? "Successfully joined the team" : "Invite rejected",
+        };
+    }
+
+    /**
+     * Cancel an invite (by inviter)
+     */
+    async cancelInvite(inviteId: string, userId: string): Promise<ApiResponse<void>> {
+        const supabase = this.supabaseService.getAdminClient();
+
+        const { data: invite } = await supabase
+            .from("hackathon_team_invites")
+            .select("inviter_id")
+            .eq("id", inviteId)
+            .single();
+
+        if (!invite) {
+            throw new NotFoundException("Invite not found");
+        }
+
+        if (invite.inviter_id !== userId) {
+            throw new ForbiddenException("Only the inviter can cancel this invite");
+        }
+
+        const { error } = await supabase
+            .from("hackathon_team_invites")
+            .delete()
+            .eq("id", inviteId);
+
+        if (error) {
+            this.logger.error(`Failed to cancel invite: ${error.message}`);
+            throw new Error(`Failed to cancel invite: ${error.message}`);
+        }
+
+        return { success: true, message: "Invite cancelled" };
+    }
 }

@@ -808,4 +808,137 @@ export const apiClient = {
       `/hackathons/${hackathonId}/participants${queryString ? `?${queryString}` : ""}`
     );
   },
+
+  // =============================================
+  // HACKATHON TEAMS
+  // =============================================
+
+  // Create a new team for a hackathon
+  createTeam: (hackathonId: string, data: { name: string; description?: string; isLookingForMembers?: boolean }) =>
+    apiFetch<{
+      id: string;
+      name: string;
+      description?: string;
+      hackathonId: string;
+      leaderId: string;
+      isLookingForMembers: boolean;
+      memberCount: number;
+      createdAt: string;
+    }>(`/hackathons/${hackathonId}/teams`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  // Get all teams for a hackathon
+  getHackathonTeams: (hackathonId: string, lookingForMembers?: boolean, limit?: number, offset?: number) => {
+    const params = new URLSearchParams();
+    if (lookingForMembers !== undefined) params.append("lookingForMembers", lookingForMembers.toString());
+    if (limit) params.append("limit", limit.toString());
+    if (offset) params.append("offset", offset.toString());
+    const queryString = params.toString();
+    return apiFetch<{
+      teams: Array<{
+        id: string;
+        name: string;
+        description?: string;
+        leaderId: string;
+        leaderName: string;
+        leaderAvatar?: string;
+        isLookingForMembers: boolean;
+        memberCount: number;
+        maxMembers: number;
+        members: Array<{ id: string; username: string; avatar?: string; role: string }>;
+      }>;
+      total: number;
+    }>(`/hackathons/${hackathonId}/teams${queryString ? `?${queryString}` : ""}`);
+  },
+
+  // Get current user's team for a hackathon
+  getMyTeam: (hackathonId: string) =>
+    apiFetch<{
+      team?: {
+        id: string;
+        name: string;
+        description?: string;
+        hackathonId: string;
+        leaderId: string;
+        isLookingForMembers: boolean;
+        memberCount: number;
+        maxMembers: number;
+        members: Array<{ id: string; username: string; avatar?: string; role: string; joinedAt: string }>;
+      };
+      role?: 'leader' | 'member';
+    }>(`/hackathons/${hackathonId}/teams/my`),
+
+  // Update a team
+  updateTeam: (hackathonId: string, teamId: string, data: { name?: string; description?: string; isLookingForMembers?: boolean }) =>
+    apiFetch<{
+      id: string;
+      name: string;
+      description?: string;
+      isLookingForMembers: boolean;
+    }>(`/hackathons/${hackathonId}/teams/${teamId}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
+  // Delete a team (leader only)
+  deleteTeam: (hackathonId: string, teamId: string) =>
+    apiFetch<void>(`/hackathons/${hackathonId}/teams/${teamId}`, {
+      method: "DELETE",
+    }),
+
+  // Invite a user to the team
+  inviteToTeam: (hackathonId: string, teamId: string, userId: string) =>
+    apiFetch<{
+      id: string;
+      teamId: string;
+      invitedUserId: string;
+      status: string;
+      createdAt: string;
+    }>(`/hackathons/${hackathonId}/teams/${teamId}/invite`, {
+      method: "POST",
+      body: JSON.stringify({ userId }),
+    }),
+
+  // Accept a team invite
+  acceptInvite: (hackathonId: string, inviteId: string) =>
+    apiFetch<{
+      teamId: string;
+      message: string;
+    }>(`/hackathons/${hackathonId}/teams/invites/${inviteId}/accept`, {
+      method: "POST",
+    }),
+
+  // Reject a team invite
+  rejectInvite: (hackathonId: string, inviteId: string) =>
+    apiFetch<void>(`/hackathons/${hackathonId}/teams/invites/${inviteId}/reject`, {
+      method: "POST",
+    }),
+
+  // Leave a team
+  leaveTeam: (hackathonId: string, teamId: string) =>
+    apiFetch<void>(`/hackathons/${hackathonId}/teams/${teamId}/leave`, {
+      method: "POST",
+    }),
+
+  // Kick a member from the team (leader only)
+  kickMember: (hackathonId: string, teamId: string, userId: string) =>
+    apiFetch<void>(`/hackathons/${hackathonId}/teams/${teamId}/members/${userId}`, {
+      method: "DELETE",
+    }),
+
+  // Get all pending invites for current user
+  getMyInvites: (hackathonId: string) =>
+    apiFetch<{
+      invites: Array<{
+        id: string;
+        teamId: string;
+        teamName: string;
+        invitedBy: string;
+        invitedByName: string;
+        status: string;
+        createdAt: string;
+      }>;
+    }>(`/hackathons/${hackathonId}/teams/invites/my`),
 };
