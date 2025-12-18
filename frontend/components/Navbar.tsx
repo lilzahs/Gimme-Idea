@@ -313,7 +313,7 @@ const Navbar = () => {
                              initial={{ opacity: 0, y: 10, scale: 0.95 }}
                              animate={{ opacity: 1, y: 0, scale: 1 }}
                              exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                             className="fixed sm:absolute top-20 sm:top-full left-1/2 sm:left-auto -translate-x-1/2 sm:translate-x-0 sm:right-0 mt-0 sm:mt-4 w-[90vw] sm:w-80 bg-[#0F0F0F] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50"
+                             className="fixed sm:absolute top-20 sm:top-full inset-x-0 mx-auto sm:inset-x-auto sm:mx-0 sm:right-0 mt-0 sm:mt-4 w-[90vw] sm:w-80 max-w-[360px] bg-[#0F0F0F] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50"
                           >
                              <div className="p-3 border-b border-white/5 flex justify-between items-center">
                                  <span className="text-xs font-bold text-gray-400 uppercase">Notifications</span>
