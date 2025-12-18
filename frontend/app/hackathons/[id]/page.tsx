@@ -467,7 +467,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                                                <span className="opacity-50 text-[10px] mr-2">[{format(new Date(log.date), 'HH:mm')}]</span>
                                                                <span
                                                                   className={`
-                                                                     ${log.type === 'warning' ? 'text-yellow-400' : log.type === 'success' ? 'text-green-400' : 'text-gold'}
+                                                                     ${log.type === 'warning' ? 'text-yellow-400' : log.type === 'success' ? 'text-purple-400' : 'text-gold'}
                                                                      ${effectClass}
                                                                   `}
                                                                   style={log.config?.effect === 'glitch' ? { textShadow: '2px 0 red, -2px 0 blue' } : {}}
