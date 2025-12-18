@@ -296,14 +296,6 @@ export const ConnectWalletPopup = () => {
       isPasskey: true,
       isMobileAdapter: false,
     },
-    // Mobile Wallet Adapter - shows first on mobile devices
-    ...(isMobile ? [{
-      name: 'Mobile Wallet',
-      icon: '', // We'll use Smartphone icon component instead
-      color: 'hover:bg-[#9945FF]/20 hover:border-[#9945FF]/50',
-      isPasskey: false,
-      isMobileAdapter: true,
-    }] : []),
     {
       name: 'Phantom',
       icon: '/asset/phantom-logo.svg',

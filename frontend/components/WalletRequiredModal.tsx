@@ -267,17 +267,9 @@ export const WalletRequiredModal: React.FC<WalletRequiredModalProps> = ({
   };
 
   const walletOptions = [
-    // Mobile Wallet Adapter - shows first on mobile devices
-    ...(isMobile ? [{
-      name: 'Mobile Wallet',
-      icon: '', // We'll use Smartphone icon component instead
-      color: 'hover:bg-[#9945FF]/20',
-      isMobileAdapter: true,
-      isPasskey: false,
-    }] : []),
+    { name: 'Passkey', icon: '', color: 'hover:bg-green-500/20', isMobileAdapter: false, isPasskey: true },
     { name: 'Phantom', icon: '/asset/phantom-logo.svg', color: 'hover:bg-[#AB9FF2]/20', isMobileAdapter: false, isPasskey: false },
     { name: 'Solflare', icon: '/asset/solflare-logo.png', color: 'hover:bg-[#FFD700]/20', isMobileAdapter: false, isPasskey: false },
-    { name: 'Passkey', icon: '', color: 'hover:bg-green-500/20', isMobileAdapter: false, isPasskey: true },
   ];
 
   if (!isOpen) return null;
