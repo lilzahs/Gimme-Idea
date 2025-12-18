@@ -623,84 +623,128 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
                   {/* Recommended Ideas Cards */}
                   {msg.recommendedIdeas && msg.recommendedIdeas.length > 0 && (
                     <div className="mt-3 sm:mt-4 space-y-3 sm:space-y-4">
-                      {msg.recommendedIdeas.map((idea, idx) => (
-                        <motion.div
-                          key={idea.id}
-                          onClick={() => handleIdeaClick(idea)}
-                          className="p-3 sm:p-4 bg-[#12131a] border border-[#FFD700]/30 rounded-xl cursor-pointer group relative"
-                          whileHover={{
-                            scale: 1.02,
-                            boxShadow: '0 0 25px rgba(255, 215, 0, 0.4), 0 0 50px rgba(153, 69, 255, 0.3)',
-                            borderColor: 'rgba(255, 215, 0, 0.6)',
-                          }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          {/* Glitch overlay layers */}
+                      {msg.recommendedIdeas.map((idea, idx) => {
+                        const [isCardHovered, setIsCardHovered] = React.useState(false);
+                        
+                        return (
                           <motion.div
-                            className="absolute inset-0 rounded-xl pointer-events-none"
-                            initial={{ opacity: 0 }}
-                            whileHover={{
-                              opacity: [0, 0.5, 0.3, 0.6, 0.4],
-                              x: [-2, 2, -1, 1, 0],
-                              background: 'linear-gradient(45deg, rgba(255, 215, 0, 0.1), transparent)',
+                            key={idea.id}
+                            onClick={() => handleIdeaClick(idea)}
+                            onMouseEnter={() => setIsCardHovered(true)}
+                            onMouseLeave={() => setIsCardHovered(false)}
+                            className="p-3 sm:p-4 bg-[#12131a] border rounded-xl cursor-pointer group relative overflow-hidden"
+                            animate={{
+                              scale: isCardHovered ? 1.02 : 1,
+                              borderColor: isCardHovered ? 'rgba(255, 215, 0, 0.6)' : 'rgba(255, 215, 0, 0.3)',
                             }}
-                            transition={{ duration: 0.3, repeat: Infinity }}
-                          />
-                          <motion.div
-                            className="absolute inset-0 rounded-xl pointer-events-none"
-                            initial={{ opacity: 0 }}
-                            whileHover={{
-                              opacity: [0, 0.4, 0.2, 0.5, 0.3],
-                              x: [2, -2, 1, -1, 0],
-                              background: 'linear-gradient(135deg, rgba(153, 69, 255, 0.1), transparent)',
+                            transition={{ duration: 0.2 }}
+                            style={{
+                              boxShadow: isCardHovered 
+                                ? '0 0 25px rgba(255, 215, 0, 0.4), 0 0 50px rgba(153, 69, 255, 0.3)'
+                                : 'none',
                             }}
-                            transition={{ duration: 0.3, repeat: Infinity, delay: 0.05 }}
-                          />
-                          
-                          <div className="flex items-start gap-2 sm:gap-3 relative z-10">
-                            <motion.div 
-                              className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-[#FFD700]/20 flex items-center justify-center text-[#FFD700] font-bold text-xs sm:text-sm flex-shrink-0"
-                              whileHover={{
-                                boxShadow: '0 0 15px rgba(255, 215, 0, 0.5)',
-                              }}
-                            >
-                              {idx + 1}
-                            </motion.div>
-                            <div className="flex-1 min-w-0">
-                              <motion.h4 
-                                className="font-bold text-[#FFD700] line-clamp-1 text-sm relative"
-                                whileHover={{
-                                  textShadow: [
-                                    '0 0 10px rgba(255, 215, 0, 0.8)',
-                                    '-2px 0 rgba(153, 69, 255, 0.8), 2px 0 rgba(255, 215, 0, 0.8)',
-                                    '2px 0 rgba(153, 69, 255, 0.8), -2px 0 rgba(255, 215, 0, 0.8)',
-                                    '0 0 10px rgba(255, 215, 0, 0.8)',
-                                  ],
+                          >
+                            {/* Glitch border effects - Yellow & Purple */}
+                            {isCardHovered && (
+                              <>
+                                <motion.div 
+                                  className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#FFD700] to-transparent"
+                                  animate={{ opacity: [0.5, 1, 0.5], x: [-5, 5, -5] }}
+                                  transition={{ duration: 0.3, repeat: Infinity }}
+                                />
+                                <motion.div 
+                                  className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#9945FF] to-transparent"
+                                  animate={{ opacity: [0.5, 1, 0.5], x: [5, -5, 5] }}
+                                  transition={{ duration: 0.3, repeat: Infinity, delay: 0.05 }}
+                                />
+                                <motion.div 
+                                  className="absolute top-0 bottom-0 left-0 w-[2px] bg-gradient-to-b from-[#FFD700] via-transparent to-[#9945FF]"
+                                  animate={{ opacity: [0.3, 0.7, 0.3] }}
+                                  transition={{ duration: 0.5, repeat: Infinity }}
+                                />
+                                <motion.div 
+                                  className="absolute top-0 bottom-0 right-0 w-[2px] bg-gradient-to-b from-[#9945FF] via-transparent to-[#FFD700]"
+                                  animate={{ opacity: [0.3, 0.7, 0.3] }}
+                                  transition={{ duration: 0.5, repeat: Infinity, delay: 0.1 }}
+                                />
+                                
+                                {/* Glitch overlay layers */}
+                                <motion.div
+                                  className="absolute inset-0 rounded-xl pointer-events-none"
+                                  animate={{
+                                    opacity: [0, 0.3, 0.1, 0.4, 0.2],
+                                    x: [-3, 3, -2, 2, 0],
+                                  }}
+                                  style={{ background: 'linear-gradient(45deg, rgba(255, 215, 0, 0.15), transparent)' }}
+                                  transition={{ duration: 0.2, repeat: Infinity }}
+                                />
+                                <motion.div
+                                  className="absolute inset-0 rounded-xl pointer-events-none"
+                                  animate={{
+                                    opacity: [0, 0.25, 0.1, 0.35, 0.15],
+                                    x: [3, -3, 2, -2, 0],
+                                  }}
+                                  style={{ background: 'linear-gradient(135deg, rgba(153, 69, 255, 0.15), transparent)' }}
+                                  transition={{ duration: 0.2, repeat: Infinity, delay: 0.05 }}
+                                />
+                              </>
+                            )}
+                            
+                            <div className="flex items-start gap-2 sm:gap-3 relative z-10">
+                              <motion.div 
+                                className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-[#FFD700]/20 flex items-center justify-center text-[#FFD700] font-bold text-xs sm:text-sm flex-shrink-0"
+                                animate={{
+                                  boxShadow: isCardHovered 
+                                    ? ['0 0 10px rgba(255, 215, 0, 0.5)', '0 0 20px rgba(255, 215, 0, 0.7)', '0 0 10px rgba(255, 215, 0, 0.5)']
+                                    : 'none',
                                 }}
-                                transition={{ duration: 0.2, repeat: Infinity }}
+                                transition={{ duration: 0.5, repeat: isCardHovered ? Infinity : 0 }}
                               >
-                                {idea.title}
-                              </motion.h4>
-                              <p className="text-[10px] sm:text-xs text-gray-400 mt-1 line-clamp-2 group-hover:text-gray-300 transition-colors">
-                                {idea.problem || idea.description}
-                              </p>
-                              <div className="flex items-center gap-3 mt-2">
-                                <span className="text-[10px] px-2 py-0.5 bg-[#FFD700]/10 text-[#FFD700] rounded-full group-hover:bg-[#FFD700]/20 transition-colors">
-                                  {idea.category}
-                                </span>
-                                <div className="flex items-center gap-1 text-gray-500 text-xs group-hover:text-gray-400">
-                                  <ThumbsUp className="w-3 h-3" />
-                                  {idea.votes || 0}
-                                </div>
-                                <div className="flex items-center gap-1 text-gray-500 text-xs group-hover:text-gray-400">
-                                  <MessageCircle className="w-3 h-3" />
-                                  {idea.feedbackCount || 0}
+                                {idx + 1}
+                              </motion.div>
+                              <div className="flex-1 min-w-0">
+                                <motion.h4 
+                                  className="font-bold text-[#FFD700] line-clamp-1 text-sm relative"
+                                  animate={{
+                                    textShadow: isCardHovered 
+                                      ? [
+                                          '0 0 10px rgba(255, 215, 0, 0.8)',
+                                          '-3px 0 rgba(153, 69, 255, 0.9), 3px 0 rgba(255, 215, 0, 0.9)',
+                                          '3px 0 rgba(153, 69, 255, 0.9), -3px 0 rgba(255, 215, 0, 0.9)',
+                                          '0 0 10px rgba(255, 215, 0, 0.8)',
+                                        ]
+                                      : 'none',
+                                  }}
+                                  transition={{ duration: 0.15, repeat: isCardHovered ? Infinity : 0 }}
+                                >
+                                  {idea.title}
+                                </motion.h4>
+                                <p className="text-[10px] sm:text-xs text-gray-400 mt-1 line-clamp-2 group-hover:text-gray-300 transition-colors">
+                                  {idea.problem || idea.description}
+                                </p>
+                                <div className="flex items-center gap-3 mt-2">
+                                  <motion.span 
+                                    className="text-[10px] px-2 py-0.5 bg-[#FFD700]/10 text-[#FFD700] rounded-full"
+                                    animate={{
+                                      backgroundColor: isCardHovered ? 'rgba(255, 215, 0, 0.25)' : 'rgba(255, 215, 0, 0.1)',
+                                    }}
+                                  >
+                                    {idea.category}
+                                  </motion.span>
+                                  <div className="flex items-center gap-1 text-gray-500 text-xs group-hover:text-gray-400">
+                                    <ThumbsUp className="w-3 h-3" />
+                                    {idea.votes || 0}
+                                  </div>
+                                  <div className="flex items-center gap-1 text-gray-500 text-xs group-hover:text-gray-400">
+                                    <MessageCircle className="w-3 h-3" />
+                                    {idea.feedbackCount || 0}
+                                  </div>
                                 </div>
                               </div>
                             </div>
-                          </div>
-                        </motion.div>
-                      ))}
+                          </motion.div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
