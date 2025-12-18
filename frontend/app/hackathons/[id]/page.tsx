@@ -403,10 +403,10 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                               switch (activeSection) {
                                  case 'overview':
                                     return (
-                                       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
+                                       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 h-full overflow-y-auto md:overflow-hidden pb-6 md:pb-0">
 
                                           {/* LEFT COLUMN: Title, Description, Terminal (Span 8) */}
-                                          <div className="lg:col-span-8 flex flex-col gap-4 h-full min-h-0">
+                                          <div className="lg:col-span-8 flex flex-col gap-4 h-full min-h-0 order-1">
                                              {/* 1x6 Image Banner */}
                                              {hackathon.image_url && (
                                                 <div className="relative w-full aspect-[2/1] md:aspect-[4/1] lg:aspect-[6/1] rounded-b-xl overflow-hidden shadow-2xl border-x border-b border-white/10 shrink-0">
@@ -438,19 +438,19 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                                 </p>
                                              </div>
 
-                                             {/* Terminal (Emerald Theme) */}
-                                             <div className="flex-1 flex flex-col bg-black border border-emerald-500/30 rounded-xl p-4 md:p-6 font-mono text-xs shadow-[0_0_20px_rgba(16,185,129,0.1)] overflow-hidden min-h-[300px]">
+                                             {/* Terminal */}
+                                             <div className="flex-1 flex flex-col bg-black border border-amber-200/20 rounded-xl p-4 md:p-6 font-mono text-xs shadow-[0_0_20px_rgba(251,191,36,0.05)] overflow-hidden min-h-[300px]">
                                                 <div className="flex-1 flex flex-col space-y-2 overflow-hidden min-h-0">
-                                                   <div className="border-b border-emerald-500/20 pb-2 flex justify-between shrink-0">
-                                                      <div><span className="text-emerald-400">$</span> <span className="text-emerald-400">cat system_announcements.log</span></div>
-                                                      <div className="text-[10px] text-emerald-400/80">SECURE_CONNECTION</div>
+                                                   <div className="border-b border-amber-200/10 pb-2 flex justify-between shrink-0">
+                                                      <div><span className="text-amber-100">$</span> <span className="text-amber-100">cat system_announcements.log</span></div>
+                                                      <div className="text-[10px] text-amber-100/60">SECURE_CONNECTION</div>
                                                    </div>
-                                                   <div className="flex-1 overflow-y-auto space-y-2 text-emerald-400/80 pr-2 scrollbar-thin scrollbar-thumb-emerald-500/20">
+                                                   <div className="flex-1 overflow-y-auto space-y-2 text-amber-100/70 pr-2 scrollbar-thin scrollbar-thumb-amber-200/10">
                                                       {hackathon.announcements?.map((log: any) => {
                                                          // Effect Logic - from Legacy
                                                          let effectClass = '';
                                                          if (log.config?.effect === 'pulse') effectClass = 'animate-pulse font-bold';
-                                                         if (log.config?.effect === 'typewriter') effectClass = 'border-r-2 border-emerald-400 pr-1 animate-pulse'; // Cursor simulation
+                                                         if (log.config?.effect === 'typewriter') effectClass = 'border-r-2 border-amber-100 pr-1 animate-pulse'; // Cursor simulation
                                                          if (log.config?.effect === 'glitch') effectClass = 'text-shadow-glitch'; // Glitch effect
 
                                                          // Widget Logic (Countdown)
@@ -477,7 +477,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                                                <span className="opacity-50 text-[10px] mr-2">[{format(new Date(log.date), 'HH:mm')}]</span>
                                                                <span
                                                                   className={`
-                                                                     ${log.type === 'warning' ? 'text-yellow-400' : log.type === 'success' ? 'text-purple-400' : 'text-emerald-400'}
+                                                                     ${log.type === 'warning' ? 'text-yellow-400' : log.type === 'success' ? 'text-purple-400' : 'text-amber-100'}
                                                                      ${effectClass}
                                                                   `}
                                                                   style={log.config?.effect === 'glitch' ? { textShadow: '2px 0 red, -2px 0 blue' } : {}}
@@ -489,14 +489,14 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                                          );
                                                       })}
                                                       {terminalHistory.map((item, idx) => (
-                                                         <div key={idx} className={item.type === 'error' ? 'text-red-500' : 'text-emerald-400'}>
+                                                         <div key={idx} className={item.type === 'error' ? 'text-red-500' : 'text-amber-100'}>
                                                             {item.type === 'command' ? `$ ${item.content}` : item.content}
                                                          </div>
                                                       ))}
                                                       <div ref={terminalEndRef} />
                                                    </div>
-                                                   <div className="flex items-center gap-2 pt-2 border-t border-emerald-500/20 shrink-0">
-                                                      <span className="text-emerald-400">$</span>
+                                                   <div className="flex items-center gap-2 pt-2 border-t border-amber-200/10 shrink-0">
+                                                      <span className="text-amber-100">$</span>
                                                       <div className="relative flex-1">
                                                          <motion.input
                                                             type="text"
@@ -504,7 +504,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                                             onChange={(e) => setTerminalInput(e.target.value)}
                                                             onKeyDown={handleTerminalSubmit}
                                                             className={`border outline-none font-mono w-full px-2 py-1 rounded
-                                                         ${isTerminalShaking ? 'bg-red-900/20 border-red-500 text-red-500 placeholder-red-500/50' : 'bg-transparent border-transparent text-emerald-400'}
+                                                         ${isTerminalShaking ? 'bg-red-900/20 border-red-500 text-red-500 placeholder-red-500/50' : 'bg-transparent border-transparent text-amber-100'}
                                                        `}
                                                             animate={isTerminalShaking ? { x: [-10, 10, -10, 10, 0], y: [-5, 5, -5, 5, 0] } : {}}
                                                             transition={{ duration: 0.4 }}
@@ -518,7 +518,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                           </div>
 
                                           {/* RIGHT COLUMN: Sidebar Widgets (Span 4) */}
-                                          <div className="lg:col-span-4 flex flex-col gap-6 h-full overflow-y-auto pr-2 pb-20 md:pb-0">
+                                          <div className="lg:col-span-4 flex flex-col gap-4 md:gap-6 h-auto lg:h-full lg:overflow-y-auto pr-0 lg:pr-2 order-2">
 
                                              {/* 0. Quick Action: Submit */}
                                              <div className="bg-gradient-to-br from-gold/20 to-yellow-600/5 border border-gold/30 rounded-xl p-4 shrink-0 shadow-lg shadow-gold/5">
@@ -614,7 +614,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
 
                                  case 'details':
                                     return (
-                                       <div className="grid lg:grid-cols-3 gap-6 h-full overflow-y-auto pr-2 pb-20 md:pb-0">
+                                       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6 h-full overflow-y-auto pr-0 lg:pr-2 pb-6 md:pb-0">
                                           <div className="lg:col-span-2 space-y-6">
                                              {/* About Section */}
                                              <div className="bg-surface border border-white/5 rounded-xl p-6">
@@ -715,9 +715,9 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
 
                                  case 'submission':
                                     return (
-                                       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
+                                       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 h-full overflow-y-auto md:overflow-hidden pb-6 md:pb-0">
                                           {/* LEFT COLUMN: Submission Process (Span 8) */}
-                                          <div className="lg:col-span-8 flex flex-col h-full overflow-y-auto pr-2 pb-20 md:pb-0">
+                                          <div className="lg:col-span-8 flex flex-col h-auto lg:h-full lg:overflow-y-auto pr-0 lg:pr-2 order-1">
                                              {submissionStep === 'select' && (
                                                 <div className="space-y-6">
                                                    <div className="bg-surface border border-white/5 rounded-xl p-6 flex flex-col md:flex-row justify-between items-center gap-4">
@@ -878,7 +878,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                           </div>
 
                                           {/* RIGHT COLUMN: Sidebar Widgets (Span 4) */}
-                                          <div className="lg:col-span-4 flex flex-col gap-6 h-full overflow-y-auto pr-2 pb-20 md:pb-0">
+                                          <div className="lg:col-span-4 flex flex-col gap-4 md:gap-6 h-auto lg:h-full lg:overflow-y-auto pr-0 lg:pr-2 order-2">
 
                                              {/* Checklist Widget */}
                                              <div className="bg-surface border border-white/5 rounded-xl p-5">
@@ -943,9 +943,9 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
 
                                  case 'project':
                                     return (
-                                       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
+                                       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 h-full overflow-y-auto md:overflow-hidden pb-6 md:pb-0">
                                           {/* LEFT COLUMN: Team Management (Span 8) */}
-                                          <div className="lg:col-span-8 flex flex-col gap-6 h-full overflow-y-auto pr-2 pb-20 md:pb-0">
+                                          <div className="lg:col-span-8 flex flex-col gap-4 md:gap-6 h-auto lg:h-full lg:overflow-y-auto pr-0 lg:pr-2 order-1">
                                              {!isRegistered ? (
                                                 <div className="h-full flex flex-col items-center justify-center text-center p-8 bg-surface border border-white/5 rounded-xl relative overflow-hidden">
                                                    <div className="absolute inset-0 bg-gradient-to-b from-gold/5 to-transparent pointer-events-none" />
@@ -1164,7 +1164,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                           </div>
 
                                           {/* RIGHT COLUMN: Sidebar Widgets (Span 4) */}
-                                          <div className="lg:col-span-4 flex flex-col gap-6 h-full overflow-y-auto pr-2 pb-20 md:pb-0">
+                                          <div className="lg:col-span-4 flex flex-col gap-4 md:gap-6 h-auto lg:h-full lg:overflow-y-auto pr-0 lg:pr-2 order-2">
 
                                              {/* 1. Countdown Card */}
                                              <div className="bg-surface border border-white/5 rounded-xl p-4 shrink-0">
@@ -1246,7 +1246,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
 
                                  case 'resources':
                                     return (
-                                       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 h-full overflow-y-auto pr-2 pb-20 md:pb-0">
+                                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 h-full overflow-y-auto pr-0 lg:pr-2 pb-6 md:pb-0">
                                           {hackathon.resources?.map((res, i) => (
                                              <a key={i} href={res.link} target="_blank" className="bg-surface border border-white/5 p-4 rounded-xl hover:bg-white/5 transition-all block">
                                                 <h3 className="font-bold text-white mb-1 text-sm">{res.name}</h3>
