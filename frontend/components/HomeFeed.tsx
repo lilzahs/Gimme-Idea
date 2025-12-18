@@ -250,7 +250,7 @@ export default function HomeFeed() {
                           transition={{ duration: 0.2 }}
                           className={
                             isMobile 
-                              ? "absolute z-50 left-0 right-0 top-full mt-2 w-full" 
+                              ? "absolute z-50 left-0 right-0 bottom-full mb-2 w-full" 
                               : "absolute z-50 left-1/2 -translate-x-1/2 bottom-full mb-3 w-80 pointer-events-none"
                           }
                         >

@@ -53,8 +53,16 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
       whileHover={{ y: -6, scale: 1.01 }}
       whileTap={{ scale: 0.98 }}
       transition={{ type: "spring", stiffness: 400, damping: 25 }}
-      className="relative rounded-2xl overflow-hidden cursor-pointer flex flex-col h-full group glitch-card"
+      className={`relative rounded-2xl overflow-hidden cursor-pointer flex flex-col h-full group ${isIdea ? 'glitch-card-idea' : 'glitch-card'}`}
     >
+      {/* Glitch border elements for Idea cards */}
+      {isIdea && (
+        <>
+          <div className="glitch-border-left" />
+          <div className="glitch-border-right" />
+        </>
+      )}
+      
       {/* Animated scanline - Only on hover */}
       <AnimatePresence>
         {isHovered && (
@@ -162,7 +170,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
         {/* Title with Glitch Effect - Only on hover via CSS */}
         <h3 
           className={`glitch-title text-lg font-bold mb-2 line-clamp-2 transition-colors duration-500 ${
-            isIdea ? 'text-[#FFD700]' : 'text-white group-hover:text-[#9945FF]'
+            isIdea ? 'text-white group-hover:text-[#FFD700]' : 'text-white group-hover:text-[#9945FF]'
           }`}
           data-text={project.title}
         >
