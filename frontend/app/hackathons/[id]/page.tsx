@@ -255,7 +255,9 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
       try {
          const response = await apiClient.getMyInvites(id);
          if (response.success && response.data) {
-            setPendingInvitations(response.data.invites || []);
+            // Filter invites for this hackathon only
+            const hackathonInvites = response.data.filter(inv => inv.hackathonId === id);
+            setPendingInvitations(hackathonInvites);
          }
       } catch (err) {
          console.error('Failed to load invites:', err);
@@ -1659,14 +1661,23 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                                                {pendingInvitations.map((invite) => (
                                                                   <div key={invite.id} className="flex flex-col sm:flex-row items-center justify-between bg-white/5 p-4 rounded-lg border border-white/10 gap-4">
                                                                      <div className="flex items-center gap-3">
-                                                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold/20 to-yellow-600/20 border border-gold/30 flex items-center justify-center">
-                                                                           <Users className="w-5 h-5 text-gold" />
-                                                                        </div>
+                                                                        {invite.inviterAvatar ? (
+                                                                           <Image src={invite.inviterAvatar} alt={invite.inviterName} width={40} height={40} className="w-10 h-10 rounded-full object-cover border border-gold/30" />
+                                                                        ) : (
+                                                                           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold/20 to-yellow-600/20 border border-gold/30 flex items-center justify-center">
+                                                                              <Users className="w-5 h-5 text-gold" />
+                                                                           </div>
+                                                                        )}
                                                                         <div>
                                                                            <p className="text-sm text-gray-300">
                                                                               <span className="text-white font-bold">{invite.inviterName}</span> invited you to join <span className="text-gold font-bold">{invite.teamName}</span>
                                                                            </p>
-                                                                           <p className="text-[10px] text-gray-500">Just now</p>
+                                                                           <p className="text-[10px] text-gray-500">
+                                                                              {new Date(invite.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                                                              {invite.expiresAt && (
+                                                                                 <span className="text-amber-500 ml-2">• Expires {new Date(invite.expiresAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                                                                              )}
+                                                                           </p>
                                                                         </div>
                                                                      </div>
                                                                      <div className="flex gap-2 w-full sm:w-auto">

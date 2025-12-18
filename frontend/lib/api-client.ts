@@ -941,15 +941,48 @@ export const apiClient = {
 
   // Get all pending invites for current user
   getMyInvites: (hackathonId?: string) =>
-    apiFetch<{
-      invites: Array<{
-        id: string;
-        teamId: string;
-        teamName: string;
-        invitedBy: string;
-        invitedByName: string;
-        status: string;
-        createdAt: string;
-      }>;
-    }>(`/hackathons/teams/invites/my`),
+    apiFetch<Array<{
+      id: string;
+      teamId: string;
+      teamName: string;
+      hackathonId: string;
+      inviterId: string;
+      inviterName: string;
+      inviterAvatar?: string;
+      message?: string;
+      status: string;
+      createdAt: string;
+      expiresAt: string;
+    }>>(`/hackathons/teams/invites/my`),
+
+  // ==================== ANNOUNCEMENTS ====================
+  // Get user's active announcements
+  getAnnouncements: () =>
+    apiFetch<Array<{
+      id: string;
+      type: string;
+      title: string;
+      message: string;
+      referenceType?: string;
+      referenceId?: string;
+      actionUrl?: string;
+      actionLabel?: string;
+      priority: 'low' | 'normal' | 'high' | 'urgent';
+      isRead: boolean;
+      createdAt: string;
+      expiresAt?: string;
+      metadata?: Record<string, any>;
+    }>>(`/users/me/announcements`),
+
+  // Mark announcement as read
+  markAnnouncementRead: (announcementId: string) =>
+    apiFetch<void>(`/users/announcements/${announcementId}/read`, {
+      method: "PATCH",
+    }),
+
+  // Dismiss announcement
+  dismissAnnouncement: (announcementId: string) =>
+    apiFetch<void>(`/users/announcements/${announcementId}/dismiss`, {
+      method: "PATCH",
+    }),
 };

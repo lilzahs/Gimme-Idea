@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Search, UserPlus, Loader2, Star } from 'lucide-react';
 import Image from 'next/image';
@@ -34,40 +34,42 @@ const InviteMemberModal: React.FC<InviteMemberModalProps> = ({
     const [isSearching, setIsSearching] = useState(false);
     const [invitingUserId, setInvitingUserId] = useState<string | null>(null);
 
-    // Get team member IDs to exclude from search
-    const teamMemberIds = teamMembers.map(m => m.userId || m.id).filter(Boolean) as string[];
+    // Memoize team member IDs to prevent unnecessary re-renders
+    const teamMemberIds = useMemo(() =>
+        teamMembers.map(m => m.userId || m.id).filter(Boolean) as string[],
+        [teamMembers]
+    );
 
-    // Debounced search
-    const searchUsers = useCallback(async (query: string) => {
-        if (!query || query.trim().length < 2) {
+    // Use ref to store latest teamMemberIds to avoid dependency issues
+    const teamMemberIdsRef = useRef(teamMemberIds);
+    teamMemberIdsRef.current = teamMemberIds;
+
+    // Debounce search input
+    useEffect(() => {
+        if (!searchQuery || searchQuery.trim().length < 2) {
             setSearchResults([]);
             return;
         }
 
-        setIsSearching(true);
-        try {
-            const response = await apiClient.searchUsers(query.trim(), teamMemberIds, 10);
-            if (response.success && response.data) {
-                setSearchResults(response.data);
-            } else {
+        const timer = setTimeout(async () => {
+            setIsSearching(true);
+            try {
+                const response = await apiClient.searchUsers(searchQuery.trim(), teamMemberIdsRef.current, 10);
+                if (response.success && response.data) {
+                    setSearchResults(response.data);
+                } else {
+                    setSearchResults([]);
+                }
+            } catch (err) {
+                console.error('Search users error:', err);
                 setSearchResults([]);
+            } finally {
+                setIsSearching(false);
             }
-        } catch (err) {
-            console.error('Search users error:', err);
-            setSearchResults([]);
-        } finally {
-            setIsSearching(false);
-        }
-    }, [teamMemberIds]);
-
-    // Debounce search input
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            searchUsers(searchQuery);
         }, 300);
 
         return () => clearTimeout(timer);
-    }, [searchQuery, searchUsers]);
+    }, [searchQuery]);
 
     // Reset state when modal closes
     useEffect(() => {

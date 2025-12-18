@@ -328,4 +328,83 @@ export class UsersService {
       })) || [],
     };
   }
+
+  /**
+   * Get user's announcements
+   */
+  async getAnnouncements(userId: string): Promise<ApiResponse<any[]>> {
+    const supabase = this.supabaseService.getAdminClient();
+
+    const { data: announcements, error } = await supabase
+      .from("user_announcements")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("is_dismissed", false)
+      .or("expires_at.is.null,expires_at.gt.now()")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Get announcements error:", error);
+      return { success: true, data: [] };
+    }
+
+    return {
+      success: true,
+      data: announcements?.map(a => ({
+        id: a.id,
+        type: a.type,
+        title: a.title,
+        message: a.message,
+        referenceType: a.reference_type,
+        referenceId: a.reference_id,
+        actionUrl: a.action_url,
+        actionLabel: a.action_label,
+        priority: a.priority,
+        isRead: a.is_read,
+        createdAt: a.created_at,
+        expiresAt: a.expires_at,
+        metadata: a.metadata,
+      })) || [],
+    };
+  }
+
+  /**
+   * Mark announcement as read
+   */
+  async markAnnouncementRead(userId: string, announcementId: string): Promise<ApiResponse<void>> {
+    const supabase = this.supabaseService.getAdminClient();
+
+    const { error } = await supabase
+      .from("user_announcements")
+      .update({ is_read: true, read_at: new Date().toISOString() })
+      .eq("id", announcementId)
+      .eq("user_id", userId);
+
+    if (error) {
+      console.error("Mark announcement read error:", error);
+      throw new BadRequestException("Failed to mark announcement as read");
+    }
+
+    return { success: true };
+  }
+
+  /**
+   * Dismiss announcement
+   */
+  async dismissAnnouncement(userId: string, announcementId: string): Promise<ApiResponse<void>> {
+    const supabase = this.supabaseService.getAdminClient();
+
+    const { error } = await supabase
+      .from("user_announcements")
+      .update({ is_dismissed: true })
+      .eq("id", announcementId)
+      .eq("user_id", userId);
+
+    if (error) {
+      console.error("Dismiss announcement error:", error);
+      throw new BadRequestException("Failed to dismiss announcement");
+    }
+
+    return { success: true };
+  }
 }

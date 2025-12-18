@@ -78,4 +78,42 @@ export class UsersController {
   ): Promise<ApiResponse<User>> {
     return this.usersService.updateProfile(userId, updateDto);
   }
+
+  /**
+   * GET /api/users/announcements
+   * Get current user's active announcements
+   */
+  @Get("me/announcements")
+  @UseGuards(AuthGuard)
+  async getMyAnnouncements(
+    @CurrentUser("userId") userId: string
+  ): Promise<ApiResponse<any[]>> {
+    return this.usersService.getAnnouncements(userId);
+  }
+
+  /**
+   * PATCH /api/users/announcements/:id/read
+   * Mark an announcement as read
+   */
+  @Patch("announcements/:id/read")
+  @UseGuards(AuthGuard)
+  async markAnnouncementRead(
+    @CurrentUser("userId") userId: string,
+    @Param("id") announcementId: string
+  ): Promise<ApiResponse<void>> {
+    return this.usersService.markAnnouncementRead(userId, announcementId);
+  }
+
+  /**
+   * PATCH /api/users/announcements/:id/dismiss
+   * Dismiss an announcement
+   */
+  @Patch("announcements/:id/dismiss")
+  @UseGuards(AuthGuard)
+  async dismissAnnouncement(
+    @CurrentUser("userId") userId: string,
+    @Param("id") announcementId: string
+  ): Promise<ApiResponse<void>> {
+    return this.usersService.dismissAnnouncement(userId, announcementId);
+  }
 }
