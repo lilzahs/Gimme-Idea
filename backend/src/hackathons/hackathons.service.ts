@@ -59,8 +59,9 @@ export class HackathonsService {
 
     /**
      * Helper: Resolve hackathon ID from slug or UUID
+     * Returns null if not found (instead of throwing)
      */
-    private async resolveHackathonId(idOrSlug: string): Promise<string> {
+    private async resolveHackathonId(idOrSlug: string): Promise<string | null> {
         // Check if it's a valid UUID format
         const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
         if (uuidRegex.test(idOrSlug)) {
@@ -76,7 +77,8 @@ export class HackathonsService {
             .single();
 
         if (error || !data) {
-            throw new NotFoundException(`Hackathon not found: ${idOrSlug}`);
+            this.logger.warn(`Hackathon not found: ${idOrSlug}`);
+            return null;
         }
 
         return data.id;
@@ -122,7 +124,12 @@ export class HackathonsService {
         if (query.hackathonId) {
             // Resolve hackathon ID from slug if needed
             const hackathonId = await this.resolveHackathonId(query.hackathonId);
-            supabaseQuery = supabaseQuery.eq("hackathon_id", hackathonId);
+            if (hackathonId) {
+                supabaseQuery = supabaseQuery.eq("hackathon_id", hackathonId);
+            } else {
+                // Hackathon not in DB yet, return empty array
+                return { success: true, data: [] };
+            }
         }
 
         if (query.userId) {
@@ -369,6 +376,9 @@ export class HackathonsService {
 
         // Resolve hackathon ID from slug if needed
         const hackathonId = await this.resolveHackathonId(dto.hackathonId);
+        if (!hackathonId) {
+            throw new NotFoundException(`Hackathon not found: ${dto.hackathonId}`);
+        }
         this.logger.log(`Creating submission for hackathon: ${hackathonId}`);
 
         // Check if submission already exists
