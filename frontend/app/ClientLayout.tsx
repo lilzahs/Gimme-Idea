@@ -65,7 +65,7 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
             <AuthProvider>
               <AuthStoreSync />
               {/* Global Constellation Background */}
-              <ConstellationBackground opacity={0.35} showShootingStars={true} showGradientOrbs={true} />
+              <ConstellationBackground opacity={0.25} showShootingStars={true} showGradientOrbs={true} />
               <Navbar />
               <ConnectReminderModal />
               <ConnectWalletPopup />

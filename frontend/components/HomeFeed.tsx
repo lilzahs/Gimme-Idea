@@ -40,8 +40,9 @@ const FEATURES = [
 const PARTNERS = [
   {
     id: 'dsuc',
-    name: 'DSUC',
-    description: 'DUT Superteam University Club - The first Solana blockchain club of Danang University',
+    name: 'DUT Superteam University Club',
+    shortName: 'DSUC',
+    description: 'The first Solana blockchain club of Danang University of Science and Technology. Building the next generation of Web3 developers.',
     logo: '/dsuc.png',
     gradient: 'linear-gradient(135deg, #3366ff 0%, #00ccff 60%, #99ff66 100%)',
     route: 'https://dsuc.fun',
@@ -49,7 +50,8 @@ const PARTNERS = [
   },
   {
     id: 'superteamvn',
-    name: 'Superteam VN',
+    name: 'Superteam Vietnam',
+    shortName: 'Superteam VN',
     description: 'Talent Layer of Solana in Vietnam. Empowering builders across the nation.',
     logo: '/superteamvn.png',
     gradient: 'linear-gradient(135deg, #EF4444 0%, #FACC15 100%)',
@@ -58,7 +60,8 @@ const PARTNERS = [
   },
   {
     id: 'solana',
-    name: 'Solana',
+    name: 'Solana Foundation',
+    shortName: 'Solana',
     description: 'A decentralized blockchain built for scale. Fast, secure, and energy-efficient.',
     logo: '/SOLANA.png',
     gradient: 'linear-gradient(135deg, #9945FF 0%, #14F195 50%, #00D1FF 100%)',
@@ -196,7 +199,7 @@ export default function HomeFeed() {
             Powered by Our Partners
           </h2>
           
-          <div className={`grid ${isMobile ? 'grid-cols-3 gap-3' : 'grid-cols-3 gap-6'} justify-items-center`}>
+          <div className={`grid ${isMobile ? 'grid-cols-1 gap-3' : 'grid-cols-3 gap-6'}`}>
             {PARTNERS.map((partner, index) => {
               const isHovered = hoveredItem === partner.id;
               
@@ -210,9 +213,9 @@ export default function HomeFeed() {
                   onMouseEnter={() => setHoveredItem(partner.id)}
                   onMouseLeave={() => setHoveredItem(null)}
                 >
-                  {/* Simple Card - Logo + Name only */}
+                  {/* Horizontal Card - Logo + Name */}
                   <div 
-                    className="relative p-4 rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-sm transition-all duration-300 cursor-pointer flex flex-col items-center gap-3"
+                    className="relative px-4 py-3 rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-sm transition-all duration-300 cursor-pointer flex items-center gap-3"
                     style={{
                       borderColor: isHovered ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.1)',
                     }}
@@ -220,23 +223,23 @@ export default function HomeFeed() {
                   >
                     {/* Logo */}
                     <div 
-                      className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:scale-110"
+                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:scale-110 flex-shrink-0"
                       style={{ background: partner.gradient }}
                     >
                       <Image 
                         src={partner.logo} 
                         alt={partner.name} 
-                        width={36}
-                        height={36}
+                        width={28}
+                        height={28}
                         className="object-contain"
                       />
                     </div>
                     
                     {/* Name */}
-                    <h3 className="font-bold text-white text-xs sm:text-sm text-center">{partner.name}</h3>
+                    <h3 className="font-bold text-white text-xs sm:text-sm">{partner.shortName}</h3>
                   </div>
 
-                  {/* Hover Popup with Glitch Effect */}
+                  {/* Hover Popup with Strong Glitch Effect */}
                   <AnimatePresence>
                     {isHovered && (
                       <motion.div
@@ -244,57 +247,68 @@ export default function HomeFeed() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 10, scale: 0.95 }}
                         transition={{ duration: 0.2 }}
-                        className="absolute z-50 left-1/2 -translate-x-1/2 bottom-full mb-3 w-72 pointer-events-none"
+                        className="absolute z-50 left-1/2 -translate-x-1/2 bottom-full mb-3 w-80 pointer-events-none"
                       >
-                        <div className="relative p-4 rounded-xl border border-white/20 bg-[#0d0d12]/95 backdrop-blur-xl shadow-2xl">
-                          {/* Glitch overlay */}
-                          <div className="absolute inset-0 rounded-xl overflow-hidden">
-                            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-transparent to-purple-500/10 animate-pulse" />
-                            <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent" />
-                            <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-purple-400/50 to-transparent" />
+                        <div className="relative p-5 rounded-xl border border-cyan-500/30 bg-[#0a0a10]/98 backdrop-blur-xl shadow-2xl overflow-hidden">
+                          {/* Animated scanline */}
+                          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                            <div className="absolute inset-0 bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(0,255,255,0.03)_2px,rgba(0,255,255,0.03)_4px)]" />
+                            <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-cyan-500/10 to-transparent animate-scan" />
+                          </div>
+                          
+                          {/* Glitch border effects */}
+                          <div className="absolute inset-0 rounded-xl">
+                            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-80" />
+                            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-purple-500 to-transparent opacity-80" />
+                            <div className="absolute top-0 bottom-0 left-0 w-[2px] bg-gradient-to-b from-cyan-400 via-transparent to-purple-500 opacity-50" />
+                            <div className="absolute top-0 bottom-0 right-0 w-[2px] bg-gradient-to-b from-purple-500 via-transparent to-cyan-400 opacity-50" />
                           </div>
                           
                           {/* Content */}
                           <div className="relative z-10">
-                            <div className="flex items-center gap-3 mb-3">
+                            {/* Header with logo */}
+                            <div className="flex items-center gap-3 mb-4">
                               <div 
-                                className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0"
+                                className="w-12 h-12 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0 ring-2 ring-white/20"
                                 style={{ background: partner.gradient }}
                               >
                                 <Image 
                                   src={partner.logo} 
                                   alt={partner.name} 
-                                  width={24}
-                                  height={24}
+                                  width={28}
+                                  height={28}
                                   className="object-contain"
                                 />
                               </div>
-                              <div>
-                                <h4 className="font-bold text-white text-sm glitch-text" data-text={partner.name}>
+                              <div className="flex-1 min-w-0">
+                                {/* Glitch Title */}
+                                <h4 className="font-bold text-base text-white glitch-strong" data-text={partner.name}>
                                   {partner.name}
                                 </h4>
-                                <div className="flex items-center gap-1 text-[10px] text-gray-500">
-                                  <ExternalLink className="w-2.5 h-2.5" />
-                                  <span>External Link</span>
+                                <div className="flex items-center gap-1.5 text-[11px] text-cyan-400/80 mt-0.5">
+                                  <ExternalLink className="w-3 h-3" />
+                                  <span className="glitch-flicker">{partner.route.replace('https://', '')}</span>
                                 </div>
                               </div>
                             </div>
                             
-                            <p className="text-xs text-gray-400 leading-relaxed">
+                            {/* Description with glitch */}
+                            <p className="text-sm text-gray-300 leading-relaxed mb-4 glitch-subtle">
                               {partner.description}
                             </p>
                             
-                            {/* Glitch line effect */}
-                            <div className="mt-3 pt-3 border-t border-white/10">
+                            {/* Terminal style footer */}
+                            <div className="pt-3 border-t border-cyan-500/20">
                               <div className="flex items-center gap-2 text-xs">
-                                <span className="text-cyan-400 font-mono">{'>'}</span>
-                                <span className="text-gray-500 font-mono tracking-wide glitch-flicker">Click to visit</span>
+                                <span className="text-cyan-400 font-mono font-bold animate-pulse">{'>'}</span>
+                                <span className="text-cyan-300/70 font-mono tracking-wider glitch-flicker">CLICK_TO_CONNECT</span>
+                                <span className="text-purple-400 font-mono ml-auto">█</span>
                               </div>
                             </div>
                           </div>
                           
                           {/* Arrow pointing down */}
-                          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-[#0d0d12]/95 border-r border-b border-white/20 transform rotate-45" />
+                          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-[#0a0a10] border-r-2 border-b-2 border-cyan-500/30 transform rotate-45" />
                         </div>
                       </motion.div>
                     )}
