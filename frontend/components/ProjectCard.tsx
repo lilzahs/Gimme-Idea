@@ -19,6 +19,7 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   const router = useRouter();
   const [isLiked, setIsLiked] = useState(false);
   const [showBurst, setShowBurst] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
   const isIdea = project.type === 'idea';
 
@@ -47,11 +48,107 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
   return (
     <motion.div
       onClick={handleCardClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       whileHover={{ y: -6, scale: 1.01 }}
       whileTap={{ scale: 0.98 }}
       transition={{ type: "spring", stiffness: 400, damping: 25 }}
+      animate={isHovered ? {
+        boxShadow: [
+          '0 0 0px transparent, 0 0 0px transparent',
+          '0 0 20px rgba(255, 215, 0, 0.3), 0 0 40px rgba(153, 69, 255, 0.2)',
+          '0 0 15px rgba(153, 69, 255, 0.3), 0 0 30px rgba(255, 215, 0, 0.2)',
+          '0 0 25px rgba(255, 215, 0, 0.25), 0 0 35px rgba(153, 69, 255, 0.15)'
+        ]
+      } : {
+        boxShadow: '0 0 0px transparent, 0 0 0px transparent'
+      }}
       className="relative rounded-2xl overflow-hidden cursor-pointer flex flex-col h-full group"
     >
+      {/* GLITCH EFFECT BORDERS */}
+      {/* Top border - Yellow glitch */}
+      <motion.div
+        className="absolute top-0 left-0 right-0 h-[2px] z-30 pointer-events-none"
+        style={{ background: 'linear-gradient(90deg, transparent, #FFD700, transparent)' }}
+        animate={isHovered ? {
+          x: [-100, 0, 50, 0, -30, 0],
+          opacity: [0, 1, 0.8, 1, 0.6, 1],
+          scaleX: [0.3, 1, 1.2, 1, 0.8, 1]
+        } : { x: 0, opacity: 0, scaleX: 1 }}
+        transition={{ duration: 0.5, ease: "easeOut" }}
+      />
+      
+      {/* Bottom border - Purple glitch */}
+      <motion.div
+        className="absolute bottom-0 left-0 right-0 h-[2px] z-30 pointer-events-none"
+        style={{ background: 'linear-gradient(90deg, transparent, #9945FF, transparent)' }}
+        animate={isHovered ? {
+          x: [100, 0, -50, 0, 30, 0],
+          opacity: [0, 1, 0.8, 1, 0.6, 1],
+          scaleX: [0.3, 1, 1.2, 1, 0.8, 1]
+        } : { x: 0, opacity: 0, scaleX: 1 }}
+        transition={{ duration: 0.5, ease: "easeOut", delay: 0.05 }}
+      />
+      
+      {/* Left border - Yellow/Purple gradient glitch */}
+      <motion.div
+        className="absolute top-0 bottom-0 left-0 w-[2px] z-30 pointer-events-none"
+        style={{ background: 'linear-gradient(180deg, #FFD700, transparent, #9945FF)' }}
+        animate={isHovered ? {
+          y: [-50, 0, 30, 0, -20, 0],
+          opacity: [0, 1, 0.7, 1, 0.5, 1],
+          scaleY: [0.5, 1, 1.1, 1, 0.9, 1]
+        } : { y: 0, opacity: 0, scaleY: 1 }}
+        transition={{ duration: 0.5, ease: "easeOut", delay: 0.1 }}
+      />
+      
+      {/* Right border - Purple/Yellow gradient glitch */}
+      <motion.div
+        className="absolute top-0 bottom-0 right-0 w-[2px] z-30 pointer-events-none"
+        style={{ background: 'linear-gradient(180deg, #9945FF, transparent, #FFD700)' }}
+        animate={isHovered ? {
+          y: [50, 0, -30, 0, 20, 0],
+          opacity: [0, 1, 0.7, 1, 0.5, 1],
+          scaleY: [0.5, 1, 1.1, 1, 0.9, 1]
+        } : { y: 0, opacity: 0, scaleY: 1 }}
+        transition={{ duration: 0.5, ease: "easeOut", delay: 0.15 }}
+      />
+      
+      {/* Glitch overlay layers */}
+      <motion.div
+        className="absolute inset-0 z-20 pointer-events-none rounded-2xl overflow-hidden"
+        animate={isHovered ? {
+          opacity: [0, 0.3, 0, 0.2, 0],
+        } : { opacity: 0 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-r from-[#FFD700]/20 via-transparent to-[#9945FF]/20" />
+      </motion.div>
+      
+      {/* Yellow glitch slice */}
+      <motion.div
+        className="absolute left-0 right-0 h-[4px] z-20 pointer-events-none overflow-hidden"
+        style={{ top: '30%', background: '#FFD700' }}
+        animate={isHovered ? {
+          x: [-200, 200, -100, 0],
+          opacity: [0, 0.6, 0.3, 0],
+          scaleX: [0.1, 2, 0.5, 0]
+        } : { x: 0, opacity: 0, scaleX: 0 }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
+      />
+      
+      {/* Purple glitch slice */}
+      <motion.div
+        className="absolute left-0 right-0 h-[4px] z-20 pointer-events-none overflow-hidden"
+        style={{ top: '70%', background: '#9945FF' }}
+        animate={isHovered ? {
+          x: [200, -200, 100, 0],
+          opacity: [0, 0.6, 0.3, 0],
+          scaleX: [0.1, 2, 0.5, 0]
+        } : { x: 0, opacity: 0, scaleX: 0 }}
+        transition={{ duration: 0.35, ease: "easeOut", delay: 0.08 }}
+      />
+      
       {/* Card background - more transparent */}
       <div className="absolute inset-0 bg-[#12131a]/70 backdrop-blur-sm group-hover:bg-[#12131a]/80 transition-all duration-500" />
       
@@ -137,12 +234,24 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project }) => {
       )}
 
       <div className={`relative z-10 p-5 flex flex-col flex-grow ${isIdea ? 'pt-2' : ''}`}>
-        {/* Title */}
-        <h3 className={`text-lg font-bold mb-2 line-clamp-2 text-white transition-colors duration-500 ${
-          isIdea ? 'group-hover:text-[#FFD700]' : 'group-hover:text-[#9945FF]'
-        }`}>
+        {/* Title with Glitch Effect */}
+        <motion.h3 
+          className={`text-lg font-bold mb-2 line-clamp-2 text-white transition-colors duration-500 ${
+            isIdea ? 'group-hover:text-[#FFD700]' : 'group-hover:text-[#9945FF]'
+          }`}
+          animate={isHovered ? {
+            textShadow: [
+              '0 0 0px transparent',
+              '-2px 0 #FFD700, 2px 0 #9945FF',
+              '1px 0 #9945FF, -1px 0 #FFD700',
+              '-1px 0 #FFD700, 1px 0 #9945FF',
+              '0 0 0px transparent'
+            ]
+          } : { textShadow: '0 0 0px transparent' }}
+          transition={{ duration: 0.4, ease: "easeOut" }}
+        >
           {project.title}
-        </h3>
+        </motion.h3>
 
         <p className="text-gray-500 text-sm mb-4 line-clamp-2 flex-grow leading-relaxed group-hover:text-gray-400 transition-colors duration-500">
           {project.description}

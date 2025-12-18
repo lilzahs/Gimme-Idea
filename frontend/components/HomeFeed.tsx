@@ -242,13 +242,28 @@ export default function HomeFeed() {
                   {/* Hover Popup with Strong Glitch Effect */}
                   <AnimatePresence>
                     {isHovered && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                        transition={{ duration: 0.2 }}
-                        className="absolute z-50 left-1/2 -translate-x-1/2 bottom-full mb-3 w-80 pointer-events-none"
-                      >
+                      <>
+                        {/* Mobile: Fixed centered popup with backdrop */}
+                        {isMobile && (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
+                            onClick={() => setHoveredItem(null)}
+                          />
+                        )}
+                        <motion.div
+                          initial={{ opacity: 0, y: isMobile ? 20 : 10, scale: 0.95 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: isMobile ? 20 : 10, scale: 0.95 }}
+                          transition={{ duration: 0.2 }}
+                          className={
+                            isMobile 
+                              ? "fixed z-50 left-4 right-4 top-1/2 -translate-y-1/2 max-w-sm mx-auto" 
+                              : "absolute z-50 left-1/2 -translate-x-1/2 bottom-full mb-3 w-80 pointer-events-none"
+                          }
+                        >
                         <motion.div 
                           className="relative p-5 rounded-xl border border-[#FFD700]/30 bg-[#0a0a10]/98 backdrop-blur-xl shadow-2xl overflow-hidden"
                           animate={{
@@ -385,10 +400,13 @@ export default function HomeFeed() {
                             </div>
                           </div>
                           
-                          {/* Arrow pointing down */}
-                          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-[#0a0a10] border-r-2 border-b-2 border-[#FFD700]/30 transform rotate-45" />
+                          {/* Arrow pointing down - hide on mobile */}
+                          {!isMobile && (
+                            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-[#0a0a10] border-r-2 border-b-2 border-[#FFD700]/30 transform rotate-45" />
+                          )}
                         </motion.div>
                       </motion.div>
+                      </>
                     )}
                   </AnimatePresence>
                 </motion.div>
