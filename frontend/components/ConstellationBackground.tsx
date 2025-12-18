@@ -17,8 +17,14 @@ export default function ConstellationBackground({
 }: ConstellationBackgroundProps) {
   // Generate random stars on mount
   const [stars, setStars] = useState<{ id: number; top: string; left: string; size: number; duration: string; opacity: number }[]>([]);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
+    // Check if mobile
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
     const newStars = Array.from({ length: 50 }).map((_, i) => ({
       id: i,
       top: `${Math.random() * 100}%`,
@@ -28,10 +34,20 @@ export default function ConstellationBackground({
       opacity: Math.random()
     }));
     setStars(newStars);
+    
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Reduce orb opacity on mobile for darker background
+  const orbOpacity = isMobile ? 0.15 : 0.4;
 
   return (
     <div className={`fixed inset-0 z-[-1] pointer-events-none overflow-hidden ${className}`}>
+      {/* Dark overlay for mobile */}
+      {isMobile && (
+        <div className="absolute inset-0 bg-[#020105]/60" />
+      )}
+      
       {/* Grid background */}
       <div className="bg-grid" style={{ opacity }}></div>
       
@@ -40,11 +56,11 @@ export default function ConstellationBackground({
         <>
           <div 
             className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-[#2e1065] rounded-full blur-[120px] animate-pulse-slow mix-blend-screen" 
-            style={{ opacity: 0.4 }}
+            style={{ opacity: orbOpacity }}
           />
           <div 
             className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-[#422006] rounded-full blur-[120px] animate-pulse-slow mix-blend-screen" 
-            style={{ opacity: 0.4, animationDelay: '2s' }}
+            style={{ opacity: orbOpacity, animationDelay: '2s' }}
           />
         </>
       )}

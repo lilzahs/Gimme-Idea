@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { LoadingLightbulb, LoadingStatus } from './LoadingLightbulb';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
+import { usePasskeyWallet } from '@/contexts/LazorkitContext';
 import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { apiClient } from '../lib/api-client';
 import { useAuth } from '../contexts/AuthContext';
@@ -33,8 +34,18 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   projectId,
   onConfirm
 }) => {
-  const { publicKey, sendTransaction } = useWallet();
+  // Standard Solana wallet adapter
+  const { publicKey, sendTransaction, connected } = useWallet();
   const { connection } = useConnection();
+  
+  // Lazorkit passkey wallet
+  const { 
+    isPasskeyConnected, 
+    passkeyWalletAddress, 
+    smartWalletPubkey,
+    signAndSendPasskeyTransaction 
+  } = usePasskeyWallet();
+  
   const { user } = useAuth();
   const [amount, setAmount] = useState('10');
   const [processing, setProcessing] = useState(false);
@@ -42,6 +53,11 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   const [txHash, setTxHash] = useState('');
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [walletModalMode, setWalletModalMode] = useState<'reconnect' | 'connect'>('connect');
+
+  // Check if any wallet is connected (standard or passkey)
+  const isWalletConnected = (connected && publicKey) || (isPasskeyConnected && passkeyWalletAddress);
+  const activeWalletAddress = publicKey?.toBase58() || passkeyWalletAddress;
+  const isUsingPasskey = isPasskeyConnected && passkeyWalletAddress && !publicKey;
 
   // Reset state when opening
   useEffect(() => {
@@ -53,7 +69,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   }, [isOpen]);
 
   const handlePayment = async () => {
-    if (!publicKey) {
+    // Check if any wallet is connected
+    if (!isWalletConnected) {
       // Determine the right message and action based on user's wallet status
       if (user?.wallet) {
         // User has wallet linked but not connected (needs reconnect)
@@ -64,6 +81,14 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         setWalletModalMode('connect');
         setShowWalletModal(true);
       }
+      return;
+    }
+
+    // Verify connected wallet matches user's linked wallet
+    if (user?.wallet && activeWalletAddress !== user.wallet) {
+      toast.error('Connected wallet does not match your profile. Please reconnect with the correct wallet.');
+      setWalletModalMode('reconnect');
+      setShowWalletModal(true);
       return;
     }
 
@@ -83,28 +108,43 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
     try {
       const recipientPubKey = new PublicKey(recipientWallet);
-
-      // Create SOL transfer instruction
       const lamports = amountNum * LAMPORTS_PER_SOL;
 
-      const transaction = new Transaction().add(
-        SystemProgram.transfer({
-          fromPubkey: publicKey,
+      let signature: string;
+
+      if (isUsingPasskey && smartWalletPubkey) {
+        // Use Lazorkit passkey for transaction
+        const transferInstruction = SystemProgram.transfer({
+          fromPubkey: smartWalletPubkey,
           toPubkey: recipientPubKey,
           lamports,
-        })
-      );
+        });
 
-      // Send transaction
-      const signature = await sendTransaction(transaction, connection);
+        signature = await signAndSendPasskeyTransaction({
+          instructions: [transferInstruction],
+        });
+      } else if (publicKey) {
+        // Use standard Solana wallet adapter
+        const transaction = new Transaction().add(
+          SystemProgram.transfer({
+            fromPubkey: publicKey,
+            toPubkey: recipientPubKey,
+            lamports,
+          })
+        );
 
-      // Wait for confirmation
-      const latestBlockhash = await connection.getLatestBlockhash();
-      await connection.confirmTransaction({
-        signature,
-        blockhash: latestBlockhash.blockhash,
-        lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
-      });
+        signature = await sendTransaction(transaction, connection);
+
+        // Wait for confirmation
+        const latestBlockhash = await connection.getLatestBlockhash();
+        await connection.confirmTransaction({
+          signature,
+          blockhash: latestBlockhash.blockhash,
+          lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+        });
+      } else {
+        throw new Error('No wallet connected');
+      }
 
       setTxHash(signature);
       setStatus('success');
@@ -135,9 +175,9 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
       // Provide user-friendly error messages
       let errorMessage = 'Transaction failed';
-      if (error.message?.includes('User rejected')) {
+      if (error.message?.includes('User rejected') || error.message?.includes('cancelled')) {
         errorMessage = 'Transaction cancelled';
-      } else if (error.message?.includes('insufficient funds')) {
+      } else if (error.message?.includes('insufficient funds') || error.message?.includes('Insufficient')) {
         errorMessage = 'Insufficient SOL balance';
       }
 

@@ -5,13 +5,16 @@ import { apiClient } from "../lib/api-client";
 import { Notification } from "../lib/types";
 import { useAppStore } from "../lib/store";
 import { supabase } from "../lib/supabase";
+import { useAuth } from "../contexts/AuthContext";
 
 export function useNotifications() {
   const user = useAppStore((state) => state.user);
+  const { session } = useAuth(); // Get Supabase session for realtime auth
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const subscriptionRef = useRef<any>(null);
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
 
   // Fetch notifications from API
   const fetchNotifications = useCallback(
@@ -143,6 +146,7 @@ export function useNotifications() {
 
   // Setup realtime subscription
   useEffect(() => {
+    // Need both user (for API calls) and session (for realtime auth)
     if (!user?.id) {
       setNotifications([]);
       setUnreadCount(0);
@@ -153,39 +157,91 @@ export function useNotifications() {
     fetchNotifications();
     fetchUnreadCount();
 
+    // Use Supabase session user ID for realtime subscription if available
+    // This ensures the subscription filter matches the RLS policy (auth.uid())
+    const subscriptionUserId = session?.user?.id || user.id;
+    console.log(
+      "[Notifications] Setting up realtime for user:",
+      subscriptionUserId,
+      "session:",
+      !!session
+    );
+
     // Subscribe to realtime updates
     const channel = supabase
-      .channel(`notifications:${user.id}`)
+      .channel(`notifications:${subscriptionUserId}`)
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
           table: "notifications",
-          filter: `user_id=eq.${user.id}`,
+          filter: `user_id=eq.${subscriptionUserId}`,
         },
         (payload) => {
-          // New notification received
-          const newNotif = payload.new as any;
-
-          // Fetch full notification with actor info
-          fetchNotifications(1, 0).then(() => {
-            // Actually just refetch to get proper data
-            fetchNotifications();
-            fetchUnreadCount();
-          });
+          console.log("[Notifications] Realtime INSERT received:", payload);
+          // Refetch to get full notification with actor info
+          fetchNotifications();
+          fetchUnreadCount();
         }
       )
-      .subscribe();
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${subscriptionUserId}`,
+        },
+        (payload) => {
+          console.log("[Notifications] Realtime UPDATE received:", payload);
+          // Update local state
+          const updated = payload.new as any;
+          setNotifications((prev) =>
+            prev.map((n) =>
+              n.id === updated.id ? { ...n, read: updated.read } : n
+            )
+          );
+          if (updated.read) {
+            setUnreadCount((prev) => Math.max(0, prev - 1));
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${subscriptionUserId}`,
+        },
+        (payload) => {
+          console.log("[Notifications] Realtime DELETE received:", payload);
+          const deleted = payload.old as any;
+          setNotifications((prev) => prev.filter((n) => n.id !== deleted.id));
+        }
+      )
+      .subscribe((status) => {
+        console.log("[Notifications] Subscription status:", status);
+      });
 
     subscriptionRef.current = channel;
+
+    // Fallback polling every 30 seconds in case realtime fails
+    pollingRef.current = setInterval(() => {
+      console.log("[Notifications] Polling fallback...");
+      fetchUnreadCount();
+    }, 30000);
 
     return () => {
       if (subscriptionRef.current) {
         supabase.removeChannel(subscriptionRef.current);
       }
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+      }
     };
-  }, [user?.id, fetchNotifications, fetchUnreadCount]);
+  }, [user?.id, session?.user?.id, fetchNotifications, fetchUnreadCount]);
 
   return {
     notifications,

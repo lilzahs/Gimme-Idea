@@ -8,6 +8,7 @@ import axios from 'axios';
 import { Project } from '../lib/types';
 import toast from 'react-hot-toast';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
+import { usePasskeyWallet } from '@/contexts/LazorkitContext';
 import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { createUniqueSlug } from '../lib/slug-utils';
 import { useAuth } from '../contexts/AuthContext';
@@ -94,9 +95,24 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
   const [pendingUnlock, setPendingUnlock] = useState(false); // Track if user wants to unlock after connecting
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
+  
+  // Standard Solana wallet adapter
   const { publicKey, sendTransaction, connected } = useWallet();
   const { connection } = useConnection();
+  
+  // Lazorkit passkey wallet
+  const { 
+    isPasskeyConnected, 
+    passkeyWalletAddress, 
+    smartWalletPubkey,
+    signAndSendPasskeyTransaction 
+  } = usePasskeyWallet();
+  
   const { user } = useAuth();
+  
+  // Check if any wallet is connected
+  const isWalletConnected = (connected && publicKey) || (isPasskeyConnected && passkeyWalletAddress);
+  const isUsingPasskey = isPasskeyConnected && passkeyWalletAddress && !publicKey;
 
   // Load sessions from localStorage
   useEffect(() => {
@@ -145,18 +161,18 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
 
   // Auto open donate modal after wallet connected (if pending unlock)
   useEffect(() => {
-    if (pendingUnlock && connected && publicKey) {
+    if (pendingUnlock && isWalletConnected) {
       setPendingUnlock(false);
       setShowDonateModal(true);
     }
-  }, [connected, publicKey, pendingUnlock]);
+  }, [isWalletConnected, pendingUnlock]);
 
   // Get active session
   const activeSession = sessions.find(s => s.id === activeSessionId);
 
   // Handle Unlock Chat button click - check wallet first
   const handleUnlockClick = () => {
-    if (connected && publicKey) {
+    if (isWalletConnected) {
       // Wallet already connected, show donate modal directly
       setShowDonateModal(true);
     } else {
@@ -452,7 +468,7 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
   };
 
   const handleDonation = async () => {
-    if (!publicKey || !connected) {
+    if (!isWalletConnected) {
       toast.error('Please connect your wallet first');
       return;
     }
@@ -468,36 +484,53 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
       const solAmount = donationAmount / SOL_PRICE_USD;
       const lamports = Math.floor(solAmount * LAMPORTS_PER_SOL);
 
-      // Use connection from wallet adapter (already configured with proper RPC)
-      const transaction = new Transaction().add(
-        SystemProgram.transfer({
-          fromPubkey: publicKey,
+      let signature: string;
+
+      if (isUsingPasskey && smartWalletPubkey) {
+        // Use Lazorkit passkey for transaction
+        const transferInstruction = SystemProgram.transfer({
+          fromPubkey: smartWalletPubkey,
           toPubkey: new PublicKey(RECIPIENT_WALLET),
           lamports,
-        })
-      );
+        });
 
-      const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
-      transaction.recentBlockhash = blockhash;
-      transaction.feePayer = publicKey;
+        signature = await signAndSendPasskeyTransaction({
+          instructions: [transferInstruction],
+        });
+      } else if (publicKey) {
+        // Use standard Solana wallet adapter
+        const transaction = new Transaction().add(
+          SystemProgram.transfer({
+            fromPubkey: publicKey,
+            toPubkey: new PublicKey(RECIPIENT_WALLET),
+            lamports,
+          })
+        );
 
-      const signature = await sendTransaction(transaction, connection);
+        const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+        transaction.recentBlockhash = blockhash;
+        transaction.feePayer = publicKey;
 
-      // Wait for confirmation with timeout
-      const confirmation = await connection.confirmTransaction({
-        signature,
-        blockhash,
-        lastValidBlockHeight
-      }, 'confirmed');
+        signature = await sendTransaction(transaction, connection);
 
-      if (confirmation.value.err) {
-        throw new Error('Transaction failed');
-      }
+        // Wait for confirmation with timeout
+        const confirmation = await connection.confirmTransaction({
+          signature,
+          blockhash,
+          lastValidBlockHeight
+        }, 'confirmed');
 
-      // Verify the transaction
-      const txInfo = await connection.getTransaction(signature, { maxSupportedTransactionVersion: 0 });
-      if (!txInfo) {
-        throw new Error('Could not verify transaction');
+        if (confirmation.value.err) {
+          throw new Error('Transaction failed');
+        }
+
+        // Verify the transaction
+        const txInfo = await connection.getTransaction(signature, { maxSupportedTransactionVersion: 0 });
+        if (!txInfo) {
+          throw new Error('Could not verify transaction');
+        }
+      } else {
+        throw new Error('No wallet connected');
       }
 
       toast.success('Thank you for your donation! Chat unlocked! 🎉');

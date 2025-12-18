@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import { useAppStore } from '../lib/store';
 import { apiClient } from '../lib/api-client';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
+import { usePasskeyWallet } from '@/contexts/LazorkitContext';
 import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { useAuth } from '../contexts/AuthContext';
 import { WalletRequiredModal } from './WalletRequiredModal';
@@ -14,8 +15,23 @@ import { WalletRequiredModal } from './WalletRequiredModal';
 export const Donate = () => {
     const { openConnectReminder } = useAppStore();
     const { user } = useAuth();
-    const { publicKey, sendTransaction } = useWallet();
+    
+    // Standard Solana wallet adapter
+    const { publicKey, sendTransaction, connected } = useWallet();
     const { connection } = useConnection();
+    
+    // Lazorkit passkey wallet
+    const { 
+        isPasskeyConnected, 
+        passkeyWalletAddress, 
+        smartWalletPubkey,
+        signAndSendPasskeyTransaction 
+    } = usePasskeyWallet();
+    
+    // Check if any wallet is connected
+    const isWalletConnected = (connected && publicKey) || (isPasskeyConnected && passkeyWalletAddress);
+    const isUsingPasskey = isPasskeyConnected && passkeyWalletAddress && !publicKey;
+    
     const [copied, setCopied] = useState(false);
     const [amount, setAmount] = useState('0.5');
     const [isProcessing, setIsProcessing] = useState(false);
@@ -40,7 +56,7 @@ export const Donate = () => {
             return;
         }
 
-        if (!publicKey) {
+        if (!isWalletConnected) {
             if (user.wallet) {
                 setWalletModalMode('reconnect');
             } else {
@@ -62,22 +78,40 @@ export const Donate = () => {
             const recipientPubKey = new PublicKey(walletAddress);
             const lamports = amountNum * LAMPORTS_PER_SOL;
 
-            const transaction = new Transaction().add(
-                SystemProgram.transfer({
-                    fromPubkey: publicKey,
+            let signature: string;
+
+            if (isUsingPasskey && smartWalletPubkey) {
+                // Use Lazorkit passkey for transaction
+                const transferInstruction = SystemProgram.transfer({
+                    fromPubkey: smartWalletPubkey,
                     toPubkey: recipientPubKey,
                     lamports,
-                })
-            );
+                });
 
-            const signature = await sendTransaction(transaction, connection);
+                signature = await signAndSendPasskeyTransaction({
+                    instructions: [transferInstruction],
+                });
+            } else if (publicKey) {
+                // Use standard Solana wallet adapter
+                const transaction = new Transaction().add(
+                    SystemProgram.transfer({
+                        fromPubkey: publicKey,
+                        toPubkey: recipientPubKey,
+                        lamports,
+                    })
+                );
 
-            const latestBlockhash = await connection.getLatestBlockhash();
-            await connection.confirmTransaction({
-                signature,
-                blockhash: latestBlockhash.blockhash,
-                lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
-            });
+                signature = await sendTransaction(transaction, connection);
+
+                const latestBlockhash = await connection.getLatestBlockhash();
+                await connection.confirmTransaction({
+                    signature,
+                    blockhash: latestBlockhash.blockhash,
+                    lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+                });
+            } else {
+                throw new Error('No wallet connected');
+            }
 
             setTxHash(signature);
             setIsProcessing(false);

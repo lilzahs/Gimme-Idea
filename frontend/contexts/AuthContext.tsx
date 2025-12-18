@@ -216,25 +216,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setSession(session);
           setSupabaseUser(session.user);
           
-          // Check if we already have a valid token
+          // Check if we already have a valid token - try to get current user first
           const existingToken = localStorage.getItem('auth_token');
           console.log('[Auth] Existing token:', existingToken ? 'found' : 'not found');
           
-          // Try to validate session with backend with retry
+          // If we have a token, try to get current user first (faster than full login)
+          if (existingToken) {
+            try {
+              const userResponse = await apiClient.getCurrentUser();
+              if (userResponse.success && userResponse.data) {
+                console.log('[Auth] Existing session valid, user data fetched');
+                const userData: User = {
+                  id: userResponse.data.id,
+                  wallet: userResponse.data.wallet || '',
+                  username: userResponse.data.username,
+                  reputation: userResponse.data.reputationScore || 0,
+                  balance: userResponse.data.balance || 0,
+                  projects: [],
+                  avatar: userResponse.data.avatar,
+                  coverImage: userResponse.data.coverImage,
+                  bio: userResponse.data.bio,
+                  socials: userResponse.data.socialLinks,
+                  email: userResponse.data.email,
+                  authProvider: userResponse.data.authProvider || 'google',
+                  authId: userResponse.data.authId,
+                  needsWalletConnect: userResponse.data.needsWalletConnect,
+                };
+                setUser(userData);
+                checkAdminStatus();
+                setIsLoading(false);
+                return;
+              }
+            } catch (e) {
+              console.log('[Auth] Existing token invalid, will re-login');
+              localStorage.removeItem('auth_token');
+            }
+          }
+          
+          // No valid token, need to login with backend
           let result = await processEmailLogin(session.user, false);
           
           // If first attempt fails, wait a bit and retry once
           // This handles the case where backend is slow to respond
           if (!result) {
-            console.log('[Auth] First login attempt failed, retrying in 1s...');
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            console.log('[Auth] First login attempt failed, retrying in 500ms...');
+            await new Promise(resolve => setTimeout(resolve, 500));
             result = await processEmailLogin(session.user, false);
           }
           
           if (!result) {
             // Backend validation failed after retry
-            // User will see logged-in state from Supabase but won't have app data
-            // They can manually logout or refresh to try again
             console.warn('[Auth] Backend login failed after retry - user may need to re-login');
           } else {
             console.log('[Auth] Login successful, token saved:', !!localStorage.getItem('auth_token'));
@@ -290,6 +321,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/auth/callback`,
+        queryParams: {
+          // Force Google to show account selection even if only one account
+          prompt: 'select_account',
+          // Ensure fresh login
+          access_type: 'offline',
+        },
       },
     });
     if (error) throw error;

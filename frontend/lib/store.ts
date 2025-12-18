@@ -926,9 +926,10 @@ export const useAppStore = create<AppState>((set, get) => ({
             p.id === projectId ? projectResponse.data : p
           ),
           // Also update selectedProject if it's the same project
-          selectedProject: state.selectedProject?.id === projectId 
-            ? projectResponse.data 
-            : state.selectedProject,
+          selectedProject:
+            state.selectedProject?.id === projectId
+              ? projectResponse.data
+              : state.selectedProject,
         }));
       }
     } catch (error) {
@@ -957,9 +958,10 @@ export const useAppStore = create<AppState>((set, get) => ({
             p.id === projectId ? projectResponse.data : p
           ),
           // Also update selectedProject if it's the same project
-          selectedProject: state.selectedProject?.id === projectId 
-            ? projectResponse.data 
-            : state.selectedProject,
+          selectedProject:
+            state.selectedProject?.id === projectId
+              ? projectResponse.data
+              : state.selectedProject,
         }));
       }
     } catch (error) {

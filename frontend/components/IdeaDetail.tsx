@@ -358,6 +358,7 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, projectId, isReply =
     const [isAnonReply, setIsAnonReply] = useState(false);
     const [showBurst, setShowBurst] = useState(false);
     const [hasLiked, setHasLiked] = useState(false);
+    const [localLikes, setLocalLikes] = useState(comment.likes || 0);
     const [isEditing, setIsEditing] = useState(false);
     const [editText, setEditText] = useState(comment.content);
     const [isAIThinking, setIsAIThinking] = useState(false);
@@ -412,12 +413,21 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, projectId, isReply =
         }
     };
 
-    const handleLike = () => {
+    const handleLike = async () => {
         if (!hasLiked) {
-             likeComment(projectId, comment.id);
+             // Optimistic update - immediate feedback
              setHasLiked(true);
+             setLocalLikes(prev => prev + 1);
              setShowBurst(true);
              setTimeout(() => setShowBurst(false), 800);
+             
+             try {
+                 await likeComment(projectId, comment.id);
+             } catch (error) {
+                 // Revert on error
+                 setHasLiked(false);
+                 setLocalLikes(prev => prev - 1);
+             }
         }
     };
 
@@ -494,12 +504,12 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, projectId, isReply =
     const timestamp = comment.createdAt || comment.timestamp || '';
 
     return (
-        <div className={`flex gap-4 mb-6 animate-in fade-in slide-in-from-bottom-2 duration-300 ${isReply ? 'ml-12 mt-4' : ''}`}>
+        <div className={`flex gap-3 sm:gap-4 mb-4 sm:mb-6 animate-in fade-in slide-in-from-bottom-2 duration-300 ${isReply ? 'ml-6 sm:ml-10 mt-3 pl-3 border-l-2 border-white/10' : ''}`}>
                     <AuthorAvatar
                         username={comment.author?.username || 'Anonymous'}
                         avatar={comment.author?.avatar}
                         isAnonymous={comment.isAnonymous}
-                        size="lg"
+                        size={isReply ? "md" : "lg"}
                     />
             <div className="flex-grow">
                 <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -574,17 +584,25 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, projectId, isReply =
                 <div className="flex items-center gap-4 text-xs text-gray-500">
                     <motion.button 
                         onClick={handleLike}
-                        whileTap={{ scale: 0.8 }}
-                        className={`flex items-center gap-1 transition-colors relative ${hasLiked ? 'text-gold' : 'hover:text-white'}`}
+                        whileTap={{ scale: 0.85 }}
+                        className={`flex items-center gap-1.5 transition-all relative ${hasLiked ? 'text-[#FFD700]' : 'hover:text-white'}`}
                     >
-                        <ThumbsUp className={`w-3 h-3 ${hasLiked ? 'fill-current' : ''}`} /> 
+                        <motion.div
+                            animate={hasLiked ? { rotate: [0, -15, 15, 0], scale: [1, 1.2, 1] } : {}}
+                            transition={{ duration: 0.3 }}
+                        >
+                            <ThumbsUp className={`w-3.5 h-3.5 ${hasLiked ? 'fill-current' : ''}`} />
+                        </motion.div>
                         <AnimatePresence mode="wait">
                              <motion.span 
-                                key={comment.likes} 
-                                initial={{y: -5, opacity: 0}} 
-                                animate={{y:0, opacity:1}}
+                                key={localLikes} 
+                                initial={{ y: -8, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                exit={{ y: 8, opacity: 0 }}
+                                transition={{ duration: 0.15 }}
+                                className="min-w-[12px]"
                              >
-                                {comment.likes || 0}
+                                {localLikes}
                              </motion.span>
                         </AnimatePresence>
                         
@@ -734,6 +752,7 @@ export const IdeaDetail = () => {
   const [commentText, setCommentText] = useState('');
   const [isAnonComment, setIsAnonComment] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasVoted, setHasVoted] = useState(false);
 
   // Reply form state - only one reply form can be open at a time
   const [activeReplyId, setActiveReplyId] = useState<string | null>(null);
@@ -776,10 +795,16 @@ export const IdeaDetail = () => {
         openConnectReminder();
         return;
       }
+      if (hasVoted) return; // Prevent double vote
+      
+      // Optimistic update
+      setHasVoted(true);
+      
       try {
         await voteProject(project.id);
         toast.success('Vote recorded!');
       } catch (error) {
+        setHasVoted(false); // Revert on error
         toast.error('Failed to record vote');
       }
   };
@@ -861,12 +886,40 @@ export const IdeaDetail = () => {
                 <div className="flex flex-col gap-4 mb-6">
                      <h1 className="text-2xl sm:text-4xl md:text-5xl font-display font-bold leading-tight">{project.title}</h1>
                      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                         {/* Like Button - First */}
+                         <motion.button
+                            onClick={handleVote}
+                            whileTap={{ scale: 0.9 }}
+                            className="bg-[#FFD700] text-black px-4 sm:px-6 py-2 rounded-full font-bold flex items-center gap-2 hover:scale-105 transition-transform shadow-[0_0_20px_rgba(255,215,0,0.3)] text-sm relative overflow-hidden"
+                         >
+                             <motion.div
+                                animate={{ rotate: hasVoted ? [0, -20, 20, 0] : 0 }}
+                                transition={{ duration: 0.3 }}
+                             >
+                                <ThumbsUp className={`w-4 h-4 ${hasVoted ? 'fill-current' : ''}`} />
+                             </motion.div>
+                             <AnimatePresence mode="wait">
+                                <motion.span
+                                    key={project.votes}
+                                    initial={{ y: 10, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    exit={{ y: -10, opacity: 0 }}
+                                    transition={{ duration: 0.2 }}
+                                >
+                                    {project.votes}
+                                </motion.span>
+                             </AnimatePresence>
+                         </motion.button>
+                         
+                         {/* Share Button - Second */}
                          <button
                             onClick={handleShareToX}
                             className="bg-[#1DA1F2] text-white px-4 sm:px-5 py-2 rounded-full font-bold flex items-center gap-2 hover:scale-105 transition-transform shadow-[0_0_20px_rgba(29,161,242,0.3)] text-sm"
                          >
                              <Share2 className="w-4 h-4" /> Share
                          </button>
+                         
+                         {/* Save Button - Third */}
                          <button
                             onClick={() => {
                               if (!user) {
@@ -878,12 +931,6 @@ export const IdeaDetail = () => {
                             className="bg-purple-600 text-white px-4 sm:px-5 py-2 rounded-full font-bold flex items-center gap-2 hover:scale-105 transition-transform shadow-[0_0_20px_rgba(147,51,234,0.3)] text-sm"
                          >
                              <Bookmark className="w-4 h-4" /> Save
-                         </button>
-                         <button
-                            onClick={handleVote}
-                            className="bg-[#FFD700] text-black px-4 sm:px-6 py-2 rounded-full font-bold flex items-center gap-2 hover:scale-105 transition-transform shadow-[0_0_20px_rgba(255,215,0,0.3)] text-sm"
-                         >
-                             <ThumbsUp className="w-4 h-4" /> {project.votes}
                          </button>
                          
                          {/* Admin Delete Button */}
