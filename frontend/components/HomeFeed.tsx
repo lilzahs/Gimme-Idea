@@ -249,28 +249,58 @@ export default function HomeFeed() {
                         transition={{ duration: 0.2 }}
                         className="absolute z-50 left-1/2 -translate-x-1/2 bottom-full mb-3 w-80 pointer-events-none"
                       >
-                        <div className="relative p-5 rounded-xl border border-cyan-500/30 bg-[#0a0a10]/98 backdrop-blur-xl shadow-2xl overflow-hidden">
+                        <motion.div 
+                          className="relative p-5 rounded-xl border border-[#FFD700]/30 bg-[#0a0a10]/98 backdrop-blur-xl shadow-2xl overflow-hidden"
+                          animate={{
+                            boxShadow: [
+                              '0 0 20px rgba(255, 215, 0, 0.2), 0 0 40px rgba(153, 69, 255, 0.1)',
+                              '0 0 30px rgba(255, 215, 0, 0.3), 0 0 50px rgba(153, 69, 255, 0.2)',
+                              '0 0 20px rgba(255, 215, 0, 0.2), 0 0 40px rgba(153, 69, 255, 0.1)',
+                            ],
+                          }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        >
                           {/* Animated scanline */}
                           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                            <div className="absolute inset-0 bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(0,255,255,0.03)_2px,rgba(0,255,255,0.03)_4px)]" />
-                            <div className="absolute top-0 left-0 right-0 h-20 bg-gradient-to-b from-cyan-500/10 to-transparent animate-scan" />
+                            <div className="absolute inset-0 bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(255,215,0,0.02)_2px,rgba(255,215,0,0.02)_4px)]" />
+                            <motion.div 
+                              className="absolute left-0 right-0 h-20 bg-gradient-to-b from-[#FFD700]/10 to-transparent"
+                              animate={{ top: ['-80px', '100%'] }}
+                              transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+                            />
                           </div>
                           
-                          {/* Glitch border effects */}
+                          {/* Glitch border effects - Yellow & Purple */}
                           <div className="absolute inset-0 rounded-xl">
-                            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-80" />
-                            <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-purple-500 to-transparent opacity-80" />
-                            <div className="absolute top-0 bottom-0 left-0 w-[2px] bg-gradient-to-b from-cyan-400 via-transparent to-purple-500 opacity-50" />
-                            <div className="absolute top-0 bottom-0 right-0 w-[2px] bg-gradient-to-b from-purple-500 via-transparent to-cyan-400 opacity-50" />
+                            <motion.div 
+                              className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#FFD700] to-transparent"
+                              animate={{ opacity: [0.5, 1, 0.5], x: [-5, 5, -5] }}
+                              transition={{ duration: 0.5, repeat: Infinity }}
+                            />
+                            <motion.div 
+                              className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#9945FF] to-transparent"
+                              animate={{ opacity: [0.5, 1, 0.5], x: [5, -5, 5] }}
+                              transition={{ duration: 0.5, repeat: Infinity, delay: 0.1 }}
+                            />
+                            <div className="absolute top-0 bottom-0 left-0 w-[2px] bg-gradient-to-b from-[#FFD700] via-transparent to-[#9945FF] opacity-50" />
+                            <div className="absolute top-0 bottom-0 right-0 w-[2px] bg-gradient-to-b from-[#9945FF] via-transparent to-[#FFD700] opacity-50" />
                           </div>
                           
                           {/* Content */}
                           <div className="relative z-10">
                             {/* Header with logo */}
                             <div className="flex items-center gap-3 mb-4">
-                              <div 
-                                className="w-12 h-12 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0 ring-2 ring-white/20"
+                              <motion.div 
+                                className="w-12 h-12 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0 ring-2 ring-[#FFD700]/30"
                                 style={{ background: partner.gradient }}
+                                animate={{
+                                  boxShadow: [
+                                    '0 0 10px rgba(255, 215, 0, 0.3)',
+                                    '0 0 20px rgba(255, 215, 0, 0.5)',
+                                    '0 0 10px rgba(255, 215, 0, 0.3)',
+                                  ],
+                                }}
+                                transition={{ duration: 1.5, repeat: Infinity }}
                               >
                                 <Image 
                                   src={partner.logo} 
@@ -279,37 +309,85 @@ export default function HomeFeed() {
                                   height={28}
                                   className="object-contain"
                                 />
-                              </div>
+                              </motion.div>
                               <div className="flex-1 min-w-0">
-                                {/* Glitch Title */}
-                                <h4 className="font-bold text-base text-white glitch-strong" data-text={partner.name}>
+                                {/* Glitch Title with Framer Motion */}
+                                <motion.h4 
+                                  className="font-bold text-base text-[#FFD700]"
+                                  animate={{
+                                    textShadow: [
+                                      '0 0 10px rgba(255, 215, 0, 0.8)',
+                                      '-2px 0 rgba(153, 69, 255, 0.8), 2px 0 rgba(255, 215, 0, 0.8)',
+                                      '2px 0 rgba(153, 69, 255, 0.8), -2px 0 rgba(255, 215, 0, 0.8)',
+                                      '0 0 10px rgba(255, 215, 0, 0.8)',
+                                    ],
+                                  }}
+                                  transition={{ duration: 0.3, repeat: Infinity }}
+                                >
                                   {partner.name}
-                                </h4>
-                                <div className="flex items-center gap-1.5 text-[11px] text-cyan-400/80 mt-0.5">
+                                </motion.h4>
+                                <div className="flex items-center gap-1.5 text-[11px] text-[#FFD700]/70 mt-0.5">
                                   <ExternalLink className="w-3 h-3" />
-                                  <span className="glitch-flicker">{partner.route.replace('https://', '')}</span>
+                                  <motion.span
+                                    animate={{ opacity: [0.7, 1, 0.7] }}
+                                    transition={{ duration: 1, repeat: Infinity }}
+                                  >
+                                    {partner.route.replace('https://', '')}
+                                  </motion.span>
                                 </div>
                               </div>
                             </div>
                             
-                            {/* Description with glitch */}
-                            <p className="text-sm text-gray-300 leading-relaxed mb-4 glitch-subtle">
+                            {/* Description */}
+                            <motion.p 
+                              className="text-sm text-gray-300 leading-relaxed mb-4"
+                              animate={{
+                                x: [0, -1, 1, 0],
+                                opacity: [1, 0.95, 1],
+                              }}
+                              transition={{ duration: 3, repeat: Infinity }}
+                            >
                               {partner.description}
-                            </p>
+                            </motion.p>
                             
                             {/* Terminal style footer */}
-                            <div className="pt-3 border-t border-cyan-500/20">
+                            <div className="pt-3 border-t border-[#FFD700]/20">
                               <div className="flex items-center gap-2 text-xs">
-                                <span className="text-cyan-400 font-mono font-bold animate-pulse">{'>'}</span>
-                                <span className="text-cyan-300/70 font-mono tracking-wider glitch-flicker">CLICK_TO_CONNECT</span>
-                                <span className="text-purple-400 font-mono ml-auto">█</span>
+                                <motion.span 
+                                  className="text-[#FFD700] font-mono font-bold"
+                                  animate={{ opacity: [1, 0.3, 1] }}
+                                  transition={{ duration: 0.8, repeat: Infinity }}
+                                >
+                                  {'>'}
+                                </motion.span>
+                                <motion.span 
+                                  className="text-[#FFD700]/70 font-mono tracking-wider"
+                                  animate={{ 
+                                    opacity: [0.7, 1, 0.7],
+                                    textShadow: [
+                                      'none',
+                                      '0 0 5px rgba(255, 215, 0, 0.5)',
+                                      'none',
+                                    ],
+                                  }}
+                                  transition={{ duration: 1.5, repeat: Infinity }}
+                                >
+                                  CLICK_TO_CONNECT
+                                </motion.span>
+                                <motion.span 
+                                  className="text-[#9945FF] font-mono ml-auto"
+                                  animate={{ opacity: [1, 0, 1] }}
+                                  transition={{ duration: 1, repeat: Infinity }}
+                                >
+                                  █
+                                </motion.span>
                               </div>
                             </div>
                           </div>
                           
                           {/* Arrow pointing down */}
-                          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-[#0a0a10] border-r-2 border-b-2 border-cyan-500/30 transform rotate-45" />
-                        </div>
+                          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-[#0a0a10] border-r-2 border-b-2 border-[#FFD700]/30 transform rotate-45" />
+                        </motion.div>
                       </motion.div>
                     )}
                   </AnimatePresence>
