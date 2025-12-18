@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Lightbulb, Rss, Rocket, ExternalLink, ArrowRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -196,7 +196,7 @@ export default function HomeFeed() {
             Powered by Our Partners
           </h2>
           
-          <div className={`grid ${isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-3 gap-6'}`}>
+          <div className={`grid ${isMobile ? 'grid-cols-3 gap-3' : 'grid-cols-3 gap-6'} justify-items-center`}>
             {PARTNERS.map((partner, index) => {
               const isHovered = hoveredItem === partner.id;
               
@@ -206,42 +206,99 @@ export default function HomeFeed() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.5 + index * 0.1 }}
-                  className="group relative cursor-pointer"
+                  className="group relative"
                   onMouseEnter={() => setHoveredItem(partner.id)}
                   onMouseLeave={() => setHoveredItem(null)}
-                  onClick={() => handleClick(partner.route, partner.external)}
                 >
+                  {/* Simple Card - Logo + Name only */}
                   <div 
-                    className="relative p-5 rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-sm transition-all duration-300"
+                    className="relative p-4 rounded-xl border border-white/10 bg-white/[0.02] backdrop-blur-sm transition-all duration-300 cursor-pointer flex flex-col items-center gap-3"
                     style={{
-                      borderColor: isHovered ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.1)',
+                      borderColor: isHovered ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.1)',
                     }}
+                    onClick={() => handleClick(partner.route, partner.external)}
                   >
-                    <div className="flex items-center gap-4">
-                      {/* Logo */}
-                      <div 
-                        className="w-12 h-12 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
-                        style={{ background: partner.gradient }}
-                      >
-                        <Image 
-                          src={partner.logo} 
-                          alt={partner.name} 
-                          width={28}
-                          height={28}
-                          className="object-contain"
-                        />
-                      </div>
-                      
-                      {/* Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-bold text-white text-sm truncate">{partner.name}</h3>
-                          <ExternalLink className="w-3 h-3 text-gray-500 flex-shrink-0" />
-                        </div>
-                        <p className="text-xs text-gray-500 line-clamp-2">{partner.description}</p>
-                      </div>
+                    {/* Logo */}
+                    <div 
+                      className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl flex items-center justify-center overflow-hidden transition-all duration-300 group-hover:scale-110"
+                      style={{ background: partner.gradient }}
+                    >
+                      <Image 
+                        src={partner.logo} 
+                        alt={partner.name} 
+                        width={36}
+                        height={36}
+                        className="object-contain"
+                      />
                     </div>
+                    
+                    {/* Name */}
+                    <h3 className="font-bold text-white text-xs sm:text-sm text-center">{partner.name}</h3>
                   </div>
+
+                  {/* Hover Popup with Glitch Effect */}
+                  <AnimatePresence>
+                    {isHovered && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        transition={{ duration: 0.2 }}
+                        className="absolute z-50 left-1/2 -translate-x-1/2 bottom-full mb-3 w-72 pointer-events-none"
+                      >
+                        <div className="relative p-4 rounded-xl border border-white/20 bg-[#0d0d12]/95 backdrop-blur-xl shadow-2xl">
+                          {/* Glitch overlay */}
+                          <div className="absolute inset-0 rounded-xl overflow-hidden">
+                            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-transparent to-purple-500/10 animate-pulse" />
+                            <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-400/50 to-transparent" />
+                            <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-purple-400/50 to-transparent" />
+                          </div>
+                          
+                          {/* Content */}
+                          <div className="relative z-10">
+                            <div className="flex items-center gap-3 mb-3">
+                              <div 
+                                className="w-10 h-10 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0"
+                                style={{ background: partner.gradient }}
+                              >
+                                <Image 
+                                  src={partner.logo} 
+                                  alt={partner.name} 
+                                  width={24}
+                                  height={24}
+                                  className="object-contain"
+                                />
+                              </div>
+                              <div>
+                                <h4 className="font-bold text-white text-sm glitch-text" data-text={partner.name}>
+                                  {partner.name}
+                                </h4>
+                                <div className="flex items-center gap-1 text-[10px] text-gray-500">
+                                  <ExternalLink className="w-2.5 h-2.5" />
+                                  <span>External Link</span>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <p className="text-xs text-gray-400 leading-relaxed">
+                              {partner.description}
+                            </p>
+                            
+                            {/* Glitch line effect */}
+                            <div className="mt-3 pt-3 border-t border-white/10">
+                              <div className="flex items-center gap-2 text-xs">
+                                <span className="text-cyan-400 font-mono">{'>'}</span>
+                                <span className="text-gray-500 font-mono tracking-wide glitch-flicker">Click to visit</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Arrow pointing down */}
+                          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-[#0d0d12]/95 border-r border-b border-white/20 transform rotate-45" />
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </motion.div>
               );
             })}

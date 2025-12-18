@@ -214,18 +214,12 @@ export default function ConstellationBackground({
         ))}
       </svg>
       
-      {/* Shooting stars - more frequent */}
+      {/* Shooting stars */}
       {showShootingStars && (
         <>
-          <div className="shooting-star" style={{ top: '8%', left: '92%' }} />
-          <div className="shooting-star" style={{ top: '18%', left: '15%', animationDelay: '2s' }} />
-          <div className="shooting-star" style={{ top: '25%', left: '5%', animationDelay: '4s' }} />
-          <div className="shooting-star" style={{ top: '35%', left: '78%', animationDelay: '5s' }} />
-          <div className="shooting-star" style={{ top: '45%', left: '88%', animationDelay: '7s' }} />
-          <div className="shooting-star" style={{ top: '55%', left: '25%', animationDelay: '8s' }} />
-          <div className="shooting-star" style={{ top: '65%', left: '12%', animationDelay: '10s' }} />
-          <div className="shooting-star" style={{ top: '75%', left: '65%', animationDelay: '11s' }} />
-          <div className="shooting-star" style={{ top: '80%', left: '75%', animationDelay: '13s' }} />
+          <div className="shooting-star" style={{ top: '12%', left: '90%' }} />
+          <div className="shooting-star" style={{ top: '40%', left: '8%', animationDelay: '5s' }} />
+          <div className="shooting-star" style={{ top: '70%', left: '85%', animationDelay: '10s' }} />
         </>
       )}
     </div>
