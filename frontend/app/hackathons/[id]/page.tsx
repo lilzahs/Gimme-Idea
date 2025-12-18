@@ -312,8 +312,8 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                 return (
                                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
                                       
-                                      {/* LEFT COLUMN: Title, Description, Terminal (Span 9) */}
-                                                                             <div className="lg:col-span-9 flex flex-col gap-6 h-full min-h-0">
+                                      {/* LEFT COLUMN: Title, Description, Terminal (Span 8) */}
+                                                                             <div className="lg:col-span-8 flex flex-col gap-6 h-full min-h-0">
                                                                                 {/* 1x6 Image Banner */}
                                                                                 {hackathon.image_url && (
                                                                                    <div className="relative w-full aspect-[6/1] rounded-b-xl overflow-hidden shadow-2xl border-x border-b border-white/10 shrink-0 hidden md:block">
@@ -393,8 +393,8 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                          </div>
                                       </div>
 
-                                      {/* RIGHT COLUMN: Sidebar Widgets (Span 3) */}
-                                      <div className="lg:col-span-3 flex flex-col gap-6 h-full overflow-y-auto pr-2 pb-20 md:pb-0">
+                                      {/* RIGHT COLUMN: Sidebar Widgets (Span 4) */}
+                                      <div className="lg:col-span-4 flex flex-col gap-6 h-full overflow-y-auto pr-2 pb-20 md:pb-0">
                                          
                                          {/* 1. Countdown Card */}
                                          <div className="bg-surface border border-white/5 rounded-xl p-4 shrink-0">
