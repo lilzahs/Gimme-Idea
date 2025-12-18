@@ -452,6 +452,7 @@ export const Profile = () => {
                             src={isEditing ? editForm.coverImage : displayUser.coverImage} 
                             alt="Cover" 
                             className="w-full h-full object-cover"
+                            draggable={false}
                         />
                     ) : (
                         <div className="absolute inset-0 bg-gradient-to-br from-purple-900/50 via-blue-900/30 to-pink-900/30">
@@ -505,7 +506,8 @@ export const Profile = () => {
                                 <img 
                                     src={isEditing ? editForm.avatar : displayUser.avatar} 
                                     alt="Profile" 
-                                    className="w-full h-full object-cover" 
+                                    className="w-full h-full object-cover"
+                                    draggable={false}
                                 />
                             </div>
                             

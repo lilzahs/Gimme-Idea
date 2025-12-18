@@ -29,10 +29,8 @@ const isMobileBrowser = () => {
 export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [isMobile, setIsMobile] = useState(false);
 
-  // Use mainnet for production, devnet for development
-  const network = process.env.NEXT_PUBLIC_SOLANA_NETWORK === 'mainnet-beta' 
-    ? WalletAdapterNetwork.Mainnet 
-    : WalletAdapterNetwork.Devnet;
+  // Use devnet for development
+  const network = WalletAdapterNetwork.Devnet;
   
   // Use custom RPC if provided, otherwise use default cluster URL
   const endpoint = useMemo(() => 
@@ -70,7 +68,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
               icon: `${getUriForAppIdentity()}/icon.png`,
             },
             authorizationResultCache: createDefaultAuthorizationResultCache(),
-            chain: network === WalletAdapterNetwork.Mainnet ? 'solana:mainnet' : 'solana:devnet',
+            chain: 'solana:devnet',
             onWalletNotFound: createDefaultWalletNotFoundHandler(),
           }),
           ...baseWallets,
