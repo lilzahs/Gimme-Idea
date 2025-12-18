@@ -2,54 +2,66 @@
 
 import React from 'react';
 
-// Enhanced constellation with more stars
+// Enhanced constellation with more stars - increased sizes for better visibility
 const CONSTELLATION_STARS = [
   // Top area
-  { x: 8, y: 8, size: 2 },
-  { x: 18, y: 12, size: 1.5 },
-  { x: 32, y: 6, size: 2.5 },
-  { x: 45, y: 14, size: 1.5 },
-  { x: 58, y: 8, size: 2 },
-  { x: 72, y: 12, size: 1.5 },
-  { x: 85, y: 6, size: 2 },
-  { x: 95, y: 15, size: 1.5 },
+  { x: 8, y: 8, size: 3, brightness: 1 },
+  { x: 18, y: 12, size: 2.5, brightness: 0.8 },
+  { x: 32, y: 6, size: 4, brightness: 1 },
+  { x: 45, y: 14, size: 2.5, brightness: 0.9 },
+  { x: 58, y: 8, size: 3.5, brightness: 1 },
+  { x: 72, y: 12, size: 2.5, brightness: 0.8 },
+  { x: 85, y: 6, size: 3, brightness: 1 },
+  { x: 95, y: 15, size: 2.5, brightness: 0.9 },
   
   // Upper middle
-  { x: 12, y: 25, size: 2 },
-  { x: 25, y: 30, size: 1.5 },
-  { x: 38, y: 22, size: 2.5 },
-  { x: 52, y: 28, size: 1.5 },
-  { x: 65, y: 24, size: 2 },
-  { x: 78, y: 32, size: 1.5 },
-  { x: 92, y: 26, size: 2 },
+  { x: 12, y: 25, size: 3, brightness: 0.9 },
+  { x: 25, y: 30, size: 2.5, brightness: 0.8 },
+  { x: 38, y: 22, size: 4, brightness: 1 },
+  { x: 52, y: 28, size: 2.5, brightness: 0.8 },
+  { x: 65, y: 24, size: 3.5, brightness: 1 },
+  { x: 78, y: 32, size: 2.5, brightness: 0.9 },
+  { x: 92, y: 26, size: 3, brightness: 1 },
   
   // Middle
-  { x: 5, y: 45, size: 2 },
-  { x: 18, y: 48, size: 1.5 },
-  { x: 30, y: 42, size: 2.5 },
-  { x: 42, y: 50, size: 1.5 },
-  { x: 55, y: 44, size: 2 },
-  { x: 68, y: 52, size: 1.5 },
-  { x: 82, y: 46, size: 2 },
-  { x: 94, y: 50, size: 1.5 },
+  { x: 5, y: 45, size: 3, brightness: 0.9 },
+  { x: 18, y: 48, size: 2.5, brightness: 0.8 },
+  { x: 30, y: 42, size: 4, brightness: 1 },
+  { x: 42, y: 50, size: 2.5, brightness: 0.8 },
+  { x: 55, y: 44, size: 3.5, brightness: 1 },
+  { x: 68, y: 52, size: 2.5, brightness: 0.9 },
+  { x: 82, y: 46, size: 3, brightness: 1 },
+  { x: 94, y: 50, size: 2.5, brightness: 0.8 },
   
   // Lower middle
-  { x: 10, y: 65, size: 2 },
-  { x: 22, y: 70, size: 1.5 },
-  { x: 35, y: 62, size: 2.5 },
-  { x: 48, y: 68, size: 1.5 },
-  { x: 62, y: 72, size: 2 },
-  { x: 75, y: 66, size: 1.5 },
-  { x: 88, y: 70, size: 2 },
+  { x: 10, y: 65, size: 3, brightness: 0.9 },
+  { x: 22, y: 70, size: 2.5, brightness: 0.8 },
+  { x: 35, y: 62, size: 4, brightness: 1 },
+  { x: 48, y: 68, size: 2.5, brightness: 0.8 },
+  { x: 62, y: 72, size: 3.5, brightness: 1 },
+  { x: 75, y: 66, size: 2.5, brightness: 0.9 },
+  { x: 88, y: 70, size: 3, brightness: 1 },
   
   // Bottom area
-  { x: 6, y: 85, size: 2 },
-  { x: 20, y: 88, size: 1.5 },
-  { x: 34, y: 82, size: 2.5 },
-  { x: 50, y: 90, size: 1.5 },
-  { x: 65, y: 84, size: 2 },
-  { x: 80, y: 92, size: 1.5 },
-  { x: 92, y: 86, size: 2 },
+  { x: 6, y: 85, size: 3, brightness: 0.9 },
+  { x: 20, y: 88, size: 2.5, brightness: 0.8 },
+  { x: 34, y: 82, size: 4, brightness: 1 },
+  { x: 50, y: 90, size: 2.5, brightness: 0.8 },
+  { x: 65, y: 84, size: 3.5, brightness: 1 },
+  { x: 80, y: 92, size: 2.5, brightness: 0.9 },
+  { x: 92, y: 86, size: 3, brightness: 1 },
+  
+  // Extra scattered stars for depth
+  { x: 3, y: 18, size: 2, brightness: 0.6 },
+  { x: 15, y: 38, size: 2, brightness: 0.7 },
+  { x: 27, y: 55, size: 2, brightness: 0.6 },
+  { x: 40, y: 35, size: 2.5, brightness: 0.7 },
+  { x: 60, y: 38, size: 2, brightness: 0.6 },
+  { x: 73, y: 55, size: 2, brightness: 0.7 },
+  { x: 97, y: 38, size: 2, brightness: 0.6 },
+  { x: 85, y: 78, size: 2, brightness: 0.7 },
+  { x: 45, y: 78, size: 2.5, brightness: 0.6 },
+  { x: 15, y: 78, size: 2, brightness: 0.7 },
 ];
 
 // Connect stars to form constellations
@@ -82,46 +94,67 @@ interface ConstellationBackgroundProps {
 }
 
 export default function ConstellationBackground({ 
-  opacity = 0.25, 
+  opacity = 0.35, 
   showShootingStars = true,
   showGradientOrbs = true,
   className = ''
 }: ConstellationBackgroundProps) {
   return (
     <div className={`fixed inset-0 z-[-1] pointer-events-none overflow-hidden ${className}`}>
-      {/* Grid background */}
-      <div className="bg-grid opacity-30"></div>
+      {/* Grid background - enhanced */}
+      <div className="bg-grid opacity-40"></div>
       
-      {/* Gradient orbs */}
+      {/* Gradient orbs - more vibrant */}
       {showGradientOrbs && (
         <>
-          <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-[#2e1065] rounded-full blur-[120px] opacity-40" />
-          <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-[#422006] rounded-full blur-[120px] opacity-40" />
-          <div className="absolute top-[40%] right-[-15%] w-[400px] h-[400px] bg-[#14F195]/10 rounded-full blur-[100px] opacity-30" />
+          <div className="absolute top-[-20%] left-[-10%] w-[700px] h-[700px] bg-[#2e1065] rounded-full blur-[150px] opacity-50 animate-pulse-slow" />
+          <div className="absolute bottom-[-20%] right-[-10%] w-[700px] h-[700px] bg-[#422006] rounded-full blur-[150px] opacity-50 animate-pulse-slow" style={{ animationDelay: '4s' }} />
+          <div className="absolute top-[40%] right-[-15%] w-[500px] h-[500px] bg-[#14F195]/15 rounded-full blur-[120px] opacity-40 animate-pulse-slow" style={{ animationDelay: '2s' }} />
+          <div className="absolute top-[20%] left-[30%] w-[400px] h-[400px] bg-[#FFD700]/10 rounded-full blur-[100px] opacity-30 animate-pulse-slow" style={{ animationDelay: '6s' }} />
         </>
       )}
       
-      {/* Constellation SVG */}
+      {/* Constellation SVG - enhanced */}
       <svg className="absolute inset-0 w-full h-full" style={{ opacity }}>
         <defs>
-          {/* Glow filter for stars */}
-          <filter id="starGlow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="1" result="coloredBlur"/>
+          {/* Enhanced glow filter for stars */}
+          <filter id="starGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
             <feMerge>
+              <feMergeNode in="coloredBlur"/>
               <feMergeNode in="coloredBlur"/>
               <feMergeNode in="SourceGraphic"/>
             </feMerge>
           </filter>
           
-          {/* Gradient for lines */}
+          {/* Golden glow for special stars */}
+          <filter id="starGlowGold" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+            <feFlood floodColor="#FFD700" floodOpacity="0.5" result="goldColor"/>
+            <feComposite in="goldColor" in2="coloredBlur" operator="in" result="goldBlur"/>
+            <feMerge>
+              <feMergeNode in="goldBlur"/>
+              <feMergeNode in="coloredBlur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+          
+          {/* Gradient for lines - more visible */}
           <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="white" stopOpacity="0.1" />
-            <stop offset="50%" stopColor="white" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="white" stopOpacity="0.1" />
+            <stop offset="0%" stopColor="white" stopOpacity="0.15" />
+            <stop offset="50%" stopColor="white" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="white" stopOpacity="0.15" />
+          </linearGradient>
+          
+          {/* Golden line gradient */}
+          <linearGradient id="lineGradientGold" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#FFD700" stopOpacity="0.1" />
+            <stop offset="50%" stopColor="#FFD700" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#FFD700" stopOpacity="0.1" />
           </linearGradient>
         </defs>
         
-        {/* Constellation lines */}
+        {/* Constellation lines - thicker */}
         {CONSTELLATION_LINES.map(([from, to], i) => (
           <line
             key={`line-${i}`}
@@ -129,33 +162,70 @@ export default function ConstellationBackground({
             y1={`${CONSTELLATION_STARS[from].y}%`}
             x2={`${CONSTELLATION_STARS[to].x}%`}
             y2={`${CONSTELLATION_STARS[to].y}%`}
-            stroke="url(#lineGradient)"
-            strokeWidth="0.5"
+            stroke={i % 5 === 0 ? "url(#lineGradientGold)" : "url(#lineGradient)"}
+            strokeWidth={i % 5 === 0 ? "1" : "0.8"}
           />
         ))}
         
-        {/* Constellation stars with glow */}
+        {/* Constellation stars with enhanced glow */}
         {CONSTELLATION_STARS.map((star, i) => (
+          <g key={`star-${i}`}>
+            {/* Outer glow */}
+            <circle
+              cx={`${star.x}%`}
+              cy={`${star.y}%`}
+              r={star.size * 2}
+              fill={i % 7 === 0 ? "#FFD700" : "white"}
+              fillOpacity={0.1 * (star.brightness || 0.8)}
+            />
+            {/* Main star */}
+            <circle
+              cx={`${star.x}%`}
+              cy={`${star.y}%`}
+              r={star.size}
+              fill={i % 7 === 0 ? "#FFD700" : "white"}
+              fillOpacity={star.brightness || 0.8}
+              filter={i % 7 === 0 ? "url(#starGlowGold)" : "url(#starGlow)"}
+            />
+          </g>
+        ))}
+        
+        {/* Animated twinkling stars */}
+        <style>
+          {`
+            @keyframes twinkle-star {
+              0%, 100% { opacity: 0.4; }
+              50% { opacity: 1; }
+            }
+          `}
+        </style>
+        {[...Array(15)].map((_, i) => (
           <circle
-            key={`star-${i}`}
-            cx={`${star.x}%`}
-            cy={`${star.y}%`}
-            r={star.size}
+            key={`twinkle-${i}`}
+            cx={`${10 + (i * 6) % 85}%`}
+            cy={`${15 + (i * 11) % 75}%`}
+            r={1.5}
             fill="white"
-            fillOpacity="0.8"
-            filter="url(#starGlow)"
+            style={{
+              animation: `twinkle-star ${2 + (i % 3)}s ease-in-out infinite`,
+              animationDelay: `${i * 0.3}s`
+            }}
           />
         ))}
       </svg>
       
-      {/* Shooting stars */}
+      {/* Shooting stars - more frequent */}
       {showShootingStars && (
         <>
           <div className="shooting-star" style={{ top: '8%', left: '92%' }} />
-          <div className="shooting-star" style={{ top: '25%', left: '5%', animationDelay: '3s' }} />
-          <div className="shooting-star" style={{ top: '45%', left: '88%', animationDelay: '6s' }} />
-          <div className="shooting-star" style={{ top: '65%', left: '12%', animationDelay: '9s' }} />
-          <div className="shooting-star" style={{ top: '80%', left: '75%', animationDelay: '12s' }} />
+          <div className="shooting-star" style={{ top: '18%', left: '15%', animationDelay: '2s' }} />
+          <div className="shooting-star" style={{ top: '25%', left: '5%', animationDelay: '4s' }} />
+          <div className="shooting-star" style={{ top: '35%', left: '78%', animationDelay: '5s' }} />
+          <div className="shooting-star" style={{ top: '45%', left: '88%', animationDelay: '7s' }} />
+          <div className="shooting-star" style={{ top: '55%', left: '25%', animationDelay: '8s' }} />
+          <div className="shooting-star" style={{ top: '65%', left: '12%', animationDelay: '10s' }} />
+          <div className="shooting-star" style={{ top: '75%', left: '65%', animationDelay: '11s' }} />
+          <div className="shooting-star" style={{ top: '80%', left: '75%', animationDelay: '13s' }} />
         </>
       )}
     </div>

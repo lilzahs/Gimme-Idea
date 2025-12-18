@@ -20,7 +20,6 @@ import { Project, Feed } from '../lib/types';
 import { apiClient } from '../lib/api-client';
 import { uploadAvatar, uploadCoverImage } from '../lib/imgbb';
 import { createUsernameSlug } from '../lib/slug-utils';
-import ConstellationBackground from './ConstellationBackground';
 
 interface UserStats {
   reputation: number;
@@ -427,9 +426,6 @@ export const Profile = () => {
         animate={{ opacity: 1 }}
         className="min-h-screen pt-20 sm:pt-24 pb-20 px-4 sm:px-6"
     >
-        {/* Constellation Background */}
-        <ConstellationBackground opacity={0.25} />
-
         <div className="max-w-5xl mx-auto">
             {/* Back Button */}
             {!isOwnProfile && (

@@ -11,7 +11,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRealtimeProjects } from '../hooks/useRealtimeProjects';
 import { ComingSoonModal } from './ComingSoonModal';
 import { AIChatModal } from './AIChatModal';
-import ConstellationBackground from './ConstellationBackground';
 
 interface DashboardProps {
     mode: 'project' | 'idea';
@@ -116,9 +115,6 @@ export default function Dashboard({ mode }: DashboardProps) {
       animate={{ opacity: 1 }}
       className="min-h-screen pb-20 relative"
     >
-      {/* Constellation Background */}
-      <ConstellationBackground opacity={0.25} />
-
       <div className="pt-24 sm:pt-32 px-4 sm:px-6 max-w-7xl mx-auto">
         
         {/* Header */}

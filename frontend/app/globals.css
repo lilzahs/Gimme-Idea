@@ -129,7 +129,7 @@ body {
   animation: orb-float-3 14s ease-in-out infinite;
 }
 
-/* Grid Background */
+/* Grid Background - Enhanced */
 .bg-grid {
   position: fixed;
   top: 0;
@@ -138,11 +138,11 @@ body {
   height: 100vh;
   z-index: -20;
   background-image:
-    linear-gradient(to right, rgba(153, 69, 255, 0.1) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(153, 69, 255, 0.1) 1px, transparent 1px);
-  background-size: 50px 50px;
-  mask-image: radial-gradient(circle at 50% 50%, black 40%, transparent 90%);
-  -webkit-mask-image: radial-gradient(circle at 50% 50%, black 40%, transparent 90%);
+    linear-gradient(to right, rgba(153, 69, 255, 0.12) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(153, 69, 255, 0.12) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(circle at 50% 50%, black 30%, transparent 80%);
+  -webkit-mask-image: radial-gradient(circle at 50% 50%, black 30%, transparent 80%);
   pointer-events: none;
 }
 
@@ -208,17 +208,21 @@ body {
   }
 }
 
-/* Shooting Stars */
+/* Shooting Stars - Enhanced */
 .shooting-star {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 4px;
-  height: 4px;
+  width: 6px;
+  height: 6px;
   background: #ffd700;
   border-radius: 50%;
-  box-shadow: 0 0 0 4px rgba(255, 215, 0, 0.1), 0 0 0 8px rgba(255, 215, 0, 0.1), 0 0 20px rgba(255, 215, 0, 1);
-  animation: shoot 3s linear infinite;
+  box-shadow: 
+    0 0 0 4px rgba(255, 215, 0, 0.15), 
+    0 0 0 8px rgba(255, 215, 0, 0.1), 
+    0 0 30px rgba(255, 215, 0, 1),
+    0 0 60px rgba(255, 215, 0, 0.5);
+  animation: shoot 4s linear infinite;
   opacity: 0;
   z-index: -5;
 }
@@ -228,25 +232,39 @@ body {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 300px;
+  width: 400px;
+  height: 2px;
+  background: linear-gradient(90deg, #ffd700, rgba(255, 215, 0, 0.5), transparent);
+  border-radius: 1px;
+}
+
+.shooting-star::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  width: 200px;
   height: 1px;
-  background: linear-gradient(90deg, #ffd700, transparent);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.8), transparent);
 }
 
 @keyframes shoot {
   0% {
-    transform: rotate(315deg) translateX(1000px);
-    /* Start far off-screen in the direction of origin */
+    transform: rotate(315deg) translateX(1200px);
+    opacity: 0;
+  }
+
+  5% {
     opacity: 1;
   }
 
-  70% {
+  60% {
     opacity: 1;
   }
 
   100% {
-    transform: rotate(315deg) translateX(-1200px);
-    /* End far off-screen in the direction of travel */
+    transform: rotate(315deg) translateX(-1500px);
     opacity: 0;
   }
 }

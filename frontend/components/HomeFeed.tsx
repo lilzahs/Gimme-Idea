@@ -5,7 +5,6 @@ import { motion } from 'framer-motion';
 import { Lightbulb, Rss, Rocket, ExternalLink, ArrowRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import ConstellationBackground from './ConstellationBackground';
 
 // Constellation items configuration
 const FEATURES = [
@@ -90,9 +89,6 @@ export default function HomeFeed() {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Constellation Background */}
-      <ConstellationBackground opacity={0.3} />
-
       <div className={`${isMobile ? 'pt-20 px-4 pb-24' : 'pt-24 md:pt-28 px-4 sm:px-6'} max-w-6xl mx-auto`}>
         {/* Hero Section */}
         <motion.div 

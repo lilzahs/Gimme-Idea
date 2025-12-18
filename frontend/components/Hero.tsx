@@ -6,7 +6,6 @@ import { motion } from 'framer-motion';
 import { Terminal, Code, Cpu, LayoutGrid, Plus } from 'lucide-react';
 import { useAppStore } from '../lib/store';
 import { useRouter } from 'next/navigation';
-import ConstellationBackground from './ConstellationBackground';
 
 const Hero: React.FC = () => {
   const { openSubmitModal } = useAppStore();
@@ -14,10 +13,6 @@ const Hero: React.FC = () => {
 
   return (
     <section className="relative min-h-screen flex items-center pt-24 sm:pt-20 overflow-hidden px-6">
-      
-      {/* Constellation Background */}
-      <ConstellationBackground opacity={0.2} showGradientOrbs={true} />
-
       {/* Content Container */}
       <div className="max-w-7xl mx-auto relative z-10 grid lg:grid-cols-2 gap-12 items-center w-full">
         

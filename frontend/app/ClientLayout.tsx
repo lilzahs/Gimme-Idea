@@ -10,6 +10,7 @@ import { ConnectReminderModal } from '../components/ConnectReminderModal';
 import { ConnectWalletPopup } from '../components/ConnectWalletPopup';
 import { SubmissionModal } from '../components/SubmissionModal';
 import ErrorBoundary from '../components/ErrorBoundary';
+import ConstellationBackground from '../components/ConstellationBackground';
 import Script from 'next/script';
 import React, { useEffect } from 'react';
 import { useAppStore } from '../lib/store';
@@ -63,6 +64,8 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
           <LazorkitProvider>
             <AuthProvider>
               <AuthStoreSync />
+              {/* Global Constellation Background */}
+              <ConstellationBackground opacity={0.35} showShootingStars={true} showGradientOrbs={true} />
               <Navbar />
               <ConnectReminderModal />
               <ConnectWalletPopup />

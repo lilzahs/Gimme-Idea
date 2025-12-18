@@ -10,7 +10,6 @@ import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
 import { useAuth } from '../contexts/AuthContext';
 import { WalletRequiredModal } from './WalletRequiredModal';
-import ConstellationBackground from './ConstellationBackground';
 
 export const Donate = () => {
     const { openConnectReminder } = useAppStore();
@@ -118,9 +117,6 @@ export const Donate = () => {
 
     return (
         <div className="min-h-screen pt-20 sm:pt-24 pb-12 px-4 sm:px-6 relative overflow-hidden flex items-center">
-            {/* Constellation Background */}
-            <ConstellationBackground opacity={0.25} />
-
             <div className="max-w-6xl mx-auto w-full">
                 {/* Header */}
                 <motion.div
