@@ -180,91 +180,91 @@ export const RecommendedIdeas = () => {
                 opacity: 1, 
                 y: 0,
                 boxShadow: [
-                  `0 0 20px ${medal.color}30, inset 0 0 20px ${medal.color}05`,
-                  `0 0 35px ${medal.color}50, inset 0 0 30px ${medal.color}10`,
-                  `0 0 20px ${medal.color}30, inset 0 0 20px ${medal.color}05`,
+                  `0 0 25px ${medal.color}50, inset 0 0 25px ${medal.color}15`,
+                  `0 0 50px ${medal.color}70, inset 0 0 40px ${medal.color}25`,
+                  `0 0 25px ${medal.color}50, inset 0 0 25px ${medal.color}15`,
                 ]
               }}
               transition={{ 
                 delay: index * 0.1, 
                 duration: 0.3, 
                 ease: "easeOut",
-                boxShadow: { duration: 2, repeat: Infinity, ease: "easeInOut" }
+                boxShadow: { duration: 1.5, repeat: Infinity, ease: "easeInOut" }
               }}
               onClick={() => handleViewIdea(idea)}
               whileHover={{ y: -4 }}
               whileTap={{ scale: 0.98 }}
               className={`relative p-6 rounded-2xl cursor-pointer group min-h-[300px] flex flex-col overflow-hidden
                 bg-gradient-to-br from-white/[0.08] to-white/[0.02] backdrop-blur-sm
-                border ${medal.borderColor} ${medal.hoverBorder} ${medal.hoverShadow}
-                transition-all duration-500`}
+                border-2 transition-all duration-500`}
+              style={{ borderColor: `${medal.color}60` }}
             >
-              {/* Continuous Glitch Scanline */}
+              {/* Strong Continuous Glitch Scanline */}
               <motion.div
                 className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl z-20"
-                initial={{ opacity: 0.3 }}
               >
                 <motion.div
-                  className="absolute w-full h-[2px]"
+                  className="absolute w-full h-[3px]"
                   style={{ 
-                    background: `linear-gradient(90deg, transparent, ${medal.color}80, transparent)`,
-                    boxShadow: `0 0 10px ${medal.color}60`
+                    background: `linear-gradient(90deg, transparent, ${medal.color}, transparent)`,
+                    boxShadow: `0 0 15px ${medal.color}, 0 0 30px ${medal.color}80`
                   }}
                   animate={{ top: ['-10%', '110%'] }}
-                  transition={{ duration: 2.5, repeat: Infinity, ease: 'linear' }}
+                  transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
                 />
               </motion.div>
 
-              {/* Continuous Glitch Border Effects */}
+              {/* Strong Glitch Border Effects */}
               <motion.div
-                className="absolute inset-0 rounded-2xl pointer-events-none"
-                style={{ border: `1px solid ${medal.color}` }}
+                className="absolute inset-0 rounded-2xl pointer-events-none z-10"
+                style={{ border: `2px solid ${medal.color}` }}
                 animate={{
-                  opacity: [0.3, 0.7, 0.3],
-                  x: [0, -2, 2, 0],
+                  opacity: [0.5, 1, 0.5],
+                  x: [0, -3, 3, 0],
+                }}
+                transition={{ duration: 0.2, repeat: Infinity }}
+              />
+              <motion.div
+                className="absolute inset-0 rounded-2xl pointer-events-none z-10"
+                style={{ borderTop: `2px solid ${medal.color}`, borderBottom: `2px solid ${medal.color}` }}
+                animate={{
+                  opacity: [0.3, 0.8, 0.3],
+                  x: [0, 4, -4, 0],
+                }}
+                transition={{ duration: 0.15, repeat: Infinity, delay: 0.05 }}
+              />
+
+              {/* Strong Glitch Color Overlay */}
+              <motion.div
+                className="absolute inset-0 rounded-2xl pointer-events-none mix-blend-screen"
+                style={{ background: `linear-gradient(45deg, ${medal.color}20, transparent 60%, ${medal.color}15)` }}
+                animate={{
+                  opacity: [0.2, 0.5, 0.2],
+                  x: [0, -5, 5, 0],
                 }}
                 transition={{ duration: 0.3, repeat: Infinity }}
               />
-              <motion.div
-                className="absolute inset-0 rounded-2xl pointer-events-none"
-                style={{ borderTop: `1px solid ${medal.color}`, borderBottom: `1px solid ${medal.color}` }}
-                animate={{
-                  opacity: [0.2, 0.5, 0.2],
-                  x: [0, 3, -3, 0],
-                }}
-                transition={{ duration: 0.25, repeat: Infinity, delay: 0.1 }}
-              />
 
-              {/* Glitch Color Overlay */}
-              <motion.div
-                className="absolute inset-0 rounded-2xl pointer-events-none mix-blend-overlay"
-                style={{ background: `linear-gradient(45deg, ${medal.color}10, transparent)` }}
-                animate={{
-                  opacity: [0.1, 0.3, 0.1],
-                  x: [0, -3, 3, 0],
-                }}
-                transition={{ duration: 0.4, repeat: Infinity }}
-              />
-
-              {/* Random Glitch Slices */}
-              {[...Array(3)].map((_, i) => (
+              {/* More Visible Glitch Slices */}
+              {[...Array(4)].map((_, i) => (
                 <motion.div
                   key={i}
-                  className="absolute left-0 right-0 pointer-events-none overflow-hidden"
+                  className="absolute left-0 right-0 pointer-events-none overflow-hidden z-10"
                   style={{
-                    top: `${20 + i * 25}%`,
-                    height: '3px',
-                    background: `linear-gradient(90deg, transparent 20%, ${medal.color}40 50%, transparent 80%)`,
+                    top: `${15 + i * 20}%`,
+                    height: '4px',
+                    background: `linear-gradient(90deg, transparent 10%, ${medal.color}70 50%, transparent 90%)`,
+                    boxShadow: `0 0 8px ${medal.color}50`,
                   }}
                   animate={{
-                    opacity: [0, 0.6, 0],
-                    x: [0, i % 2 === 0 ? 5 : -5, 0],
-                    scaleX: [1, 1.02, 1],
+                    opacity: [0, 0.9, 0],
+                    x: [0, i % 2 === 0 ? 8 : -8, 0],
+                    scaleX: [1, 1.05, 1],
                   }}
                   transition={{
-                    duration: 0.15,
+                    duration: 0.12,
                     repeat: Infinity,
-                    repeatDelay: 1.5 + i * 0.3,
+                    repeatDelay: 1 + i * 0.2,
                   }}
                 />
               ))}
