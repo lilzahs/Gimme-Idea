@@ -114,7 +114,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
   // Data States
   const [userTeam, setUserTeam] = useState<any>(null);
   const [isCreatingTeam, setIsCreatingTeam] = useState(false);
-  const [newTeamData, setNewTeamData] = useState({ name: '', lookingFor: [] as string[] });
+  const [newTeamData, setNewTeamData] = useState({ name: '' });
   const [countdown, setCountdown] = useState({ text: 'Calculating...', label: 'Loading...' });
 
   // Handle inviting a user (mock functionality)
@@ -685,53 +685,59 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                                     </div>
                                                 </div>
                                              ) : (
-                                                <div className="h-full flex flex-col justify-center max-w-2xl mx-auto w-full">
-                                                    <div className="bg-surface border border-white/5 rounded-xl p-8">
-                                                        <div className="flex items-center gap-3 mb-6">
-                                                            <div className="w-10 h-10 bg-gold/10 rounded-lg flex items-center justify-center border border-gold/20">
-                                                                <Rocket className="w-5 h-5 text-gold" />
-                                                            </div>
-                                                            <div>
-                                                                <h2 className="text-xl font-bold text-white font-quantico">Create Your Team</h2>
-                                                                <p className="text-xs text-gray-500">Form a squad to build something amazing.</p>
+                                                <div className="h-full flex flex-col justify-center max-w-xl mx-auto w-full">
+                                                    <div className="bg-surface border border-white/5 rounded-xl p-8 shadow-2xl relative overflow-hidden">
+                                                        <div className="absolute top-0 right-0 w-32 h-32 bg-gold/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2" />
+                                                        
+                                                        <div className="flex items-center justify-between mb-8 relative z-10">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-10 h-10 bg-gold/10 rounded-lg flex items-center justify-center border border-gold/20">
+                                                                    <Rocket className="w-5 h-5 text-gold" />
+                                                                </div>
+                                                                <div>
+                                                                    <h2 className="text-xl font-bold text-white font-quantico">Create Team</h2>
+                                                                    <p className="text-xs text-gray-500">Initialize your workspace</p>
+                                                                </div>
                                                             </div>
                                                         </div>
 
-                                                        <div className="space-y-4">
+                                                        <div className="space-y-6 relative z-10">
                                                             <div>
-                                                                <label className="block text-xs font-bold text-gray-400 uppercase mb-1.5">Team Name</label>
+                                                                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-1">Team Name</label>
                                                                 <input 
                                                                     type="text" 
+                                                                    autoFocus
                                                                     value={newTeamData.name}
-                                                                    onChange={(e) => setNewTeamData({...newTeamData, name: e.target.value})}
-                                                                    placeholder="e.g. Velocity Vanguards"
-                                                                    className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-gold/50 focus:outline-none placeholder-gray-600 transition-colors"
+                                                                    onChange={(e) => setNewTeamData({ name: e.target.value })}
+                                                                    placeholder="Enter your team name..."
+                                                                    className="w-full bg-black/40 border border-white/10 rounded-xl px-5 py-4 text-white focus:border-gold/50 focus:outline-none placeholder-gray-700 transition-all font-medium text-base shadow-inner"
                                                                 />
                                                             </div>
 
-                                                            <div>
-                                                                <label className="block text-xs font-bold text-gray-400 uppercase mb-1.5">Looking For (Optional)</label>
-                                                                <p className="text-[10px] text-gray-500 mb-2">Separate skills with commas (e.g. Frontend, Rust, Design)</p>
-                                                                <input 
-                                                                    type="text" 
-                                                                    placeholder="Add skills tags..."
-                                                                    value={newTeamData.lookingFor.join(', ')}
-                                                                    onChange={(e) => setNewTeamData({...newTeamData, lookingFor: e.target.value.split(',').map(s => s.trim()).filter(Boolean)})}
-                                                                    className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-gold/50 focus:outline-none placeholder-gray-600 transition-colors"
-                                                                />
-                                                                <div className="flex flex-wrap gap-2 mt-2">
-                                                                    {newTeamData.lookingFor.map((tag, i) => (
-                                                                        <span key={i} className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-gray-300 flex items-center gap-1">
-                                                                            {tag} <X className="w-3 h-3 cursor-pointer hover:text-white" onClick={() => setNewTeamData(prev => ({...prev, lookingFor: prev.lookingFor.filter((_, idx) => idx !== i)}))} />
-                                                                        </span>
-                                                                    ))}
-                                                                </div>
+                                                            <div className="bg-black/20 border border-white/5 rounded-xl p-4 space-y-3">
+                                                                <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                                                                    <Sparkles className="w-3 h-3 text-gold" /> Guidelines
+                                                                </h4>
+                                                                <ul className="space-y-2">
+                                                                    <li className="flex items-start gap-2 text-xs text-gray-500">
+                                                                        <div className="w-1 h-1 rounded-full bg-gold/40 mt-1.5 shrink-0" />
+                                                                        <span>Choosing a unique name helps your team stand out.</span>
+                                                                    </li>
+                                                                    <li className="flex items-start gap-2 text-xs text-gray-500">
+                                                                        <div className="w-1 h-1 rounded-full bg-gold/40 mt-1.5 shrink-0" />
+                                                                        <span>You can change your team settings later in the workspace.</span>
+                                                                    </li>
+                                                                    <li className="flex items-start gap-2 text-xs text-gray-500">
+                                                                        <div className="w-1 h-1 rounded-full bg-gold/40 mt-1.5 shrink-0" />
+                                                                        <span>Once created, you can immediately start inviting members.</span>
+                                                                    </li>
+                                                                </ul>
                                                             </div>
 
-                                                            <div className="flex gap-3 pt-4 mt-2 border-t border-white/5">
+                                                            <div className="flex gap-3 pt-4 border-t border-white/5">
                                                                 <button 
-                                                                    onClick={() => setIsCreatingTeam(false)}
-                                                                    className="flex-1 px-4 py-2.5 rounded-lg border border-white/10 text-gray-400 hover:text-white hover:bg-white/5 transition-colors font-bold text-xs"
+                                                                    onClick={() => { setIsCreatingTeam(false); setNewTeamData({ name: '' }); }}
+                                                                    className="flex-1 px-4 py-3 rounded-xl border border-white/10 text-gray-400 hover:text-white hover:bg-white/5 transition-colors font-bold text-xs uppercase tracking-widest"
                                                                 >
                                                                     Cancel
                                                                 </button>
@@ -741,14 +747,15 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                                                         setUserTeam({
                                                                             ...DEFAULT_NEW_TEAM,
                                                                             name: newTeamData.name,
-                                                                            tags: newTeamData.lookingFor.length > 0 ? newTeamData.lookingFor : DEFAULT_NEW_TEAM.tags
+                                                                            tags: ['Early Stage']
                                                                         });
                                                                         setIsCreatingTeam(false);
+                                                                        setNewTeamData({ name: '' });
                                                                     }}
                                                                     disabled={!newTeamData.name}
-                                                                    className={`flex-1 px-4 py-2.5 rounded-lg font-bold text-xs transition-colors flex items-center justify-center gap-2 ${!newTeamData.name ? 'bg-gray-800 text-gray-500 cursor-not-allowed' : 'bg-gold text-black hover:bg-gold/90'}`}
+                                                                    className={`flex-1 px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${!newTeamData.name ? 'bg-gray-800 text-gray-600 cursor-not-allowed' : 'bg-gold text-black hover:bg-gold/90 shadow-lg shadow-gold/10 hover:scale-[1.02] active:scale-95'}`}
                                                                 >
-                                                                    Create Team <ChevronRight className="w-3 h-3" />
+                                                                    Create Team <ChevronRight className="w-4 h-4" />
                                                                 </button>
                                                             </div>
                                                         </div>
