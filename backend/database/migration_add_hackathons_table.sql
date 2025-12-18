@@ -4,6 +4,9 @@
 -- =============================================
 -- DROP EXISTING (if any)
 -- =============================================
+DROP TABLE IF EXISTS hackathon_submission_votes CASCADE;
+DROP TABLE IF EXISTS hackathon_registrations CASCADE;
+DROP TABLE IF EXISTS hackathon_submissions CASCADE;
 DROP TABLE IF EXISTS hackathons CASCADE;
 
 -- =============================================
@@ -89,8 +92,43 @@ CREATE POLICY "Only admins can delete hackathons"
   );
 
 -- =============================================
--- INSERT SAMPLE HACKATHON FOR TESTING
+-- INSERT HACKATHONS DATA
 -- =============================================
+
+-- DSUC Hackathon Solana Edu (current active hackathon)
+INSERT INTO hackathons (
+  slug,
+  title,
+  tagline,
+  description,
+  organizer_name,
+  prize_pool,
+  status,
+  is_featured,
+  registration_start,
+  registration_end,
+  submission_start,
+  submission_end,
+  judging_start,
+  judging_end
+) VALUES (
+  'dsuc-hackathon-solana-edu',
+  'DSUC Hackathon - Solana Education',
+  'Build educational tools on Solana',
+  'Create innovative educational applications and tools powered by Solana blockchain. Join developers from around the world to build the future of Web3 education.',
+  'DSUC',
+  '$50,000',
+  'active',
+  true,
+  NOW() - INTERVAL '30 days',
+  NOW() + INTERVAL '60 days',
+  NOW() - INTERVAL '7 days',
+  NOW() + INTERVAL '53 days',
+  NOW() + INTERVAL '53 days',
+  NOW() + INTERVAL '60 days'
+) ON CONFLICT (slug) DO NOTHING;
+
+-- Solana Global Hackathon 2025
 INSERT INTO hackathons (
   slug,
   title,
@@ -123,11 +161,13 @@ INSERT INTO hackathons (
   NOW() + INTERVAL '60 days'
 ) ON CONFLICT (slug) DO NOTHING;
 
--- Get the ID for reference
+-- Log created hackathons
 DO $$
 DECLARE
-  hackathon_uuid UUID;
+  rec RECORD;
 BEGIN
-  SELECT id INTO hackathon_uuid FROM hackathons WHERE slug = 'solana-hackathon-2025';
-  RAISE NOTICE 'Hackathon UUID: %', hackathon_uuid;
+  RAISE NOTICE '=== Created Hackathons ===';
+  FOR rec IN SELECT id, slug, title FROM hackathons ORDER BY created_at DESC LOOP
+    RAISE NOTICE 'ID: %, Slug: %, Title: %', rec.id, rec.slug, rec.title;
+  END LOOP;
 END $$;
