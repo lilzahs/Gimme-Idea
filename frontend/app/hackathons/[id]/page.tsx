@@ -4,14 +4,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Trophy, Calendar, Users, Clock, ChevronRight,
-  Target, Zap, MessageSquare, FileText, CheckCircle2,
+  Target, MessageSquare, FileText, CheckCircle2,
   AlertCircle, MoreHorizontal, Github, Disc, Link as LinkIcon,
   Monitor, Mic, SwatchBook, Code, ShieldCheck, Smartphone, UserPlus, 
   RefreshCw, Lock, Search, Plus, Settings, LogOut, UserMinus,
   LayoutDashboard, Rocket, BookOpen, Menu as MenuIcon, X, Sparkles, Activity
 } from 'lucide-react';
 import Image from 'next/image';
-import Link from 'next/link';
+
 import { useSearchParams } from 'next/navigation';
 import { format, isBefore } from 'date-fns';
 import { HACKATHONS_MOCK_DATA } from '@/lib/mock-hackathons';
@@ -20,7 +20,7 @@ import InviteMemberModal from '@/components/InviteMemberModal';
 // Map icon names from mock data to Lucide React components
 const LucideIconMap: { [key: string]: React.ElementType } = {
   Trophy, Calendar, Users, Clock, ChevronRight,
-  Target, Zap, MessageSquare, FileText, CheckCircle2,
+  Target, MessageSquare, FileText, CheckCircle2,
   AlertCircle, MoreHorizontal, Github, Disc, LinkIcon,
   Monitor, Mic, SwatchBook, Code, ShieldCheck, Smartphone, UserPlus, RefreshCw
 };
@@ -32,11 +32,7 @@ const DEFAULT_NEW_TEAM = {
   maxMembers: 5
 };
 
-const MOCK_USER_IDEAS = [
-    { id: 'idea-1', title: 'Decentralized Uber', description: 'A peer-to-peer ride sharing protocol on Solana. Eliminating middlemen fees.', category: 'DePIN', tags: ['Mobility', 'Solana'], date: '2 days ago' },
-    { id: 'idea-2', title: 'NFT Ticketing', description: 'Eliminating scalpers using dynamic NFTs for event access with verifiable ownership.', category: 'NFT', tags: ['Events', 'Utility'], date: '1 week ago' },
-    { id: 'idea-3', title: 'DAO Governance Tool', description: 'AI-powered proposal summarizer for DAOs to increase voter participation.', category: 'DAO', tags: ['AI', 'Governance'], date: '2 weeks ago' },
-];
+
 
 // Moved SidebarItem definition outside the component
 const SidebarItem = ({ id, label, icon: Icon, activeSection, setActiveSection, setIsMobileMenuOpen }: 
@@ -117,6 +113,8 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
 
   // Data States
   const [userTeam, setUserTeam] = useState<any>(null);
+  const [isCreatingTeam, setIsCreatingTeam] = useState(false);
+  const [newTeamData, setNewTeamData] = useState({ name: '', lookingFor: [] as string[] });
   const [countdown, setCountdown] = useState({ text: 'Calculating...', label: 'Loading...' });
 
   // Handle inviting a user (mock functionality)
@@ -165,17 +163,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
     alert('Invitation rejected.');
   };
 
-  // Submission State
-  const [submission, setSubmission] = useState({
-    title: '',
-    description: '',
-    projectUrl: '',
-    videoUrl: '',
-    track: '',
-    selectedIdeaId: ''
-  });
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [projectSubTab, setProjectSubTab] = useState<'dashboard' | 'submit'>('dashboard');
+
 
   // Terminal State
   const [terminalInput, setTerminalInput] = useState('');
@@ -216,6 +204,9 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
   const lastTimelineItem = hackathon?.timeline?.[(hackathon?.timeline?.length || 0) - 1];
   const eventEndDate = lastTimelineItem?.endDate || lastTimelineItem?.startDate;
 
+  // Submission State
+  const [submission, setSubmission] = useState<{ track?: string }>({});
+
   // Auto-set single track
   useEffect(() => {
     if (hackathon?.tracks && hackathon.tracks.length === 1) {
@@ -238,12 +229,11 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
 
       if (nextStep) {
         const diff = nextStep.date.getTime() - currentNow.getTime();
-        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const totalHours = Math.floor(diff / (1000 * 60 * 60));
         const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         const seconds = Math.floor((diff % (1000 * 60)) / 1000);
         setCountdown({
-            text: `${String(days).padStart(2, '0')}D : ${String(hours).padStart(2, '0')}H : ${String(minutes).padStart(2, '0')}M`,
+            text: `${String(totalHours).padStart(2, '0')} : ${String(minutes).padStart(2, '0')} : ${String(seconds).padStart(2, '0')}`,
             label: `Next: ${nextStep.title}`
         });
       } else {
@@ -257,10 +247,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
     }
   }, [hackathon, mockDate]);
 
-  const handleSubmitProject = (e: React.FormEvent) => {
-    e.preventDefault();
-    setTimeout(() => setIsSubmitted(true), 1000);
-  };
+
 
   const handleTerminalSubmit = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
@@ -642,60 +629,132 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                       {/* LEFT COLUMN: Team Management (Span 8) */}
                                       <div className="lg:col-span-8 flex flex-col gap-6 h-full overflow-y-auto pr-2 pb-20 md:pb-0">
                                           {!userTeam ? (
-                                             <div className="h-full flex flex-col justify-center max-w-4xl mx-auto w-full">
-                                                {/* Pending Invitations */}
-                                                {pendingInvitations.length > 0 && (
-                                                    <div className="bg-surface border border-gold/30 rounded-xl p-6 mb-6 relative overflow-hidden animate-in fade-in slide-in-from-top-5">
-                                                        <div className="absolute top-0 left-0 w-1 h-full bg-gold" />
-                                                        <h3 className="text-lg font-bold text-white mb-4 font-quantico flex items-center gap-2">
-                                                            <MessageSquare className="w-5 h-5 text-gold" /> Pending Invitations
-                                                        </h3>
-                                                        <div className="space-y-3">
-                                                            {pendingInvitations.map((invite) => (
-                                                                <div key={invite.id} className="flex flex-col sm:flex-row items-center justify-between bg-white/5 p-4 rounded-lg border border-white/10 gap-4">
-                                                                    <div className="flex items-center gap-3">
-                                                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold/20 to-yellow-600/20 border border-gold/30 flex items-center justify-center">
-                                                                            <Users className="w-5 h-5 text-gold" />
+                                             !isCreatingTeam ? (
+                                                <div className="h-full flex flex-col justify-center max-w-4xl mx-auto w-full">
+                                                    {/* Pending Invitations */}
+                                                    {pendingInvitations.length > 0 && (
+                                                        <div className="bg-surface border border-gold/30 rounded-xl p-6 mb-6 relative overflow-hidden animate-in fade-in slide-in-from-top-5">
+                                                            <div className="absolute top-0 left-0 w-1 h-full bg-gold" />
+                                                            <h3 className="text-lg font-bold text-white mb-4 font-quantico flex items-center gap-2">
+                                                                <MessageSquare className="w-5 h-5 text-gold" /> Pending Invitations
+                                                            </h3>
+                                                            <div className="space-y-3">
+                                                                {pendingInvitations.map((invite) => (
+                                                                    <div key={invite.id} className="flex flex-col sm:flex-row items-center justify-between bg-white/5 p-4 rounded-lg border border-white/10 gap-4">
+                                                                        <div className="flex items-center gap-3">
+                                                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold/20 to-yellow-600/20 border border-gold/30 flex items-center justify-center">
+                                                                                <Users className="w-5 h-5 text-gold" />
+                                                                            </div>
+                                                                            <div>
+                                                                                <p className="text-sm text-gray-300">
+                                                                                    <span className="text-white font-bold">{invite.inviterName}</span> invited you to join <span className="text-gold font-bold">{invite.teamName}</span>
+                                                                                </p>
+                                                                                <p className="text-[10px] text-gray-500">Just now</p>
+                                                                            </div>
                                                                         </div>
-                                                                        <div>
-                                                                            <p className="text-sm text-gray-300">
-                                                                                <span className="text-white font-bold">{invite.inviterName}</span> invited you to join <span className="text-gold font-bold">{invite.teamName}</span>
-                                                                            </p>
-                                                                            <p className="text-[10px] text-gray-500">Just now</p>
+                                                                        <div className="flex gap-2 w-full sm:w-auto">
+                                                                            <button 
+                                                                                onClick={() => handleAcceptInvitation(invite.id)}
+                                                                                className="flex-1 sm:flex-none px-4 py-2 bg-gold text-black text-xs font-bold rounded hover:bg-gold/90 transition-colors"
+                                                                            >
+                                                                                Accept
+                                                                            </button>
+                                                                            <button 
+                                                                                onClick={() => handleRejectInvitation(invite.id)}
+                                                                                className="flex-1 sm:flex-none px-4 py-2 bg-white/10 text-gray-300 text-xs font-bold rounded hover:bg-white/20 transition-colors"
+                                                                            >
+                                                                                Reject
+                                                                            </button>
                                                                         </div>
                                                                     </div>
-                                                                    <div className="flex gap-2 w-full sm:w-auto">
-                                                                        <button 
-                                                                            onClick={() => handleAcceptInvitation(invite.id)}
-                                                                            className="flex-1 sm:flex-none px-4 py-2 bg-gold text-black text-xs font-bold rounded hover:bg-gold/90 transition-colors"
-                                                                        >
-                                                                            Accept
-                                                                        </button>
-                                                                        <button 
-                                                                            onClick={() => handleRejectInvitation(invite.id)}
-                                                                            className="flex-1 sm:flex-none px-4 py-2 bg-white/10 text-gray-300 text-xs font-bold rounded hover:bg-white/20 transition-colors"
-                                                                        >
-                                                                            Reject
-                                                                        </button>
-                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    <div className="flex flex-col items-center justify-center text-center p-8 bg-surface border border-white/5 rounded-xl">
+                                                        <Rocket className="w-12 h-12 text-gold mb-6" />
+                                                        <h2 className="text-2xl font-bold text-white mb-3 font-quantico">Start Building</h2>
+                                                        <p className="text-gray-400 text-sm mb-6 max-w-md">
+                                                           Ready to ship? Create a team to collaborate with others, or start solo. 
+                                                           You'll need a team to submit your project.
+                                                        </p>
+                                                        <button onClick={() => setIsCreatingTeam(true)} className="bg-gold text-black font-bold px-8 py-3 rounded-lg hover:bg-gold/90 transition-transform hover:scale-105 flex items-center gap-2">
+                                                           <Plus className="w-4 h-4" /> Create Team
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                             ) : (
+                                                <div className="h-full flex flex-col justify-center max-w-2xl mx-auto w-full">
+                                                    <div className="bg-surface border border-white/5 rounded-xl p-8">
+                                                        <div className="flex items-center gap-3 mb-6">
+                                                            <div className="w-10 h-10 bg-gold/10 rounded-lg flex items-center justify-center border border-gold/20">
+                                                                <Rocket className="w-5 h-5 text-gold" />
+                                                            </div>
+                                                            <div>
+                                                                <h2 className="text-xl font-bold text-white font-quantico">Create Your Team</h2>
+                                                                <p className="text-xs text-gray-500">Form a squad to build something amazing.</p>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="space-y-4">
+                                                            <div>
+                                                                <label className="block text-xs font-bold text-gray-400 uppercase mb-1.5">Team Name</label>
+                                                                <input 
+                                                                    type="text" 
+                                                                    value={newTeamData.name}
+                                                                    onChange={(e) => setNewTeamData({...newTeamData, name: e.target.value})}
+                                                                    placeholder="e.g. Velocity Vanguards"
+                                                                    className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-gold/50 focus:outline-none placeholder-gray-600 transition-colors"
+                                                                />
+                                                            </div>
+
+                                                            <div>
+                                                                <label className="block text-xs font-bold text-gray-400 uppercase mb-1.5">Looking For (Optional)</label>
+                                                                <p className="text-[10px] text-gray-500 mb-2">Separate skills with commas (e.g. Frontend, Rust, Design)</p>
+                                                                <input 
+                                                                    type="text" 
+                                                                    placeholder="Add skills tags..."
+                                                                    value={newTeamData.lookingFor.join(', ')}
+                                                                    onChange={(e) => setNewTeamData({...newTeamData, lookingFor: e.target.value.split(',').map(s => s.trim()).filter(Boolean)})}
+                                                                    className="w-full bg-black/20 border border-white/10 rounded-lg px-4 py-2 text-white focus:border-gold/50 focus:outline-none placeholder-gray-600 transition-colors"
+                                                                />
+                                                                <div className="flex flex-wrap gap-2 mt-2">
+                                                                    {newTeamData.lookingFor.map((tag, i) => (
+                                                                        <span key={i} className="px-2 py-0.5 bg-white/5 border border-white/10 rounded text-[10px] text-gray-300 flex items-center gap-1">
+                                                                            {tag} <X className="w-3 h-3 cursor-pointer hover:text-white" onClick={() => setNewTeamData(prev => ({...prev, lookingFor: prev.lookingFor.filter((_, idx) => idx !== i)}))} />
+                                                                        </span>
+                                                                    ))}
                                                                 </div>
-                                                            ))}
+                                                            </div>
+
+                                                            <div className="flex gap-3 pt-4 mt-2 border-t border-white/5">
+                                                                <button 
+                                                                    onClick={() => setIsCreatingTeam(false)}
+                                                                    className="flex-1 px-4 py-2.5 rounded-lg border border-white/10 text-gray-400 hover:text-white hover:bg-white/5 transition-colors font-bold text-xs"
+                                                                >
+                                                                    Cancel
+                                                                </button>
+                                                                <button 
+                                                                    onClick={() => {
+                                                                        if (!newTeamData.name) return;
+                                                                        setUserTeam({
+                                                                            ...DEFAULT_NEW_TEAM,
+                                                                            name: newTeamData.name,
+                                                                            tags: newTeamData.lookingFor.length > 0 ? newTeamData.lookingFor : DEFAULT_NEW_TEAM.tags
+                                                                        });
+                                                                        setIsCreatingTeam(false);
+                                                                    }}
+                                                                    disabled={!newTeamData.name}
+                                                                    className={`flex-1 px-4 py-2.5 rounded-lg font-bold text-xs transition-colors flex items-center justify-center gap-2 ${!newTeamData.name ? 'bg-gray-800 text-gray-500 cursor-not-allowed' : 'bg-gold text-black hover:bg-gold/90'}`}
+                                                                >
+                                                                    Create Team <ChevronRight className="w-3 h-3" />
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                )}
-
-                                                <div className="flex flex-col items-center justify-center text-center p-8 bg-surface border border-white/5 rounded-xl">
-                                                    <Rocket className="w-12 h-12 text-gold mb-6" />
-                                                    <h2 className="text-2xl font-bold text-white mb-3 font-quantico">Start Building</h2>
-                                                    <p className="text-gray-400 text-sm mb-6 max-w-md">
-                                                       Ready to ship? Create a team to collaborate with others, or start solo. 
-                                                       You'll need a team to submit your project.
-                                                    </p>
-                                                    <button onClick={() => setUserTeam(DEFAULT_NEW_TEAM)} className="bg-gold text-black font-bold px-8 py-3 rounded-lg hover:bg-gold/90 transition-transform hover:scale-105 flex items-center gap-2">
-                                                       <Plus className="w-4 h-4" /> Create Team
-                                                    </button>
                                                 </div>
-                                             </div>
+                                             )
                                           ) : (
                                              <div className="space-y-6">
                                                 {/* Team Header */}
