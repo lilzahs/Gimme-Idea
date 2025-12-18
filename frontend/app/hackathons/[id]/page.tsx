@@ -8,7 +8,7 @@ import {
    AlertCircle, MoreHorizontal, Github, Disc, Link as LinkIcon,
    Monitor, Mic, SwatchBook, Code, ShieldCheck, Smartphone, UserPlus,
    RefreshCw, Lock, Search, Plus, Settings, LogOut, UserMinus,
-   LayoutDashboard, Rocket, BookOpen, Menu as MenuIcon, X, Sparkles, Activity, Send, CheckSquare, Globe, Video, Youtube, ThumbsUp, ArrowLeft
+   LayoutDashboard, Rocket, BookOpen, Menu as MenuIcon, X, Sparkles, Activity, Send, CheckSquare, Globe, Video, Youtube, ThumbsUp, ArrowLeft, FileUp
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -17,7 +17,9 @@ import { useSearchParams } from 'next/navigation';
 import { format, isBefore, isSameDay } from 'date-fns';
 import { HACKATHONS_MOCK_DATA, MY_IDEAS } from '@/lib/mock-hackathons';
 import InviteMemberModal from '@/components/InviteMemberModal';
+import ImportIdeaModal from '@/components/ImportIdeaModal';
 import { useAppStore } from '@/lib/store';
+import { Project } from '@/lib/types';
 
 // Map icon names from mock data to Lucide React components
 const LucideIconMap: { [key: string]: React.ElementType } = {
@@ -76,6 +78,8 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
    const [submissionStep, setSubmissionStep] = useState<'select' | 'details' | 'completed'>('select');
    const [selectedIdeaId, setSelectedIdeaId] = useState<string | null>(null);
    const [submissionForm, setSubmissionForm] = useState({ repoUrl: '', videoUrl: '', notes: '' });
+   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+   const [importedIdeas, setImportedIdeas] = useState<Project[]>([]);
 
    // Background Stars
    const [stars, setStars] = useState<{ id: number; top: string; left: string; size: number; duration: string; opacity: number }[]>([]);
@@ -229,6 +233,29 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
    // Submission State
    const [submission, setSubmission] = useState<{ track?: string }>({});
 
+   // Handle import idea from platform
+   const handleImportIdea = (idea: Project) => {
+      // Check if idea is already imported
+      if (!importedIdeas.find(i => i.id === idea.id)) {
+         setImportedIdeas(prev => [...prev, idea]);
+      }
+      // Auto-select the imported idea
+      setSelectedIdeaId(idea.id);
+   };
+
+   // Combined ideas list (mock + imported)
+   const allIdeas = [
+      ...MY_IDEAS,
+      ...importedIdeas.map(idea => ({
+         id: idea.id,
+         title: idea.title,
+         category: idea.category,
+         description: idea.description,
+         votes: idea.votes,
+         isImported: true // Flag to show it's imported
+      }))
+   ];
+
    // Auto-set single track
    useEffect(() => {
       if (hackathon?.tracks && hackathon.tracks.length === 1) {
@@ -351,18 +378,6 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                   <SidebarItem id="project" label="Team & Reg" icon={Rocket} activeSection={activeSection} setActiveSection={setActiveSection} setIsMobileMenuOpen={setIsMobileMenuOpen} />
                   <SidebarItem id="resources" label="Resources" icon={BookOpen} activeSection={activeSection} setActiveSection={setActiveSection} setIsMobileMenuOpen={setIsMobileMenuOpen} />
                </nav>
-               <div className="p-4 border-t border-white/5 bg-black/20">
-                  <div className="flex items-center gap-3">
-                     <div className="w-8 h-8 rounded-full bg-gray-700 overflow-hidden relative">
-                        <div className="absolute inset-0 bg-gradient-to-tr from-purple-500 to-blue-500 opacity-80"></div>
-                     </div>
-                     <div className="flex-1 min-w-0">
-                        <p className="text-white text-xs font-bold truncate">Thodium</p>
-                        <p className="text-[10px] text-gray-500 truncate">Explorer</p>
-                     </div>
-                     <Settings className="w-4 h-4 text-gray-500 cursor-pointer hover:text-white" />
-                  </div>
-               </div>
             </aside>
 
             {/* Main Content */}
@@ -715,24 +730,49 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                                          <h2 className="text-xl font-bold text-white mb-1 font-quantico">Submit Your Idea</h2>
                                                          <p className="text-gray-400 text-xs">Choose an existing idea or create a new one for this hackathon.</p>
                                                       </div>
-                                                      <button
-                                                         onClick={() => openSubmitModal('idea')}
-                                                         className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-white text-xs font-bold transition-all flex items-center gap-2 shrink-0"
-                                                      >
-                                                         <Plus className="w-3 h-3" /> Create New Idea
-                                                      </button>
+                                                      <div className="flex items-center gap-2 shrink-0">
+                                                         <button
+                                                            onClick={() => setIsImportModalOpen(true)}
+                                                            className="px-4 py-2 bg-gold/10 hover:bg-gold/20 border border-gold/30 rounded-lg text-gold text-xs font-bold transition-all flex items-center gap-2"
+                                                         >
+                                                            <FileUp className="w-3 h-3" /> Import Your Idea
+                                                         </button>
+                                                         <button
+                                                            onClick={() => openSubmitModal('idea')}
+                                                            className="px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg text-white text-xs font-bold transition-all flex items-center gap-2"
+                                                         >
+                                                            <Plus className="w-3 h-3" /> Create New Idea
+                                                         </button>
+                                                      </div>
                                                    </div>
 
                                                    <div className="grid gap-4">
                                                       <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest ml-1">Your Hackathon Ideas</div>
-                                                      {MY_IDEAS.map(idea => (
+                                                      {allIdeas.length === 0 ? (
+                                                         <div className="flex flex-col items-center justify-center py-12 gap-3 text-center bg-surface border border-white/5 rounded-xl">
+                                                            <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center">
+                                                               <FileUp className="w-8 h-8 text-gray-600" />
+                                                            </div>
+                                                            <div>
+                                                               <p className="text-sm text-gray-400 mb-1">No ideas yet</p>
+                                                               <p className="text-xs text-gray-500">Create a new idea or import from your GimmeIdea submissions</p>
+                                                            </div>
+                                                         </div>
+                                                      ) : allIdeas.map(idea => (
                                                          <div
                                                             key={idea.id}
                                                             className={`group relative p-5 rounded-xl border transition-all cursor-pointer ${selectedIdeaId === idea.id ? 'bg-gold/10 border-gold shadow-lg shadow-gold/5' : 'bg-black/20 border-white/5 hover:border-white/20 hover:bg-white/5'}`}
                                                             onClick={() => setSelectedIdeaId(idea.id)}
                                                          >
                                                             <div className="flex justify-between items-start mb-3">
-                                                               <span className="bg-white/5 border border-white/10 px-2 py-0.5 rounded text-[10px] text-gray-400 font-mono">{idea.category}</span>
+                                                               <div className="flex items-center gap-2">
+                                                                  <span className="bg-white/5 border border-white/10 px-2 py-0.5 rounded text-[10px] text-gray-400 font-mono">{idea.category}</span>
+                                                                  {'isImported' in idea && idea.isImported && (
+                                                                     <span className="bg-gold/10 border border-gold/30 px-2 py-0.5 rounded text-[10px] text-gold font-bold flex items-center gap-1">
+                                                                        <FileUp className="w-2.5 h-2.5" /> Imported
+                                                                     </span>
+                                                                  )}
+                                                               </div>
                                                                <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors ${selectedIdeaId === idea.id ? 'bg-gold border-gold' : 'border-gray-600 group-hover:border-gray-400'}`}>
                                                                   {selectedIdeaId === idea.id && <CheckCircle2 className="w-3 h-3 text-black" />}
                                                                </div>
@@ -742,7 +782,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                                             <div className="flex items-center gap-4 text-[10px] font-bold text-gray-600 uppercase tracking-tighter">
                                                                <span className="flex items-center gap-1"><ThumbsUp className="w-3 h-3" /> {idea.votes} Votes</span>
                                                                <span className="text-gray-800">•</span>
-                                                               <span>Created 2 days ago</span>
+                                                               <span>{'isImported' in idea && idea.isImported ? 'From GimmeIdea' : 'Created 2 days ago'}</span>
                                                             </div>
                                                          </div>
                                                       ))}
@@ -1242,6 +1282,12 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
             onSearchQueryChange={setSearchInviteUserQuery}
             onInvite={handleInviteUser}
             teamMembers={userTeam ? userTeam.members : []}
+         />
+         {/* Import Idea Modal */}
+         <ImportIdeaModal
+            isOpen={isImportModalOpen}
+            onClose={() => setIsImportModalOpen(false)}
+            onSelectIdea={handleImportIdea}
          />
       </div>
    );
