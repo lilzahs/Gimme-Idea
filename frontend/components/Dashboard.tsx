@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRealtimeProjects } from '../hooks/useRealtimeProjects';
 import { ComingSoonModal } from './ComingSoonModal';
 import { AIChatModal } from './AIChatModal';
+import { LoadingSpinner } from './LoadingSpinner';
 
 interface DashboardProps {
     mode: 'project' | 'idea';
@@ -27,6 +28,7 @@ export default function Dashboard({ mode }: DashboardProps) {
     fetchMoreProjects,
     hasMoreProjects,
     isLoading,
+    isLoadingMore,
     handleRealtimeNewProject,
     handleRealtimeUpdateProject,
     handleRealtimeDeleteProject,
@@ -191,14 +193,11 @@ export default function Dashboard({ mode }: DashboardProps) {
 
         {/* Grid */}
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-20 sm:py-32">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-              className="w-12 h-12 sm:w-16 sm:h-16 border-4 border-white/10 border-t-white rounded-full mb-4"
-            />
-            <p className="text-gray-400 animate-pulse text-sm sm:text-base">Loading {mode}s...</p>
-          </div>
+          <LoadingSpinner 
+            isLoading={isLoading} 
+            size="lg" 
+            text={`Loading ${mode}s...`}
+          />
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-10 mt-6 sm:mt-10">
@@ -244,16 +243,24 @@ export default function Dashboard({ mode }: DashboardProps) {
               <div className="flex justify-center mt-8 sm:mt-10">
                 <button
                   onClick={fetchMoreProjects}
-                  disabled={isLoading}
+                  disabled={isLoadingMore}
                   className="px-5 sm:px-6 py-2 sm:py-2.5 bg-white/5 hover:bg-[#FFD700] border border-white/20 hover:border-[#FFD700] rounded-full text-sm text-white hover:text-black font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 group"
                 >
-                  {isLoading ? (
+                  {isLoadingMore ? (
                     <>
                       <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                        className="w-4 h-4 border-2 border-white/20 border-t-white group-hover:border-black/20 group-hover:border-t-black rounded-full"
-                      />
+                        className="relative w-4 h-4"
+                      >
+                        <motion.div
+                          className="absolute inset-0 rounded-full border-2 border-transparent"
+                          style={{
+                            borderTopColor: '#FFD700',
+                            borderRightColor: '#9945FF',
+                          }}
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+                        />
+                      </motion.div>
                       <span className="text-sm">Loading...</span>
                     </>
                   ) : (

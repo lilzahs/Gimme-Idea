@@ -81,7 +81,7 @@ export const IdeaCard: React.FC<IdeaCardProps> = ({ project }) => {
     >
       {/* Card Container - Always visible */}
       <div 
-        className="relative bg-gradient-to-br from-[#1a1a2e]/95 to-[#0d0d1a]/98 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden transition-all duration-300 h-[220px] flex flex-col"
+        className="relative bg-gradient-to-br from-[#1a1a2e]/95 to-[#0d0d1a]/98 backdrop-blur-xl border border-white/10 rounded-xl overflow-hidden transition-all duration-300 h-[260px] flex flex-col"
         style={{
           boxShadow: isHovered 
             ? '0 0 30px rgba(255, 215, 0, 0.3), 0 0 60px rgba(153, 69, 255, 0.2)'

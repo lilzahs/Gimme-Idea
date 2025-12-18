@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { AuthorLink } from './AuthorLink';
 import { createUniqueSlug } from '../lib/slug-utils';
+import { LoadingSpinner } from './LoadingSpinner';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
@@ -53,7 +54,7 @@ const RecommendedCard = ({
     >
       {/* Card Container */}
       <div 
-        className="relative bg-gradient-to-br from-[#1a1a2e]/95 to-[#0d0d1a]/98 backdrop-blur-xl rounded-xl overflow-hidden transition-all duration-300 h-[280px] flex flex-col"
+        className="relative bg-gradient-to-br from-[#1a1a2e]/95 to-[#0d0d1a]/98 backdrop-blur-xl rounded-xl overflow-hidden transition-all duration-300 h-[300px] flex flex-col"
         style={{
           border: `1px solid ${medal.color}30`,
           boxShadow: isHovered 
@@ -297,15 +298,7 @@ export const RecommendedIdeas = () => {
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-white">Top 3 of {selectedCategory}</h2>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="glass-panel p-6 rounded-2xl animate-pulse h-[300px]">
-              <div className="h-6 bg-white/10 rounded mb-4" />
-              <div className="h-4 bg-white/10 rounded mb-2" />
-              <div className="h-4 bg-white/10 rounded w-2/3" />
-            </div>
-          ))}
-        </div>
+        <LoadingSpinner isLoading={true} size="md" text="Loading recommendations..." />
       </div>
     );
   }

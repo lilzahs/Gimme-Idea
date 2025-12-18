@@ -14,6 +14,7 @@ import { EditProjectModal } from './EditProjectModal';
 import { ImageCropper } from './ImageCropper';
 import { FollowButton, FollowStats } from './FollowButton';
 import { FollowListModal } from './FollowListModal';
+import { LoadingSpinner } from './LoadingSpinner';
 import { useFollow } from '../hooks/useFollow';
 import toast from 'react-hot-toast';
 import { Project, Feed } from '../lib/types';
@@ -262,7 +263,7 @@ export const Profile = () => {
   if (authLoading) {
       return (
           <div className="min-h-screen flex items-center justify-center pt-20">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-accent"></div>
+              <LoadingSpinner isLoading={true} size="lg" text="Loading profile..." />
           </div>
       );
   }
@@ -847,10 +848,7 @@ export const Profile = () => {
                 {activeTab === 'ideas' ? (
                     <>
                         {isLoadingIdeas ? (
-                            <div className="flex flex-col items-center justify-center py-16">
-                                <Loader2 className="w-8 h-8 animate-spin text-purple-400 mb-4" />
-                                <p className="text-gray-400">Loading ideas...</p>
-                            </div>
+                            <LoadingSpinner isLoading={true} size="md" text="Loading ideas..." />
                         ) : userIdeas.length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {userIdeas.map(project => (
@@ -902,9 +900,7 @@ export const Profile = () => {
                     /* Feeds Tab */
                     <div>
                         {isLoadingFeeds ? (
-                            <div className="flex items-center justify-center py-16">
-                                <Loader2 className="w-8 h-8 animate-spin text-[#FFD700]" />
-                            </div>
+                            <LoadingSpinner isLoading={true} size="md" text="Loading feeds..." />
                         ) : userFeeds.length > 0 ? (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {userFeeds.map(feed => (

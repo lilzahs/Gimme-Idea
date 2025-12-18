@@ -17,6 +17,7 @@ import { EditFeedModal } from '@/components/EditFeedModal';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
 import { createUsernameSlug } from '@/lib/slug-utils';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 // Feed type icons
 const FEED_TYPE_CONFIG = {
@@ -188,7 +189,7 @@ export default function FeedDetailPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#FFD700]" />
+        <LoadingSpinner isLoading={true} size="lg" text="Loading feed..." />
       </div>
     );
   }

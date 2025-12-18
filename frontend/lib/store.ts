@@ -18,6 +18,7 @@ interface AppState {
   viewedUser: User | null;
   projects: Project[];
   isLoading: boolean;
+  isLoadingMore: boolean;
   isNavigating: boolean;
 
   // Connect Wallet Reminder State (for non-logged in users)
@@ -114,6 +115,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   viewedUser: null,
   projects: [],
   isLoading: false,
+  isLoadingMore: false,
   isNavigating: false,
   isConnectReminderOpen: false,
   isSubmitModalOpen: false,
@@ -310,10 +312,15 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   fetchProjects: async (filters) => {
     try {
-      set({ isLoading: true });
+      const append = filters?.append || false;
+      // Use isLoadingMore for append mode, isLoading for initial load
+      if (append) {
+        set({ isLoadingMore: true });
+      } else {
+        set({ isLoading: true });
+      }
       const limit = filters?.limit || 9; // Load 9 ideas initially for faster load
       const offset = filters?.offset || 0;
-      const append = filters?.append || false;
 
       const response = await apiClient.getProjects({
         limit,
@@ -339,7 +346,7 @@ export const useAppStore = create<AppState>((set, get) => ({
           );
           set({
             projects: [...existingProjects, ...uniqueNewProjects],
-            isLoading: false,
+            isLoadingMore: false,
             hasMoreProjects: newProjects.length >= limit,
             projectsOffset: offset + newProjects.length,
           });
@@ -353,17 +360,17 @@ export const useAppStore = create<AppState>((set, get) => ({
           });
         }
       } else {
-        set({ isLoading: false, hasMoreProjects: false });
+        set({ isLoading: false, isLoadingMore: false, hasMoreProjects: false });
       }
     } catch (error) {
       console.error("Failed to fetch projects:", error);
-      set({ isLoading: false });
+      set({ isLoading: false, isLoadingMore: false });
     }
   },
 
   fetchMoreProjects: async () => {
     const state = get();
-    if (state.isLoading || !state.hasMoreProjects) return;
+    if (state.isLoadingMore || !state.hasMoreProjects) return;
 
     // Determine current filter type from existing projects
     const currentType = state.projects[0]?.type || "idea";

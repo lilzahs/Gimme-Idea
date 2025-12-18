@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { IdeaDetail } from '../../../components/IdeaDetail';
 import { useAppStore } from '../../../lib/store';
 import { extractIdFromSlug } from '../../../lib/slug-utils';
+import { LoadingSpinner } from '../../../components/LoadingSpinner';
 
 export default function IdeaDetailPage() {
   const params = useParams();
@@ -40,7 +41,7 @@ export default function IdeaDetailPage() {
   if (isLoading || !ideaId || !selectedProject) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="w-16 h-16 border-4 border-white/10 border-t-white rounded-full animate-spin" />
+        <LoadingSpinner isLoading={true} size="lg" text="Loading idea..." />
       </div>
     );
   }
