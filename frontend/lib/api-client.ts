@@ -915,7 +915,8 @@ export const apiClient = {
   // Accept a team invite
   acceptInvite: (hackathonId: string, inviteId: string) =>
     apiFetch<{
-      teamId: string;
+      teamId?: string;
+      hackathonSlug?: string;
       message: string;
     }>(`/hackathons/teams/invites/${inviteId}/accept`, {
       method: "POST",

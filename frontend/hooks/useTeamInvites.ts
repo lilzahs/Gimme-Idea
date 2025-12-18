@@ -10,6 +10,7 @@ export interface TeamInvite {
     teamId: string;
     teamName: string;
     hackathonId: string;
+    hackathonSlug?: string;
     inviterId: string;
     inviterName: string;
     inviterAvatar?: string;
@@ -48,7 +49,7 @@ export function useTeamInvites() {
             const response = await apiClient.acceptInvite(hackathonId, inviteId);
             if (response.success) {
                 setInvites((prev) => prev.filter((inv) => inv.id !== inviteId));
-                return { success: true, teamId: response.data?.teamId };
+                return { success: true, teamId: response.data?.teamId, hackathonSlug: response.data?.hackathonSlug };
             }
             return { success: false, error: response.error };
         } catch (error: any) {

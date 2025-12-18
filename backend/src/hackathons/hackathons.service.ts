@@ -1362,7 +1362,8 @@ export class HackathonsService {
                 team:hackathon_teams!hackathon_team_invites_team_id_fkey(
                     id,
                     name,
-                    hackathon_id
+                    hackathon_id,
+                    hackathon:hackathons!hackathon_teams_hackathon_id_fkey(slug)
                 ),
                 inviter:users!hackathon_team_invites_inviter_id_fkey(
                     id,
@@ -1384,11 +1385,13 @@ export class HackathonsService {
             data: invites?.map((inv) => {
                 const teamData = Array.isArray(inv.team) ? inv.team[0] : inv.team;
                 const inviterData = Array.isArray(inv.inviter) ? inv.inviter[0] : inv.inviter;
+                const hackathonData = teamData?.hackathon ? (Array.isArray(teamData.hackathon) ? teamData.hackathon[0] : teamData.hackathon) : null;
                 return {
                     id: inv.id,
                     teamId: teamData?.id,
                     teamName: teamData?.name,
                     hackathonId: teamData?.hackathon_id,
+                    hackathonSlug: hackathonData?.slug,
                     inviterId: inviterData?.id,
                     inviterName: inviterData?.username,
                     inviterAvatar: inviterData?.avatar,
@@ -1408,13 +1411,23 @@ export class HackathonsService {
         inviteId: string,
         userId: string,
         action: "accept" | "reject"
-    ): Promise<ApiResponse<void>> {
+    ): Promise<ApiResponse<{ hackathonSlug?: string }>> {
         const supabase = this.supabaseService.getAdminClient();
 
-        // Get invite
+        // Get invite with hackathon slug
         const { data: invite } = await supabase
             .from("hackathon_team_invites")
-            .select("id, team_id, invitee_id, status, expires_at")
+            .select(`
+                id, 
+                team_id, 
+                invitee_id, 
+                status, 
+                expires_at,
+                team:hackathon_teams!hackathon_team_invites_team_id_fkey(
+                    hackathon_id,
+                    hackathon:hackathons!hackathon_teams_hackathon_id_fkey(slug)
+                )
+            `)
             .eq("id", inviteId)
             .single();
 
@@ -1469,9 +1482,16 @@ export class HackathonsService {
             throw new Error(`Failed to respond to invite: ${error.message}`);
         }
 
+        // Extract hackathon slug
+        const teamData = Array.isArray(invite.team) ? invite.team[0] : invite.team;
+        const hackathonData = teamData?.hackathon ? (Array.isArray(teamData.hackathon) ? teamData.hackathon[0] : teamData.hackathon) : null;
+
         return {
             success: true,
             message: action === "accept" ? "Successfully joined the team" : "Invite rejected",
+            data: {
+                hackathonSlug: hackathonData?.slug,
+            },
         };
     }
 

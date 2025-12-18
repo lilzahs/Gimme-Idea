@@ -136,7 +136,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
    const [userTeam, setUserTeam] = useState<any>(null);
    const [userTeamRole, setUserTeamRole] = useState<'leader' | 'member' | null>(null);
    const [isCreatingTeam, setIsCreatingTeam] = useState(false);
-   const [newTeamData, setNewTeamData] = useState({ name: '', description: '', isLookingForMembers: true });
+   const [newTeamData, setNewTeamData] = useState({ name: '', description: '' });
    const [isLoadingTeam, setIsLoadingTeam] = useState(false);
    const [teamError, setTeamError] = useState<string | null>(null);
    const [isRegistered, setIsRegistered] = useState(false);
@@ -150,7 +150,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
    // Team Settings Modal
    const [isTeamSettingsOpen, setIsTeamSettingsOpen] = useState(false);
    const [teamSettingsTab, setTeamSettingsTab] = useState<'team' | 'members'>('team');
-   const [editTeamData, setEditTeamData] = useState({ name: '', description: '', isOpen: false });
+   const [editTeamData, setEditTeamData] = useState({ name: '', description: '' });
    const [isSavingTeam, setIsSavingTeam] = useState(false);
 
    // Get user from store
@@ -288,15 +288,14 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
       try {
          const response = await apiClient.createTeam(id, {
             name: newTeamData.name.trim(),
-            description: newTeamData.description.trim() || undefined,
-            isLookingForMembers: newTeamData.isLookingForMembers
+            description: newTeamData.description.trim() || undefined
          });
          if (response.success && response.data) {
             // Reload team data
             await loadMyTeam();
             await loadAllTeams();
             setIsCreatingTeam(false);
-            setNewTeamData({ name: '', description: '', isLookingForMembers: true });
+            setNewTeamData({ name: '', description: '' });
             alert('Team created successfully!');
          } else {
             alert(response.error || 'Failed to create team');
@@ -426,8 +425,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
       if (!userTeam || userTeamRole !== 'leader') return;
       setEditTeamData({
          name: userTeam.name || '',
-         description: userTeam.description || '',
-         isOpen: userTeam.isOpen || false
+         description: userTeam.description || ''
       });
       setTeamSettingsTab('team');
       setIsTeamSettingsOpen(true);
@@ -445,8 +443,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
       try {
          const response = await apiClient.updateTeam(id, userTeam.id, {
             name: editTeamData.name.trim(),
-            description: editTeamData.description.trim() || undefined,
-            isLookingForMembers: editTeamData.isOpen
+            description: editTeamData.description.trim() || undefined
          });
          if (response.success) {
             await loadMyTeam();
@@ -1753,17 +1750,6 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                                                />
                                                             </div>
 
-                                                            <div className="flex items-center gap-3">
-                                                               <input
-                                                                  type="checkbox"
-                                                                  id="lookingForMembers"
-                                                                  checked={newTeamData.isLookingForMembers}
-                                                                  onChange={(e) => setNewTeamData(prev => ({ ...prev, isLookingForMembers: e.target.checked }))}
-                                                                  className="w-4 h-4 accent-gold"
-                                                               />
-                                                               <label htmlFor="lookingForMembers" className="text-sm text-gray-300">Looking for team members</label>
-                                                            </div>
-
                                                             <div className="bg-black/20 border border-white/5 rounded-xl p-4 space-y-3">
                                                                <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center gap-2">
                                                                   <Sparkles className="w-3 h-3 text-gold" /> Guidelines
@@ -1786,7 +1772,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
 
                                                             <div className="flex gap-3 pt-4 border-t border-white/5">
                                                                <button
-                                                                  onClick={() => { setIsCreatingTeam(false); setNewTeamData({ name: '', description: '', isLookingForMembers: true }); }}
+                                                                  onClick={() => { setIsCreatingTeam(false); setNewTeamData({ name: '', description: '' }); }}
                                                                   className="flex-1 px-4 py-3 rounded-xl border border-white/10 text-gray-400 hover:text-white hover:bg-white/5 transition-colors font-bold text-xs uppercase tracking-widest"
                                                                >
                                                                   Cancel
@@ -1824,11 +1810,7 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                                                }`}>
                                                                   {userTeamRole === 'leader' ? 'Leader' : 'Member'}
                                                                </span>
-                                                               {userTeam.isLookingForMembers && (
-                                                                  <span className="bg-green-500/20 text-green-400 text-[10px] px-2 py-0.5 rounded border border-green-500/20 uppercase font-bold">
-                                                                     Recruiting
-                                                                  </span>
-                                                               )}
+
                                                             </div>
                                                             <p className="text-gray-400 text-xs">
                                                                {userTeam.memberCount || userTeam.members?.length || 1} / {userTeam.maxMembers || 5} members
@@ -1856,58 +1838,46 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                                          </div>
                                                       </div>
 
-                                                      <div className="grid md:grid-cols-2 gap-6">
-                                                         {/* Members */}
-                                                         <div className="bg-surface border border-white/5 rounded-xl p-6">
-                                                            <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider">
-                                                               <Users className="w-4 h-4 text-gold" /> Team Members ({userTeam.members?.length || 1})
-                                                            </h3>
-                                                            <div className="space-y-3">
-                                                               {(userTeam.members || []).map((member: any, i: number) => (
-                                                                  <div key={member.id || i} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
-                                                                     <div className="flex items-center gap-3">
-                                                                        {member.avatar ? (
-                                                                           <Image src={member.avatar} alt={member.username || member.name} width={32} height={32} className="rounded-full" />
-                                                                        ) : (
-                                                                           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-xs font-bold text-white">
-                                                                              {(member.username || member.name || '?').charAt(0).toUpperCase()}
-                                                                           </div>
-                                                                        )}
-                                                                        <div>
-                                                                           <p className="text-sm font-bold text-white leading-none mb-1">{member.username || member.name}</p>
-                                                                           <p className="text-[10px] text-gray-400 capitalize">{member.role}</p>
+                                                      {/* Members */}
+                                                      <div className="bg-surface border border-white/5 rounded-xl p-6">
+                                                         <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider">
+                                                            <Users className="w-4 h-4 text-gold" /> Team Members ({userTeam.members?.length || 1})
+                                                         </h3>
+                                                         <div className="space-y-3">
+                                                            {(userTeam.members || []).map((member: any, i: number) => (
+                                                               <div key={member.id || i} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
+                                                                  <div className="flex items-center gap-3">
+                                                                     {member.avatar ? (
+                                                                        <Image src={member.avatar} alt={member.username || member.name} width={32} height={32} className="rounded-full" />
+                                                                     ) : (
+                                                                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-xs font-bold text-white">
+                                                                           {(member.username || member.name || '?').charAt(0).toUpperCase()}
                                                                         </div>
-                                                                     </div>
-                                                                     <div className="flex items-center gap-2">
-                                                                        {member.role === 'leader' && <Trophy className="w-3 h-3 text-gold" />}
-                                                                        {userTeamRole === 'leader' && member.role !== 'leader' && member.id !== user?.id && (
-                                                                           <button 
-                                                                              onClick={() => handleKickMember(member.id)}
-                                                                              className="p-1 rounded hover:bg-red-500/10 text-gray-500 hover:text-red-500 transition-colors"
-                                                                              title="Remove member"
-                                                                           >
-                                                                              <UserMinus className="w-3 h-3" />
-                                                                           </button>
-                                                                        )}
+                                                                     )}
+                                                                     <div>
+                                                                        <p className="text-sm font-bold text-white leading-none mb-1">{member.username || member.name}</p>
+                                                                        <p className="text-[10px] text-gray-400 capitalize">{member.role}</p>
                                                                      </div>
                                                                   </div>
-                                                               ))}
-                                                               {userTeamRole === 'leader' && (
-                                                                  <button onClick={() => setIsInviteModalOpen(true)} className="w-full py-3 border border-dashed border-white/10 rounded-lg flex items-center justify-center text-gray-500 text-xs gap-2 hover:border-gold/30 hover:text-gold transition-all">
-                                                                     <Plus className="w-3 h-3" /> Invite Member
-                                                                  </button>
-                                                               )}
-                                                            </div>
-                                                         </div>
-
-                                                         {/* Chat Placeholder */}
-                                                         <div className="bg-surface border border-white/5 rounded-xl p-6 flex flex-col">
-                                                            <h3 className="text-sm font-bold text-white mb-4 flex items-center gap-2 uppercase tracking-wider">
-                                                               <MessageSquare className="w-4 h-4 text-blue-400" /> Team Chat
-                                                            </h3>
-                                                            <div className="flex-1 bg-black/20 rounded-lg flex items-center justify-center text-gray-600 text-xs italic border border-white/5 min-h-[150px]">
-                                                               Chat feature coming soon...
-                                                            </div>
+                                                                  <div className="flex items-center gap-2">
+                                                                     {member.role === 'leader' && <Trophy className="w-3 h-3 text-gold" />}
+                                                                     {userTeamRole === 'leader' && member.role !== 'leader' && member.id !== user?.id && (
+                                                                        <button 
+                                                                           onClick={() => handleKickMember(member.id)}
+                                                                           className="p-1 rounded hover:bg-red-500/10 text-gray-500 hover:text-red-500 transition-colors"
+                                                                           title="Remove member"
+                                                                        >
+                                                                           <UserMinus className="w-3 h-3" />
+                                                                        </button>
+                                                                     )}
+                                                                  </div>
+                                                               </div>
+                                                            ))}
+                                                            {userTeamRole === 'leader' && (userTeam.members?.length || 1) < (userTeam.maxMembers || 5) && (
+                                                               <button onClick={() => setIsInviteModalOpen(true)} className="w-full py-3 border border-dashed border-white/10 rounded-lg flex items-center justify-center text-gray-500 text-xs gap-2 hover:border-gold/30 hover:text-gold transition-all">
+                                                                  <Plus className="w-3 h-3" /> Invite Member
+                                                               </button>
+                                                            )}
                                                          </div>
                                                       </div>
                                                    </div>
@@ -2407,19 +2377,6 @@ export default function HackathonDashboard({ params }: { params: { id: string } 
                                     rows={3}
                                     className="w-full bg-black/40 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-gold/50 focus:outline-none placeholder-gray-600 text-sm resize-none"
                                  />
-                              </div>
-
-                              <div className="flex items-center gap-3 p-3 bg-black/20 rounded-lg border border-white/5">
-                                 <input
-                                    type="checkbox"
-                                    id="isOpenSetting"
-                                    checked={editTeamData.isOpen}
-                                    onChange={(e) => setEditTeamData(prev => ({ ...prev, isOpen: e.target.checked }))}
-                                    className="w-4 h-4 accent-gold"
-                                 />
-                                 <label htmlFor="isOpenSetting" className="text-sm text-gray-300 cursor-pointer">
-                                    Looking for team members (visible in team listings)
-                                 </label>
                               </div>
 
                               <button

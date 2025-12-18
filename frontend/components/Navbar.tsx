@@ -382,7 +382,7 @@ const Navbar = () => {
                                           setRespondingInviteId(null);
                                           if (result.success) {
                                             setShowNotifications(false);
-                                            router.push(`/hackathons/${invite.hackathonId}`);
+                                            router.push(`/hackathons/${invite.hackathonSlug || invite.hackathonId}`);
                                           }
                                         }}
                                         disabled={respondingInviteId === invite.id}
