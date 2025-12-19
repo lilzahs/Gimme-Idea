@@ -86,6 +86,21 @@ interface ActivityLog {
   };
 }
 
+interface HackathonRound {
+  id: string;
+  roundNumber: number;
+  title: string;
+  description?: string;
+  roundType: 'idea' | 'pitching' | 'final';
+  mode: 'online' | 'offline' | 'hybrid';
+  teamsAdvancing?: number;
+  bonusTeams?: number;
+  startDate: string;
+  endDate: string;
+  resultsDate?: string;
+  status: 'upcoming' | 'active' | 'judging' | 'completed';
+}
+
 interface Hackathon {
   id: string;
   slug: string;
@@ -95,6 +110,7 @@ interface Hackathon {
   status: 'draft' | 'upcoming' | 'active' | 'judging' | 'completed' | 'cancelled';
   prizePool?: string;
   participantsCount: number;
+  teamsCount?: number;
   maxParticipants?: number;
   registrationStart?: string;
   registrationEnd?: string;
@@ -104,6 +120,7 @@ interface Hackathon {
   judgingEnd?: string;
   isFeatured: boolean;
   createdAt: string;
+  rounds?: HackathonRound[];
 }
 
 interface Submission {
@@ -304,6 +321,26 @@ export default function AdminDashboard() {
   const [editingHackathon, setEditingHackathon] = useState<Hackathon | null>(null);
   const [showScoreModal, setShowScoreModal] = useState(false);
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
+  // Rounds management
+  const [showRoundsModal, setShowRoundsModal] = useState(false);
+  const [editingRound, setEditingRound] = useState<HackathonRound | null>(null);
+  const [selectedHackathonRounds, setSelectedHackathonRounds] = useState<HackathonRound[]>([]);
+  const [selectedHackathonForRounds, setSelectedHackathonForRounds] = useState<Hackathon | null>(null);
+  const [isLoadingRounds, setIsLoadingRounds] = useState(false);
+  const [isSavingRounds, setIsSavingRounds] = useState(false);
+  const [roundForm, setRoundForm] = useState({
+    title: '',
+    description: '',
+    roundType: 'idea' as 'idea' | 'pitching' | 'final',
+    mode: 'online' as 'online' | 'offline' | 'hybrid',
+    teamsAdvancing: 10,
+    bonusTeams: 5,
+    startDate: '',
+    endDate: '',
+    resultsDate: '',
+    status: 'upcoming' as 'upcoming' | 'active' | 'judging' | 'completed',
+  });
+  const [isSavingRound, setIsSavingRound] = useState(false);
   const [scoreForm, setScoreForm] = useState({
     innovation: 0,
     execution: 0,
@@ -547,6 +584,78 @@ export default function AdminDashboard() {
     } finally {
       setIsLoadingSubmissions(false);
     }
+  };
+
+  // Fetch rounds for a hackathon
+  const fetchHackathonRounds = async (hackathonId: string) => {
+    setIsLoadingRounds(true);
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+      const res = await fetch(`${API_URL}/admin/hackathons/${hackathonId}/rounds`);
+      const data = await res.json();
+      if (data.success && data.data) {
+        setSelectedHackathonRounds(data.data);
+      } else {
+        // Initialize default 3 rounds if none exist
+        setSelectedHackathonRounds([
+          { id: '', roundNumber: 1, title: 'Round 1: Idea Submission', description: 'Submit your innovative idea', roundType: 'idea', mode: 'online', teamsAdvancing: 50, startDate: '', endDate: '', status: 'upcoming' },
+          { id: '', roundNumber: 2, title: 'Round 2: Pitching', description: 'Pitch your solution to judges', roundType: 'pitching', mode: 'online', teamsAdvancing: 20, startDate: '', endDate: '', status: 'upcoming' },
+          { id: '', roundNumber: 3, title: 'Round 3: Final Demo', description: 'Present working MVP', roundType: 'final', mode: 'offline', teamsAdvancing: 5, startDate: '', endDate: '', status: 'upcoming' },
+        ]);
+      }
+    } catch (error) {
+      console.error('Failed to fetch rounds:', error);
+      // Initialize default 3 rounds on error
+      setSelectedHackathonRounds([
+        { id: '', roundNumber: 1, title: 'Round 1: Idea Submission', description: 'Submit your innovative idea', roundType: 'idea', mode: 'online', teamsAdvancing: 50, startDate: '', endDate: '', status: 'upcoming' },
+        { id: '', roundNumber: 2, title: 'Round 2: Pitching', description: 'Pitch your solution to judges', roundType: 'pitching', mode: 'online', teamsAdvancing: 20, startDate: '', endDate: '', status: 'upcoming' },
+        { id: '', roundNumber: 3, title: 'Round 3: Final Demo', description: 'Present working MVP', roundType: 'final', mode: 'offline', teamsAdvancing: 5, startDate: '', endDate: '', status: 'upcoming' },
+      ]);
+    } finally {
+      setIsLoadingRounds(false);
+    }
+  };
+
+  // Save rounds for a hackathon
+  const handleSaveRounds = async () => {
+    if (!selectedHackathonForRounds) return;
+    setIsSavingRounds(true);
+    try {
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+      const res = await fetch(`${API_URL}/admin/hackathons/${selectedHackathonForRounds.id}/rounds`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rounds: selectedHackathonRounds }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success('Rounds updated successfully!');
+        setShowRoundsModal(false);
+        setSelectedHackathonForRounds(null);
+      } else {
+        toast.error(data.message || 'Failed to save rounds');
+      }
+    } catch (error) {
+      toast.error('Failed to save rounds');
+    } finally {
+      setIsSavingRounds(false);
+    }
+  };
+
+  // Open rounds modal
+  const openRoundsModal = (hackathon: any) => {
+    setSelectedHackathonForRounds(hackathon);
+    fetchHackathonRounds(hackathon.id);
+    setShowRoundsModal(true);
+  };
+
+  // Update round field
+  const updateRoundField = (roundNumber: number, field: keyof HackathonRound, value: any) => {
+    setSelectedHackathonRounds(prev => 
+      prev.map(round => 
+        round.roundNumber === roundNumber ? { ...round, [field]: value } : round
+      )
+    );
   };
 
   // Create/Update hackathon
@@ -1562,6 +1671,13 @@ export default function AdminDashboard() {
                               >
                                 <Medal className="w-4 h-4" />
                               </button>
+                              <button
+                                onClick={() => openRoundsModal(hackathon)}
+                                className="p-2 text-gray-400 hover:text-cyan-400 hover:bg-cyan-500/10 rounded-lg"
+                                title="Manage Rounds"
+                              >
+                                <Calendar className="w-4 h-4" />
+                              </button>
                               <Link href={`/hackathons/${hackathon.slug}`} className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg">
                                 <ExternalLink className="w-4 h-4" />
                               </Link>
@@ -2027,6 +2143,213 @@ export default function AdminDashboard() {
                   >
                     <CheckCircle className="w-4 h-4" />
                     Save Score
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Rounds Management Modal */}
+        <AnimatePresence>
+          {showRoundsModal && selectedHackathonForRounds && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto"
+              onClick={() => setShowRoundsModal(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.95, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+                className="bg-[#111] border border-white/10 rounded-2xl w-full max-w-4xl my-8"
+              >
+                {/* Modal Header */}
+                <div className="p-6 border-b border-white/10">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-xl font-bold text-white flex items-center gap-3">
+                        <Calendar className="w-6 h-6 text-cyan-400" />
+                        Manage Rounds
+                      </h2>
+                      <p className="text-sm text-gray-500 mt-1">
+                        Configure rounds for "{selectedHackathonForRounds.title}"
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setShowRoundsModal(false)}
+                      className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Modal Content */}
+                <div className="p-6 max-h-[70vh] overflow-y-auto">
+                  {isLoadingRounds ? (
+                    <div className="flex justify-center py-12">
+                      <Loader2 className="w-8 h-8 animate-spin text-cyan-500" />
+                    </div>
+                  ) : (
+                    <div className="space-y-6">
+                      {selectedHackathonRounds.map((round) => (
+                        <div
+                          key={round.roundNumber}
+                          className="bg-white/5 border border-white/10 rounded-xl p-6"
+                        >
+                          {/* Round Header */}
+                          <div className="flex items-center gap-3 mb-4">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg ${
+                              round.roundType === 'idea' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
+                              round.roundType === 'pitching' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
+                              'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                            }`}>
+                              {round.roundNumber}
+                            </div>
+                            <div className="flex-grow">
+                              <input
+                                type="text"
+                                value={round.title}
+                                onChange={(e) => updateRoundField(round.roundNumber, 'title', e.target.value)}
+                                className="bg-transparent text-lg font-semibold text-white w-full focus:outline-none border-b border-transparent hover:border-white/20 focus:border-cyan-500 transition-colors"
+                              />
+                            </div>
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                              round.status === 'active' ? 'bg-green-500/10 text-green-400' :
+                              round.status === 'completed' ? 'bg-purple-500/10 text-purple-400' :
+                              round.status === 'judging' ? 'bg-amber-500/10 text-amber-400' :
+                              'bg-gray-500/10 text-gray-400'
+                            }`}>
+                              {round.status.charAt(0).toUpperCase() + round.status.slice(1)}
+                            </span>
+                          </div>
+
+                          {/* Round Fields */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {/* Round Type */}
+                            <div>
+                              <label className="block text-sm text-gray-400 mb-1">Round Type</label>
+                              <select
+                                value={round.roundType}
+                                onChange={(e) => updateRoundField(round.roundNumber, 'roundType', e.target.value)}
+                                className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                              >
+                                <option value="idea">Idea Submission</option>
+                                <option value="pitching">Pitching</option>
+                                <option value="final">Final Demo</option>
+                              </select>
+                            </div>
+
+                            {/* Mode */}
+                            <div>
+                              <label className="block text-sm text-gray-400 mb-1">Mode</label>
+                              <select
+                                value={round.mode}
+                                onChange={(e) => updateRoundField(round.roundNumber, 'mode', e.target.value)}
+                                className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                              >
+                                <option value="online">Online</option>
+                                <option value="offline">Offline</option>
+                                <option value="hybrid">Hybrid</option>
+                              </select>
+                            </div>
+
+                            {/* Status */}
+                            <div>
+                              <label className="block text-sm text-gray-400 mb-1">Status</label>
+                              <select
+                                value={round.status}
+                                onChange={(e) => updateRoundField(round.roundNumber, 'status', e.target.value)}
+                                className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                              >
+                                <option value="upcoming">Upcoming</option>
+                                <option value="active">Active</option>
+                                <option value="judging">Judging</option>
+                                <option value="completed">Completed</option>
+                              </select>
+                            </div>
+
+                            {/* Start Date */}
+                            <div>
+                              <label className="block text-sm text-gray-400 mb-1">Start Date</label>
+                              <input
+                                type="datetime-local"
+                                value={round.startDate ? new Date(round.startDate).toISOString().slice(0, 16) : ''}
+                                onChange={(e) => updateRoundField(round.roundNumber, 'startDate', e.target.value ? new Date(e.target.value).toISOString() : '')}
+                                className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                              />
+                            </div>
+
+                            {/* End Date */}
+                            <div>
+                              <label className="block text-sm text-gray-400 mb-1">End Date</label>
+                              <input
+                                type="datetime-local"
+                                value={round.endDate ? new Date(round.endDate).toISOString().slice(0, 16) : ''}
+                                onChange={(e) => updateRoundField(round.roundNumber, 'endDate', e.target.value ? new Date(e.target.value).toISOString() : '')}
+                                className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                              />
+                            </div>
+
+                            {/* Teams Advancing */}
+                            <div>
+                              <label className="block text-sm text-gray-400 mb-1">Teams Advancing</label>
+                              <input
+                                type="number"
+                                min="1"
+                                value={round.teamsAdvancing || ''}
+                                onChange={(e) => updateRoundField(round.roundNumber, 'teamsAdvancing', parseInt(e.target.value) || 0)}
+                                className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                                placeholder="Number of teams"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Description */}
+                          <div className="mt-4">
+                            <label className="block text-sm text-gray-400 mb-1">Description</label>
+                            <textarea
+                              value={round.description || ''}
+                              onChange={(e) => updateRoundField(round.roundNumber, 'description', e.target.value)}
+                              rows={2}
+                              className="w-full bg-black/50 border border-white/10 rounded-lg px-3 py-2 text-white text-sm resize-none"
+                              placeholder="Describe what happens in this round..."
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Modal Footer */}
+                <div className="p-6 border-t border-white/10 flex items-center justify-end gap-3">
+                  <button
+                    onClick={() => setShowRoundsModal(false)}
+                    className="px-5 py-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg font-medium transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveRounds}
+                    disabled={isSavingRounds}
+                    className="flex items-center gap-2 px-6 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSavingRounds ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-4 h-4" />
+                        Save Rounds
+                      </>
+                    )}
                   </button>
                 </div>
               </motion.div>

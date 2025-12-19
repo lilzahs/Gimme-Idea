@@ -492,6 +492,129 @@ export class AdminService {
   }
 
   /**
+   * Get hackathon rounds
+   */
+  async getHackathonRounds(
+    adminId: string,
+    hackathonId: string
+  ): Promise<ApiResponse<any[]>> {
+    // Verify admin access
+    const isAdminUser = await this.isAdmin(adminId);
+    if (!isAdminUser) {
+      throw new ForbiddenException("Admin access required");
+    }
+
+    const supabase = this.supabaseService.getAdminClient();
+
+    const { data: rounds, error } = await supabase
+      .from("hackathon_rounds")
+      .select("*")
+      .eq("hackathon_id", hackathonId)
+      .order("round_number", { ascending: true });
+
+    if (error) {
+      this.logger.error(`Failed to fetch rounds: ${error.message}`);
+      return {
+        success: false,
+        message: `Failed to fetch rounds: ${error.message}`,
+        data: [],
+      };
+    }
+
+    // Map snake_case to camelCase
+    const mappedRounds = (rounds || []).map((round) => ({
+      id: round.id,
+      roundNumber: round.round_number,
+      title: round.title,
+      description: round.description,
+      roundType: round.round_type,
+      mode: round.mode || "online",
+      teamsAdvancing: round.teams_advancing,
+      bonusTeams: round.bonus_teams,
+      startDate: round.start_date,
+      endDate: round.end_date,
+      resultsDate: round.results_date,
+      status: round.status,
+    }));
+
+    return {
+      success: true,
+      data: mappedRounds,
+    };
+  }
+
+  /**
+   * Update hackathon rounds
+   */
+  async updateHackathonRounds(
+    adminId: string,
+    hackathonId: string,
+    rounds: any[]
+  ): Promise<ApiResponse<void>> {
+    // Verify admin access
+    const isAdminUser = await this.isAdmin(adminId);
+    if (!isAdminUser) {
+      throw new ForbiddenException("Admin access required");
+    }
+
+    const supabase = this.supabaseService.getAdminClient();
+
+    // Process each round - update existing or insert new
+    for (const round of rounds) {
+      const roundData = {
+        hackathon_id: hackathonId,
+        round_number: round.roundNumber,
+        title: round.title,
+        description: round.description || null,
+        round_type: round.roundType,
+        mode: round.mode || "online",
+        teams_advancing: round.teamsAdvancing || null,
+        bonus_teams: round.bonusTeams || null,
+        start_date: round.startDate || null,
+        end_date: round.endDate || null,
+        results_date: round.resultsDate || null,
+        status: round.status,
+      };
+
+      if (round.id) {
+        // Update existing round
+        const { error } = await supabase
+          .from("hackathon_rounds")
+          .update(roundData)
+          .eq("id", round.id);
+
+        if (error) {
+          this.logger.error(`Failed to update round: ${error.message}`);
+          throw new Error(`Failed to update round: ${error.message}`);
+        }
+      } else {
+        // Insert new round
+        const { error } = await supabase
+          .from("hackathon_rounds")
+          .insert(roundData);
+
+        if (error) {
+          this.logger.error(`Failed to create round: ${error.message}`);
+          throw new Error(`Failed to create round: ${error.message}`);
+        }
+      }
+    }
+
+    await this.logAdminAction(
+      adminId,
+      "update_hackathon_rounds",
+      "hackathon",
+      hackathonId,
+      { roundsCount: rounds.length }
+    );
+
+    return {
+      success: true,
+      message: "Rounds updated successfully",
+    };
+  }
+
+  /**
    * Update submission status (winner, finalist, rejected)
    */
   async updateSubmissionStatus(

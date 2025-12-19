@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Patch,
+  Put,
   Delete,
   Body,
   Param,
@@ -142,6 +143,33 @@ export class AdminController {
     @CurrentUser("userId") userId: string
   ) {
     return this.adminService.getHackathonSubmissions(userId, hackathonId);
+  }
+
+  /**
+   * GET /api/admin/hackathons/:id/rounds
+   * Get all rounds for a hackathon
+   */
+  @Get("hackathons/:id/rounds")
+  @UseGuards(AuthGuard)
+  async getHackathonRounds(
+    @Param("id") hackathonId: string,
+    @CurrentUser("userId") userId: string
+  ) {
+    return this.adminService.getHackathonRounds(userId, hackathonId);
+  }
+
+  /**
+   * PUT /api/admin/hackathons/:id/rounds
+   * Update all rounds for a hackathon
+   */
+  @Put("hackathons/:id/rounds")
+  @UseGuards(AuthGuard)
+  async updateHackathonRounds(
+    @Param("id") hackathonId: string,
+    @CurrentUser("userId") userId: string,
+    @Body() body: { rounds: any[] }
+  ) {
+    return this.adminService.updateHackathonRounds(userId, hackathonId, body.rounds);
   }
 
   /**
