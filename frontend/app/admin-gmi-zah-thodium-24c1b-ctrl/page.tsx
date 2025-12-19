@@ -368,20 +368,53 @@ export default function AdminDashboard() {
       { rank: 3, amount: '', title: '3rd Place' },
     ] as { rank: number; amount: string; title: string }[],
     // Round 1 (Idea) configuration
-    ideaPhase: {
+    round1: {
       startDate: '',
       endDate: '',
-      ideasToAdvance: 10, // Top ideas advancing
-      ideaPrizeCount: 2,
-      ideaPrizes: [
-        { rank: 1, amount: '', title: 'Best Idea' },
-        { rank: 2, amount: '', title: 'Best Engagement' },
-      ] as { rank: number; amount: string; title: string }[],
-      judgingCriteria: [
-        { name: 'Innovation', weight: 30 },
+      resultsDate: '',
+      mode: 'online' as 'online' | 'offline' | 'hybrid',
+    },
+    // Round 2 (Pitching) configuration
+    round2: {
+      startDate: '',
+      endDate: '',
+      resultsDate: '',
+      mode: 'online' as 'online' | 'offline' | 'hybrid',
+      teamsAdvancing: 20,
+    },
+    // Round 3 (Final) configuration
+    round3: {
+      startDate: '',
+      endDate: '',
+      resultsDate: '',
+      mode: 'offline' as 'online' | 'offline' | 'hybrid',
+      teamsAdvancing: 5,
+    },
+    // Idea Phase Prizes (Top 10)
+    ideaPrizeCount: 10 as 5 | 10,
+    ideaPrizes: [
+      { rank: 1, amount: '', title: 'Best Idea #1' },
+      { rank: 2, amount: '', title: 'Best Idea #2' },
+      { rank: 3, amount: '', title: 'Best Idea #3' },
+      { rank: 4, amount: '', title: 'Best Idea #4' },
+      { rank: 5, amount: '', title: 'Best Idea #5' },
+      { rank: 6, amount: '', title: 'Best Idea #6' },
+      { rank: 7, amount: '', title: 'Best Idea #7' },
+      { rank: 8, amount: '', title: 'Best Idea #8' },
+      { rank: 9, amount: '', title: 'Best Idea #9' },
+      { rank: 10, amount: '', title: 'Best Idea #10' },
+    ] as { rank: number; amount: string; title: string }[],
+    // Top ideas advancing to round 2
+    ideasAdvancing: 50,
+    // Judging criteria (30% community, 70% judges)
+    judgingCriteria: {
+      communityWeight: 30, // 30% community votes/engagement
+      judgeWeight: 70, // 70% judge scores
+      judgeCategories: [
+        { name: 'Innovation', weight: 25 },
         { name: 'Feasibility', weight: 25 },
         { name: 'Impact', weight: 25 },
-        { name: 'Presentation', weight: 20 },
+        { name: 'Presentation', weight: 25 },
       ] as { name: string; weight: number }[],
     },
     // Schedule/Events
@@ -392,6 +425,9 @@ export default function AdminDashboard() {
     registrationStart: '',
     registrationEnd: '',
   });
+  
+  // imgbb upload state
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   // Check if user has valid access token
   useEffect(() => {
@@ -475,7 +511,11 @@ export default function AdminDashboard() {
   const fetchSystemStats = async () => {
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-      const res = await fetch(`${API_URL}/admin/stats`);
+      const res = await fetch(`${API_URL}/admin/stats`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`
+        }
+      });
       const data = await res.json();
       if (data.success && data.data) {
         setSystemStats(data.data);
@@ -492,7 +532,11 @@ export default function AdminDashboard() {
     setIsLoadingUsers(true);
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-      const res = await fetch(`${API_URL}/admin/users`);
+      const res = await fetch(`${API_URL}/admin/users`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`
+        }
+      });
       const data = await res.json();
       if (data.success && data.data) {
         setUsers(data.data);
@@ -504,11 +548,11 @@ export default function AdminDashboard() {
     }
   };
 
-  // Fetch all projects
+  // Fetch all projects (type = 'project' only, not ideas)
   const fetchAllProjects = async () => {
     setIsLoadingProjects(true);
     try {
-      const res = await apiClient.getProjects({ limit: 500 });
+      const res = await apiClient.getProjects({ type: 'project', limit: 500 });
       if (res.success && res.data) {
         setProjects(res.data as any);
       }
@@ -586,7 +630,11 @@ export default function AdminDashboard() {
   const fetchAdminHackathons = async () => {
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-      const res = await fetch(`${API_URL}/admin/hackathons`);
+      const res = await fetch(`${API_URL}/admin/hackathons`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`
+        }
+      });
       const data = await res.json();
       if (data.success && data.data) {
         setHackathons(data.data);
@@ -603,7 +651,11 @@ export default function AdminDashboard() {
     setIsLoadingSubmissions(true);
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-      const res = await fetch(`${API_URL}/admin/hackathons/${hackathonId}/submissions`);
+      const res = await fetch(`${API_URL}/admin/hackathons/${hackathonId}/submissions`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`
+        }
+      });
       const data = await res.json();
       if (data.success && data.data) {
         setSubmissions(data.data);
@@ -620,7 +672,11 @@ export default function AdminDashboard() {
     setIsLoadingRounds(true);
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-      const res = await fetch(`${API_URL}/admin/hackathons/${hackathonId}/rounds`);
+      const res = await fetch(`${API_URL}/admin/hackathons/${hackathonId}/rounds`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`
+        }
+      });
       const data = await res.json();
       if (data.success && data.data) {
         setSelectedHackathonRounds(data.data);
@@ -822,20 +878,48 @@ export default function AdminDashboard() {
         { rank: 2, amount: '', title: '2nd Place' },
         { rank: 3, amount: '', title: '3rd Place' },
       ],
-      ideaPhase: {
+      round1: {
         startDate: '',
         endDate: '',
-        ideasToAdvance: 10,
-        ideaPrizeCount: 2,
-        ideaPrizes: [
-          { rank: 1, amount: '', title: 'Best Idea' },
-          { rank: 2, amount: '', title: 'Best Engagement' },
-        ],
-        judgingCriteria: [
-          { name: 'Innovation', weight: 30 },
+        resultsDate: '',
+        mode: 'online',
+      },
+      round2: {
+        startDate: '',
+        endDate: '',
+        resultsDate: '',
+        mode: 'online',
+        teamsAdvancing: 20,
+      },
+      round3: {
+        startDate: '',
+        endDate: '',
+        resultsDate: '',
+        mode: 'offline',
+        teamsAdvancing: 5,
+      },
+      ideaPrizeCount: 10,
+      ideaPrizes: [
+        { rank: 1, amount: '', title: 'Best Idea #1' },
+        { rank: 2, amount: '', title: 'Best Idea #2' },
+        { rank: 3, amount: '', title: 'Best Idea #3' },
+        { rank: 4, amount: '', title: 'Best Idea #4' },
+        { rank: 5, amount: '', title: 'Best Idea #5' },
+        { rank: 6, amount: '', title: 'Best Idea #6' },
+        { rank: 7, amount: '', title: 'Best Idea #7' },
+        { rank: 8, amount: '', title: 'Best Idea #8' },
+        { rank: 9, amount: '', title: 'Best Idea #9' },
+        { rank: 10, amount: '', title: 'Best Idea #10' },
+      ],
+      ideasAdvancing: 50,
+      judgingCriteria: {
+        communityWeight: 30,
+        judgeWeight: 70,
+        judgeCategories: [
+          { name: 'Innovation', weight: 25 },
           { name: 'Feasibility', weight: 25 },
           { name: 'Impact', weight: 25 },
-          { name: 'Presentation', weight: 20 },
+          { name: 'Presentation', weight: 25 },
         ],
       },
       schedule: [],
@@ -857,44 +941,85 @@ export default function AdminDashboard() {
 
   const openEditHackathon = (hackathon: Hackathon) => {
     setEditingHackathon(hackathon);
+    const h = hackathon as any;
     // For now, just load basic info - full edit form will fetch more details
     setHackathonForm({
       slug: hackathon.slug,
       title: hackathon.title,
       tagline: hackathon.tagline || '',
       description: hackathon.description || '',
-      coverImage: (hackathon as any).coverImage || '',
-      mode: (hackathon as any).mode || 'online',
+      coverImage: h.coverImage || '',
+      mode: h.mode || 'online',
       maxParticipants: hackathon.maxParticipants || 100,
-      prizeCount: (hackathon as any).prizeCount || 3,
-      currency: (hackathon as any).currency || 'VND',
-      prizes: (hackathon as any).prizes || [
+      prizeCount: h.prizeCount || 3,
+      currency: h.currency || 'VND',
+      prizes: h.prizes || [
         { rank: 1, amount: '', title: '1st Place' },
         { rank: 2, amount: '', title: '2nd Place' },
         { rank: 3, amount: '', title: '3rd Place' },
       ],
-      ideaPhase: (hackathon as any).ideaPhase || {
-        startDate: '',
-        endDate: '',
-        ideasToAdvance: 10,
-        ideaPrizeCount: 2,
-        ideaPrizes: [
-          { rank: 1, amount: '', title: 'Best Idea' },
-          { rank: 2, amount: '', title: 'Best Engagement' },
-        ],
-        judgingCriteria: [
-          { name: 'Innovation', weight: 30 },
+      round1: h.round1 || { startDate: '', endDate: '', resultsDate: '', mode: 'online' },
+      round2: h.round2 || { startDate: '', endDate: '', resultsDate: '', mode: 'online', teamsAdvancing: 20 },
+      round3: h.round3 || { startDate: '', endDate: '', resultsDate: '', mode: 'offline', teamsAdvancing: 5 },
+      ideaPrizeCount: h.ideaPrizeCount || 10,
+      ideaPrizes: h.ideaPrizes || [
+        { rank: 1, amount: '', title: 'Best Idea #1' },
+        { rank: 2, amount: '', title: 'Best Idea #2' },
+        { rank: 3, amount: '', title: 'Best Idea #3' },
+        { rank: 4, amount: '', title: 'Best Idea #4' },
+        { rank: 5, amount: '', title: 'Best Idea #5' },
+        { rank: 6, amount: '', title: 'Best Idea #6' },
+        { rank: 7, amount: '', title: 'Best Idea #7' },
+        { rank: 8, amount: '', title: 'Best Idea #8' },
+        { rank: 9, amount: '', title: 'Best Idea #9' },
+        { rank: 10, amount: '', title: 'Best Idea #10' },
+      ],
+      ideasAdvancing: h.ideasAdvancing || 50,
+      judgingCriteria: h.judgingCriteria || {
+        communityWeight: 30,
+        judgeWeight: 70,
+        judgeCategories: [
+          { name: 'Innovation', weight: 25 },
           { name: 'Feasibility', weight: 25 },
           { name: 'Impact', weight: 25 },
-          { name: 'Presentation', weight: 20 },
+          { name: 'Presentation', weight: 25 },
         ],
       },
-      schedule: (hackathon as any).schedule || [],
-      partnerHackathons: (hackathon as any).partnerHackathons || [],
+      schedule: h.schedule || [],
+      partnerHackathons: h.partnerHackathons || [],
       registrationStart: hackathon.registrationStart?.slice(0, 16) || '',
       registrationEnd: hackathon.registrationEnd?.slice(0, 16) || '',
     });
     setShowHackathonForm(true);
+  };
+
+  // Upload image to imgbb
+  const handleImageUpload = async (file: File) => {
+    setIsUploadingImage(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      // imgbb API - you need to get your own API key from imgbb.com
+      const IMGBB_API_KEY = 'aa9af3a48df8f3912e51bf37e6d56c0b'; // Free tier API key
+      const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+        method: 'POST',
+        body: formData,
+      });
+      
+      const data = await res.json();
+      if (data.success) {
+        setHackathonForm(prev => ({ ...prev, coverImage: data.data.url }));
+        toast.success('Image uploaded successfully!');
+      } else {
+        toast.error('Failed to upload image');
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Failed to upload image');
+    } finally {
+      setIsUploadingImage(false);
+    }
   };
 
   const openScoreModal = (submission: Submission) => {
@@ -1921,6 +2046,53 @@ export default function AdminDashboard() {
                 )}
               </motion.div>
             )}
+
+            {/* Partner Hackathons Section */}
+            <div className="bg-[#111] border border-white/5 rounded-xl overflow-hidden">
+              <div className="p-4 border-b border-white/10 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                  <Globe className="w-5 h-5 text-cyan-400" />
+                  Partner Hackathons
+                </h3>
+                <p className="text-sm text-gray-500">
+                  External hackathons linked from partner organizations
+                </p>
+              </div>
+              <div className="p-4">
+                <p className="text-sm text-gray-400 mb-4">
+                  Partner hackathons are displayed as secondary cards on the hackathons page. 
+                  You can add them when creating/editing a hackathon in the "Partner Hackathons" section.
+                </p>
+                <div className="bg-white/5 rounded-lg p-4">
+                  <h4 className="text-sm font-medium text-white mb-3">Current Partner Links</h4>
+                  {hackathons.filter(h => (h as any).partnerHackathons?.length > 0).length === 0 ? (
+                    <p className="text-sm text-gray-500">No partner hackathons added to any event yet.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {hackathons.filter(h => (h as any).partnerHackathons?.length > 0).map(h => (
+                        <div key={h.id} className="border-b border-white/10 pb-3 last:border-0">
+                          <p className="text-xs text-gray-500 mb-1">Partners for: {h.title}</p>
+                          <div className="flex flex-wrap gap-2">
+                            {((h as any).partnerHackathons || []).map((p: any, idx: number) => (
+                              <a
+                                key={idx}
+                                href={p.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 px-2 py-1 bg-cyan-500/10 text-cyan-400 rounded text-xs hover:bg-cyan-500/20 transition-colors"
+                              >
+                                <ExternalLink className="w-3 h-3" />
+                                {p.name || p.link}
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
@@ -1954,7 +2126,7 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="p-6 space-y-6">
-                  {/* Cover Image Upload */}
+                  {/* Cover Image Upload with imgbb */}
                   <div>
                     <label className="block text-sm font-medium text-gray-400 mb-2">
                       Cover Image (1200x400 recommended - 3:1 ratio)
@@ -1975,19 +2147,46 @@ export default function AdminDashboard() {
                           </button>
                         </div>
                       ) : (
-                        <div className="border-2 border-dashed border-white/20 rounded-xl aspect-[3/1] flex items-center justify-center hover:border-purple-500/50 transition-colors">
+                        <label className="border-2 border-dashed border-white/20 rounded-xl aspect-[3/1] flex items-center justify-center hover:border-purple-500/50 transition-colors cursor-pointer">
                           <div className="text-center">
-                            <ImageIcon className="w-8 h-8 text-gray-500 mx-auto mb-2" />
-                            <input
-                              type="text"
-                              placeholder="Paste image URL..."
-                              onChange={(e) => setHackathonForm({ ...hackathonForm, coverImage: e.target.value })}
-                              className="bg-transparent text-center text-gray-400 focus:outline-none"
-                            />
+                            {isUploadingImage ? (
+                              <>
+                                <Loader2 className="w-8 h-8 text-purple-400 mx-auto mb-2 animate-spin" />
+                                <p className="text-sm text-gray-400">Uploading...</p>
+                              </>
+                            ) : (
+                              <>
+                                <ImageIcon className="w-8 h-8 text-gray-500 mx-auto mb-2" />
+                                <p className="text-sm text-gray-400 mb-2">Click to upload or drag & drop</p>
+                                <p className="text-xs text-gray-500">PNG, JPG up to 10MB</p>
+                              </>
+                            )}
                           </div>
-                        </div>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleImageUpload(file);
+                            }}
+                            disabled={isUploadingImage}
+                          />
+                        </label>
                       )}
                     </div>
+                    {/* URL input as fallback */}
+                    {!hackathonForm.coverImage && !isUploadingImage && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <span className="text-xs text-gray-500">Or paste URL:</span>
+                        <input
+                          type="text"
+                          placeholder="https://..."
+                          onChange={(e) => setHackathonForm({ ...hackathonForm, coverImage: e.target.value })}
+                          className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-purple-500"
+                        />
+                      </div>
+                    )}
                   </div>
 
                   {/* Basic Info */}
@@ -2168,21 +2367,21 @@ export default function AdminDashboard() {
                     </div>
                   </div>
 
-                  {/* Idea Phase Configuration */}
+                  {/* Round 1: Idea Phase */}
                   <div className="border-t border-white/10 pt-6">
                     <h4 className="text-sm font-medium text-white mb-4 flex items-center gap-2">
                       <Lightbulb className="w-4 h-4 text-green-400" />
-                      Round 1: Idea Phase
+                      Round 1: Idea Submission (Online)
                     </h4>
-                    <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="grid grid-cols-3 gap-4 mb-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-400 mb-2">Start Date</label>
                         <input
                           type="datetime-local"
-                          value={hackathonForm.ideaPhase.startDate}
+                          value={hackathonForm.round1.startDate}
                           onChange={(e) => setHackathonForm({
                             ...hackathonForm,
-                            ideaPhase: { ...hackathonForm.ideaPhase, startDate: e.target.value }
+                            round1: { ...hackathonForm.round1, startDate: e.target.value }
                           })}
                           className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:outline-none"
                         />
@@ -2191,82 +2390,334 @@ export default function AdminDashboard() {
                         <label className="block text-sm font-medium text-gray-400 mb-2">End Date</label>
                         <input
                           type="datetime-local"
-                          value={hackathonForm.ideaPhase.endDate}
+                          value={hackathonForm.round1.endDate}
                           onChange={(e) => setHackathonForm({
                             ...hackathonForm,
-                            ideaPhase: { ...hackathonForm.ideaPhase, endDate: e.target.value }
+                            round1: { ...hackathonForm.round1, endDate: e.target.value }
                           })}
                           className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:outline-none"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-400 mb-2">Ideas to Advance</label>
+                        <label className="block text-sm font-medium text-gray-400 mb-2">Results Announcement</label>
                         <input
-                          type="number"
-                          value={hackathonForm.ideaPhase.ideasToAdvance}
+                          type="datetime-local"
+                          value={hackathonForm.round1.resultsDate}
                           onChange={(e) => setHackathonForm({
                             ...hackathonForm,
-                            ideaPhase: { ...hackathonForm.ideaPhase, ideasToAdvance: parseInt(e.target.value) || 10 }
+                            round1: { ...hackathonForm.round1, resultsDate: e.target.value }
                           })}
                           className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:outline-none"
                         />
                       </div>
                     </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-2">Ideas Advancing to Round 2</label>
+                      <input
+                        type="number"
+                        value={hackathonForm.ideasAdvancing}
+                        onChange={(e) => setHackathonForm({
+                          ...hackathonForm,
+                          ideasAdvancing: parseInt(e.target.value) || 50
+                        })}
+                        className="w-32 bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:outline-none"
+                      />
+                    </div>
+                  </div>
 
-                    {/* Idea Prizes */}
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium text-gray-400 mb-2">Idea Phase Prizes</label>
-                      <div className="space-y-2">
-                        {hackathonForm.ideaPhase.ideaPrizes.map((prize, idx) => (
-                          <div key={idx} className="flex items-center gap-3">
-                            <input
-                              type="text"
-                              value={prize.title}
-                              onChange={(e) => {
-                                const newPrizes = [...hackathonForm.ideaPhase.ideaPrizes];
-                                newPrizes[idx].title = e.target.value;
-                                setHackathonForm({
-                                  ...hackathonForm,
-                                  ideaPhase: { ...hackathonForm.ideaPhase, ideaPrizes: newPrizes }
-                                });
-                              }}
-                              className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
-                              placeholder="Prize title"
-                            />
+                  {/* Round 2: Pitching */}
+                  <div className="border-t border-white/10 pt-6">
+                    <h4 className="text-sm font-medium text-white mb-4 flex items-center gap-2">
+                      <Target className="w-4 h-4 text-blue-400" />
+                      Round 2: Pitching
+                    </h4>
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-2">Mode</label>
+                        <select
+                          value={hackathonForm.round2.mode}
+                          onChange={(e) => setHackathonForm({
+                            ...hackathonForm,
+                            round2: { ...hackathonForm.round2, mode: e.target.value as any }
+                          })}
+                          className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:outline-none"
+                        >
+                          <option value="online">🌐 Online</option>
+                          <option value="offline">📍 Offline</option>
+                          <option value="hybrid">🔀 Hybrid</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-2">Teams Advancing to Final</label>
+                        <input
+                          type="number"
+                          value={hackathonForm.round2.teamsAdvancing}
+                          onChange={(e) => setHackathonForm({
+                            ...hackathonForm,
+                            round2: { ...hackathonForm.round2, teamsAdvancing: parseInt(e.target.value) || 20 }
+                          })}
+                          className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-2">Start Date</label>
+                        <input
+                          type="datetime-local"
+                          value={hackathonForm.round2.startDate}
+                          onChange={(e) => setHackathonForm({
+                            ...hackathonForm,
+                            round2: { ...hackathonForm.round2, startDate: e.target.value }
+                          })}
+                          className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-2">End Date</label>
+                        <input
+                          type="datetime-local"
+                          value={hackathonForm.round2.endDate}
+                          onChange={(e) => setHackathonForm({
+                            ...hackathonForm,
+                            round2: { ...hackathonForm.round2, endDate: e.target.value }
+                          })}
+                          className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-2">Results Announcement</label>
+                        <input
+                          type="datetime-local"
+                          value={hackathonForm.round2.resultsDate}
+                          onChange={(e) => setHackathonForm({
+                            ...hackathonForm,
+                            round2: { ...hackathonForm.round2, resultsDate: e.target.value }
+                          })}
+                          className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Round 3: Final */}
+                  <div className="border-t border-white/10 pt-6">
+                    <h4 className="text-sm font-medium text-white mb-4 flex items-center gap-2">
+                      <Trophy className="w-4 h-4 text-amber-400" />
+                      Round 3: Final Demo
+                    </h4>
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-2">Mode</label>
+                        <select
+                          value={hackathonForm.round3.mode}
+                          onChange={(e) => setHackathonForm({
+                            ...hackathonForm,
+                            round3: { ...hackathonForm.round3, mode: e.target.value as any }
+                          })}
+                          className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:outline-none"
+                        >
+                          <option value="online">🌐 Online</option>
+                          <option value="offline">📍 Offline</option>
+                          <option value="hybrid">🔀 Hybrid</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-2">Final Teams</label>
+                        <input
+                          type="number"
+                          value={hackathonForm.round3.teamsAdvancing}
+                          onChange={(e) => setHackathonForm({
+                            ...hackathonForm,
+                            round3: { ...hackathonForm.round3, teamsAdvancing: parseInt(e.target.value) || 5 }
+                          })}
+                          className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-2">Start Date</label>
+                        <input
+                          type="datetime-local"
+                          value={hackathonForm.round3.startDate}
+                          onChange={(e) => setHackathonForm({
+                            ...hackathonForm,
+                            round3: { ...hackathonForm.round3, startDate: e.target.value }
+                          })}
+                          className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-2">End Date</label>
+                        <input
+                          type="datetime-local"
+                          value={hackathonForm.round3.endDate}
+                          onChange={(e) => setHackathonForm({
+                            ...hackathonForm,
+                            round3: { ...hackathonForm.round3, endDate: e.target.value }
+                          })}
+                          className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-400 mb-2">Results Announcement</label>
+                        <input
+                          type="datetime-local"
+                          value={hackathonForm.round3.resultsDate}
+                          onChange={(e) => setHackathonForm({
+                            ...hackathonForm,
+                            round3: { ...hackathonForm.round3, resultsDate: e.target.value }
+                          })}
+                          className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Idea Phase Prizes - Top 10 */}
+                  <div className="border-t border-white/10 pt-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="text-sm font-medium text-white flex items-center gap-2">
+                        <Award className="w-4 h-4 text-green-400" />
+                        Top Idea Prizes (Round 1)
+                      </h4>
+                      <select
+                        value={hackathonForm.ideaPrizeCount}
+                        onChange={(e) => {
+                          const count = parseInt(e.target.value) as 5 | 10;
+                          setHackathonForm({
+                            ...hackathonForm,
+                            ideaPrizeCount: count,
+                            ideaPrizes: hackathonForm.ideaPrizes.slice(0, count)
+                          });
+                        }}
+                        className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white"
+                      >
+                        <option value={5}>Top 5 Ideas</option>
+                        <option value={10}>Top 10 Ideas</option>
+                      </select>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      {hackathonForm.ideaPrizes.slice(0, hackathonForm.ideaPrizeCount).map((prize, idx) => (
+                        <div key={idx} className="flex items-center gap-2">
+                          <span className="w-7 h-7 rounded-full bg-green-500/20 text-green-400 flex items-center justify-center text-xs font-bold">
+                            {prize.rank}
+                          </span>
+                          <input
+                            type="text"
+                            value={prize.title}
+                            onChange={(e) => {
+                              const newPrizes = [...hackathonForm.ideaPrizes];
+                              newPrizes[idx].title = e.target.value;
+                              setHackathonForm({ ...hackathonForm, ideaPrizes: newPrizes });
+                            }}
+                            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                            placeholder="Prize title"
+                          />
+                          <div className="relative">
                             <input
                               type="text"
                               value={prize.amount}
                               onChange={(e) => {
-                                const newPrizes = [...hackathonForm.ideaPhase.ideaPrizes];
+                                const newPrizes = [...hackathonForm.ideaPrizes];
                                 newPrizes[idx].amount = e.target.value;
-                                setHackathonForm({
-                                  ...hackathonForm,
-                                  ideaPhase: { ...hackathonForm.ideaPhase, ideaPrizes: newPrizes }
-                                });
+                                setHackathonForm({ ...hackathonForm, ideaPrizes: newPrizes });
                               }}
-                              className="w-32 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
+                              className="w-28 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm pr-12"
                               placeholder="Amount"
                             />
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-xs">
+                              {hackathonForm.currency}
+                            </span>
                           </div>
-                        ))}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Judging Criteria - 30% Community + 70% Judges */}
+                  <div className="border-t border-white/10 pt-6">
+                    <h4 className="text-sm font-medium text-white mb-4 flex items-center gap-2">
+                      <BarChart3 className="w-4 h-4 text-purple-400" />
+                      Judging Criteria
+                    </h4>
+                    
+                    {/* Weight Distribution */}
+                    <div className="bg-white/5 rounded-xl p-4 mb-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm text-gray-400">Score Distribution</span>
+                        <span className="text-xs text-gray-500">Total: 100%</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm text-white">👥 Community/System</span>
+                            <span className="text-sm text-purple-400 font-bold">{hackathonForm.judgingCriteria.communityWeight}%</span>
+                          </div>
+                          <input
+                            type="range"
+                            min="0"
+                            max="100"
+                            value={hackathonForm.judgingCriteria.communityWeight}
+                            onChange={(e) => {
+                              const community = parseInt(e.target.value);
+                              setHackathonForm({
+                                ...hackathonForm,
+                                judgingCriteria: {
+                                  ...hackathonForm.judgingCriteria,
+                                  communityWeight: community,
+                                  judgeWeight: 100 - community
+                                }
+                              });
+                            }}
+                            className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">Votes, engagement, comments...</p>
+                        </div>
+                        <div>
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm text-white">⚖️ Judges Panel</span>
+                            <span className="text-sm text-amber-400 font-bold">{hackathonForm.judgingCriteria.judgeWeight}%</span>
+                          </div>
+                          <input
+                            type="range"
+                            min="0"
+                            max="100"
+                            value={hackathonForm.judgingCriteria.judgeWeight}
+                            onChange={(e) => {
+                              const judge = parseInt(e.target.value);
+                              setHackathonForm({
+                                ...hackathonForm,
+                                judgingCriteria: {
+                                  ...hackathonForm.judgingCriteria,
+                                  judgeWeight: judge,
+                                  communityWeight: 100 - judge
+                                }
+                              });
+                            }}
+                            className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                          />
+                          <p className="text-xs text-gray-500 mt-1">Expert evaluation scores</p>
+                        </div>
                       </div>
                     </div>
-
-                    {/* Judging Criteria */}
+                    
+                    {/* Judge Categories */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-400 mb-2">Judging Criteria (Total: 100%)</label>
+                      <label className="block text-sm font-medium text-gray-400 mb-2">Judge Scoring Categories (Total of weights should = 100%)</label>
                       <div className="space-y-2">
-                        {hackathonForm.ideaPhase.judgingCriteria.map((criteria, idx) => (
+                        {hackathonForm.judgingCriteria.judgeCategories.map((criteria, idx) => (
                           <div key={idx} className="flex items-center gap-3">
                             <input
                               type="text"
                               value={criteria.name}
                               onChange={(e) => {
-                                const newCriteria = [...hackathonForm.ideaPhase.judgingCriteria];
+                                const newCriteria = [...hackathonForm.judgingCriteria.judgeCategories];
                                 newCriteria[idx].name = e.target.value;
                                 setHackathonForm({
                                   ...hackathonForm,
-                                  ideaPhase: { ...hackathonForm.ideaPhase, judgingCriteria: newCriteria }
+                                  judgingCriteria: { ...hackathonForm.judgingCriteria, judgeCategories: newCriteria }
                                 });
                               }}
                               className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm"
@@ -2279,11 +2730,11 @@ export default function AdminDashboard() {
                                 max="100"
                                 value={criteria.weight}
                                 onChange={(e) => {
-                                  const newCriteria = [...hackathonForm.ideaPhase.judgingCriteria];
+                                  const newCriteria = [...hackathonForm.judgingCriteria.judgeCategories];
                                   newCriteria[idx].weight = parseInt(e.target.value) || 0;
                                   setHackathonForm({
                                     ...hackathonForm,
-                                    ideaPhase: { ...hackathonForm.ideaPhase, judgingCriteria: newCriteria }
+                                    judgingCriteria: { ...hackathonForm.judgingCriteria, judgeCategories: newCriteria }
                                   });
                                 }}
                                 className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm pr-8"

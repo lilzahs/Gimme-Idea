@@ -311,6 +311,24 @@ CREATE INDEX IF NOT EXISTS idx_hackathon_partners_hackathon ON hackathon_partner
 -- =============================================
 -- RLS POLICIES
 -- =============================================
+
+-- Drop existing policies first (to allow re-running migration)
+DROP POLICY IF EXISTS "hackathon_rounds_view" ON hackathon_rounds;
+DROP POLICY IF EXISTS "hackathon_prizes_view" ON hackathon_prizes;
+DROP POLICY IF EXISTS "hackathon_ideas_view" ON hackathon_ideas;
+DROP POLICY IF EXISTS "hackathon_feedback_view" ON hackathon_feedback;
+DROP POLICY IF EXISTS "hackathon_round_results_view" ON hackathon_round_results;
+DROP POLICY IF EXISTS "hackathon_schedule_view" ON hackathon_schedule;
+DROP POLICY IF EXISTS "hackathon_partners_view" ON hackathon_partners;
+DROP POLICY IF EXISTS "hackathon_ideas_insert" ON hackathon_ideas;
+DROP POLICY IF EXISTS "hackathon_feedback_insert" ON hackathon_feedback;
+DROP POLICY IF EXISTS "hackathon_prizes_admin" ON hackathon_prizes;
+DROP POLICY IF EXISTS "hackathon_round_results_admin" ON hackathon_round_results;
+DROP POLICY IF EXISTS "hackathon_rounds_admin" ON hackathon_rounds;
+DROP POLICY IF EXISTS "hackathon_schedule_admin" ON hackathon_schedule;
+DROP POLICY IF EXISTS "hackathon_partners_admin" ON hackathon_partners;
+
+-- Enable RLS
 ALTER TABLE hackathon_rounds ENABLE ROW LEVEL SECURITY;
 ALTER TABLE hackathon_prizes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE hackathon_ideas ENABLE ROW LEVEL SECURITY;
@@ -346,6 +364,17 @@ CREATE POLICY "hackathon_prizes_admin" ON hackathon_prizes FOR ALL USING (
   EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
 );
 CREATE POLICY "hackathon_round_results_admin" ON hackathon_round_results FOR ALL USING (
+  EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
+);
+
+-- Admins can manage rounds, schedule and partners
+CREATE POLICY "hackathon_rounds_admin" ON hackathon_rounds FOR ALL USING (
+  EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
+);
+CREATE POLICY "hackathon_schedule_admin" ON hackathon_schedule FOR ALL USING (
+  EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
+);
+CREATE POLICY "hackathon_partners_admin" ON hackathon_partners FOR ALL USING (
   EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
 );
 

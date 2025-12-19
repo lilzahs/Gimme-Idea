@@ -36,7 +36,9 @@ interface Hackathon {
   currentRound?: number;
   totalRounds?: number;
   rounds?: HackathonRound[];
+  coverImage?: string; // 1x3 banner from admin
   bannerImage?: string;
+  mode?: 'online' | 'offline' | 'hybrid';
   organizerName?: string;
   registrationStart?: string;
   registrationEnd?: string;
@@ -95,6 +97,7 @@ const FeaturedHackathonCard = ({ hackathon }: { hackathon: Hackathon }) => {
   
   const countdown = getCountdown();
   const currentRound = hackathon.rounds?.find(r => r.status === 'active') || hackathon.rounds?.[0];
+  const coverImage = hackathon.coverImage || hackathon.bannerImage;
   
   return (
     <motion.div
@@ -113,9 +116,20 @@ const FeaturedHackathonCard = ({ hackathon }: { hackathon: Hackathon }) => {
               : '0 0 30px rgba(255, 215, 0, 0.1)'
           }}
         >
+          {/* Cover Image Background */}
+          {coverImage && (
+            <div 
+              className="absolute inset-0 bg-cover bg-center opacity-30"
+              style={{ backgroundImage: `url(${coverImage})` }}
+            />
+          )}
+          
+          {/* Gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent z-[1]" />
+          
           {/* Scanline effect */}
           <div 
-            className="absolute inset-0 pointer-events-none z-[1]"
+            className="absolute inset-0 pointer-events-none z-[2]"
             style={{
               backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,215,0,0.02) 2px, rgba(255,215,0,0.02) 4px)',
               opacity: isHovered ? 0.8 : 0.4
@@ -272,6 +286,8 @@ const FeaturedHackathonCard = ({ hackathon }: { hackathon: Hackathon }) => {
 
 // Partner/External Hackathon Card (smaller, simpler)
 const PartnerHackathonCard = ({ hackathon, index }: { hackathon: Hackathon; index: number }) => {
+  const coverImage = hackathon.coverImage || hackathon.bannerImage;
+  
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -279,37 +295,49 @@ const PartnerHackathonCard = ({ hackathon, index }: { hackathon: Hackathon; inde
       transition={{ delay: index * 0.1 }}
     >
       <Link href={`/hackathons/${hackathon.slug || hackathon.id}`}>
-        <div className="bg-[#111] border border-white/5 rounded-xl p-5 hover:border-white/20 transition-all group">
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <ExternalLink className="w-4 h-4 text-gray-500" />
-              <span className="text-[10px] text-gray-500 uppercase tracking-wider">Partner Event</span>
+        <div className="relative bg-[#111] border border-white/5 rounded-xl overflow-hidden hover:border-white/20 transition-all group">
+          {/* Cover Image */}
+          {coverImage && (
+            <div 
+              className="h-32 bg-cover bg-center"
+              style={{ backgroundImage: `url(${coverImage})` }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-t from-[#111] via-[#111]/70 to-transparent" />
             </div>
-            <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${getStatusStyle(hackathon.status)}`}>
-              {hackathon.status}
+          )}
+          
+          <div className="relative p-5">
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <ExternalLink className="w-4 h-4 text-gray-500" />
+                <span className="text-[10px] text-gray-500 uppercase tracking-wider">Partner Event</span>
+              </div>
+              <div className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${getStatusStyle(hackathon.status)}`}>
+                {hackathon.status}
+              </div>
             </div>
-          </div>
-          
-          <h3 className="text-lg font-bold text-white mb-2 group-hover:text-[#FFD700] transition-colors line-clamp-1">
-            {hackathon.title}
-          </h3>
-          
-          <p className="text-sm text-gray-400 line-clamp-2 mb-4">
-            {hackathon.tagline || hackathon.description}
-          </p>
-          
-          <div className="flex items-center justify-between text-xs text-gray-500">
-            <div className="flex items-center gap-3">
-              <span className="flex items-center gap-1">
-                <Trophy className="w-3 h-3" />
-                {hackathon.prizePool || 'TBA'}
-              </span>
-              <span className="flex items-center gap-1">
-                <Users className="w-3 h-3" />
-                {hackathon.participantsCount || 0}
-              </span>
+            
+            <h3 className="text-lg font-bold text-white mb-2 group-hover:text-[#FFD700] transition-colors line-clamp-1">
+              {hackathon.title}
+            </h3>
+            
+            <p className="text-sm text-gray-400 line-clamp-2 mb-4">
+              {hackathon.tagline || hackathon.description}
+            </p>
+            
+            <div className="flex items-center justify-between text-xs text-gray-500">
+              <div className="flex items-center gap-3">
+                <span className="flex items-center gap-1">
+                  <Trophy className="w-3 h-3" />
+                  {hackathon.prizePool || 'TBA'}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Users className="w-3 h-3" />
+                  {hackathon.participantsCount || 0}
+                </span>
+              </div>
+              <ChevronRight className="w-4 h-4 group-hover:text-[#FFD700] transition-colors" />
             </div>
-            <ChevronRight className="w-4 h-4 group-hover:text-[#FFD700] transition-colors" />
           </div>
         </div>
       </Link>
