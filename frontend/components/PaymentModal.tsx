@@ -2,16 +2,19 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Check, ExternalLink } from 'lucide-react';
+import { X, Check, ExternalLink, AlertTriangle, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { LoadingLightbulb, LoadingStatus } from './LoadingLightbulb';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { usePasskeyWallet } from '@/contexts/LazorkitContext';
-import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL, TransactionInstruction } from '@solana/web3.js';
 import { apiClient } from '../lib/api-client';
 import { useAuth } from '../contexts/AuthContext';
 import { WalletRequiredModal } from './WalletRequiredModal';
+
+// Memo Program ID for adding transaction context
+const MEMO_PROGRAM_ID = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -53,6 +56,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   const [txHash, setTxHash] = useState('');
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [walletModalMode, setWalletModalMode] = useState<'reconnect' | 'connect'>('connect');
+  const [showPreview, setShowPreview] = useState(false);
 
   // Check if any wallet is connected (standard or passkey)
   const isWalletConnected = (connected && publicKey) || (isPasskeyConnected && passkeyWalletAddress);
@@ -65,10 +69,26 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
         setProcessing(false);
         setStatus('loading');
         setTxHash('');
+        setShowPreview(false);
     }
   }, [isOpen]);
 
-  const handlePayment = async () => {
+  // Helper function to create memo instruction
+  const createMemoInstruction = (message: string, signer: PublicKey): TransactionInstruction => {
+    return new TransactionInstruction({
+      keys: [{ pubkey: signer, isSigner: true, isWritable: false }],
+      programId: MEMO_PROGRAM_ID,
+      data: Buffer.from(message, 'utf-8'),
+    });
+  };
+
+  // Shorten wallet address for display
+  const shortenAddress = (address: string) => {
+    return `${address.slice(0, 4)}...${address.slice(-4)}`;
+  };
+
+  // Initiate payment - show preview first
+  const initiatePayment = () => {
     // Check if any wallet is connected
     if (!isWalletConnected) {
       // Determine the right message and action based on user's wallet status
@@ -103,12 +123,27 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
       return;
     }
 
+    // Show preview before sending
+    setShowPreview(true);
+  };
+
+  // Execute the actual payment after preview confirmation
+  const handlePayment = async () => {
+    if (!recipientWallet || !isWalletConnected) return;
+
+    const amountNum = Number(amount);
+    setShowPreview(false);
     setProcessing(true);
     setStatus('loading');
 
     try {
       const recipientPubKey = new PublicKey(recipientWallet);
-      const lamports = amountNum * LAMPORTS_PER_SOL;
+      const lamports = Math.floor(amountNum * LAMPORTS_PER_SOL);
+
+      // Create memo for transaction context
+      const memoText = context === 'comment' 
+        ? `Gimme Idea: Tip to ${recipientName}`
+        : `Gimme Idea: Support ${recipientName}`;
 
       let signature: string;
 
@@ -120,12 +155,22 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           lamports,
         });
 
+        const memoInstruction = createMemoInstruction(memoText, smartWalletPubkey);
+
         signature = await signAndSendPasskeyTransaction({
-          instructions: [transferInstruction],
+          instructions: [memoInstruction, transferInstruction],
         });
       } else if (publicKey) {
-        // Use standard Solana wallet adapter
-        const transaction = new Transaction().add(
+        // Use standard Solana wallet adapter with proper setup
+        const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
+        
+        const transaction = new Transaction();
+        
+        // Add memo instruction first (explains the transaction purpose)
+        transaction.add(createMemoInstruction(memoText, publicKey));
+        
+        // Add transfer instruction
+        transaction.add(
           SystemProgram.transfer({
             fromPubkey: publicKey,
             toPubkey: recipientPubKey,
@@ -133,15 +178,18 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           })
         );
 
+        // Set transaction metadata explicitly
+        transaction.recentBlockhash = blockhash;
+        transaction.feePayer = publicKey;
+
         signature = await sendTransaction(transaction, connection);
 
         // Wait for confirmation
-        const latestBlockhash = await connection.getLatestBlockhash();
         await connection.confirmTransaction({
           signature,
-          blockhash: latestBlockhash.blockhash,
-          lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
-        });
+          blockhash,
+          lastValidBlockHeight,
+        }, 'confirmed');
       } else {
         throw new Error('No wallet connected');
       }
@@ -297,6 +345,75 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                             />
                         </motion.div>
                     )
+                ) : showPreview ? (
+                    /* Transaction Preview Step */
+                    <motion.div 
+                        key="preview"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="h-full flex flex-col"
+                    >
+                        <div className="flex items-center gap-2 mb-4">
+                            <Shield className="w-5 h-5 text-green-400" />
+                            <h2 className="text-xl sm:text-2xl font-bold">Confirm Transaction</h2>
+                        </div>
+                        
+                        <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-4">
+                            <p className="text-gray-400 text-xs mb-3 uppercase font-mono">Transaction Details</p>
+                            
+                            <div className="space-y-3">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-gray-400 text-sm">Action</span>
+                                    <span className="text-white font-medium">{context === 'comment' ? 'Tip' : 'Support'}</span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-gray-400 text-sm">Amount</span>
+                                    <span className="text-white font-bold text-lg">{amount} SOL</span>
+                                </div>
+                                <div className="h-px bg-white/10" />
+                                <div className="flex justify-between items-center">
+                                    <span className="text-gray-400 text-sm">From</span>
+                                    <span className="text-white font-mono text-sm">
+                                        {activeWalletAddress ? shortenAddress(activeWalletAddress) : 'Your Wallet'}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <span className="text-gray-400 text-sm">To</span>
+                                    <div className="text-right">
+                                        <span className="text-white font-medium block">{recipientName}</span>
+                                        <span className="text-gray-500 font-mono text-xs">
+                                            {recipientWallet ? shortenAddress(recipientWallet) : ''}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-3 mb-4">
+                            <div className="flex items-start gap-2">
+                                <Shield className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                                <p className="text-green-400 text-xs">
+                                    This is a verified Gimme Idea transaction. Your wallet will show the exact amount being sent.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3 mt-auto">
+                            <button 
+                                onClick={() => setShowPreview(false)}
+                                className="flex-1 py-3 bg-white/10 text-white font-medium rounded-xl hover:bg-white/20 transition-colors text-sm"
+                            >
+                                Back
+                            </button>
+                            <button 
+                                onClick={handlePayment}
+                                className="flex-1 py-3 bg-white text-black font-bold rounded-xl hover:bg-accent transition-colors text-sm"
+                            >
+                                Confirm & Send
+                            </button>
+                        </div>
+                    </motion.div>
                 ) : (
                     <motion.div 
                         key="form"
@@ -340,10 +457,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
                         </div>
 
                         <button 
-                            onClick={handlePayment}
+                            onClick={initiatePayment}
                             className="w-full py-3 sm:py-4 bg-white text-black font-bold rounded-xl hover:bg-accent transition-colors flex items-center justify-center gap-2 mt-auto text-sm sm:text-base"
                         >
-                            Send Contribution
+                            Continue
                         </button>
                     </motion.div>
                 )}

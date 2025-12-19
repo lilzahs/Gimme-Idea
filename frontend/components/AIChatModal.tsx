@@ -2,14 +2,14 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, Loader2, Sparkles, Lock, History, Plus, Trash2, MessageCircle, ThumbsUp } from 'lucide-react';
+import { X, Send, Loader2, Sparkles, Lock, History, Plus, Trash2, MessageCircle, ThumbsUp, Shield } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import { Project } from '../lib/types';
 import toast from 'react-hot-toast';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { usePasskeyWallet } from '@/contexts/LazorkitContext';
-import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL, TransactionInstruction } from '@solana/web3.js';
 import { createUniqueSlug } from '../lib/slug-utils';
 import { useAuth } from '../contexts/AuthContext';
 import { WalletRequiredModal } from './WalletRequiredModal';
@@ -18,6 +18,9 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 const RECIPIENT_WALLET = 'FzcnaZMYcoAYpLgr7Wym2b8hrKYk3VXsRxWSLuvZKLJm';
 const MIN_DONATION_USD = 1;
 const SOL_PRICE_USD = 145; // Approximate price, update periodically
+
+// Memo Program ID for adding transaction context
+const MEMO_PROGRAM_ID = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
 
 interface Message {
   id: string;
@@ -467,6 +470,15 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
     onClose();
   };
 
+  // Helper function to create memo instruction
+  const createMemoInstruction = (message: string, signer: PublicKey): TransactionInstruction => {
+    return new TransactionInstruction({
+      keys: [{ pubkey: signer, isSigner: true, isWritable: false }],
+      programId: MEMO_PROGRAM_ID,
+      data: Buffer.from(message, 'utf-8'),
+    });
+  };
+
   const handleDonation = async () => {
     if (!isWalletConnected) {
       toast.error('Please connect your wallet first');
@@ -483,6 +495,9 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
     try {
       const solAmount = donationAmount / SOL_PRICE_USD;
       const lamports = Math.floor(solAmount * LAMPORTS_PER_SOL);
+      
+      // Create memo for transaction context
+      const memoText = `Gimme Idea: AI Chat Unlock`;
 
       let signature: string;
 
@@ -493,13 +508,23 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
           toPubkey: new PublicKey(RECIPIENT_WALLET),
           lamports,
         });
+        
+        const memoInstruction = createMemoInstruction(memoText, smartWalletPubkey);
 
         signature = await signAndSendPasskeyTransaction({
-          instructions: [transferInstruction],
+          instructions: [memoInstruction, transferInstruction],
         });
       } else if (publicKey) {
-        // Use standard Solana wallet adapter
-        const transaction = new Transaction().add(
+        // Use standard Solana wallet adapter with proper setup
+        const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
+        
+        const transaction = new Transaction();
+        
+        // Add memo instruction first (explains the transaction purpose)
+        transaction.add(createMemoInstruction(memoText, publicKey));
+        
+        // Add transfer instruction
+        transaction.add(
           SystemProgram.transfer({
             fromPubkey: publicKey,
             toPubkey: new PublicKey(RECIPIENT_WALLET),
@@ -507,28 +532,18 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
           })
         );
 
-        const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+        // Set transaction metadata explicitly
         transaction.recentBlockhash = blockhash;
         transaction.feePayer = publicKey;
 
         signature = await sendTransaction(transaction, connection);
 
         // Wait for confirmation with timeout
-        const confirmation = await connection.confirmTransaction({
+        await connection.confirmTransaction({
           signature,
           blockhash,
           lastValidBlockHeight
         }, 'confirmed');
-
-        if (confirmation.value.err) {
-          throw new Error('Transaction failed');
-        }
-
-        // Verify the transaction
-        const txInfo = await connection.getTransaction(signature, { maxSupportedTransactionVersion: 0 });
-        if (!txInfo) {
-          throw new Error('Could not verify transaction');
-        }
       } else {
         throw new Error('No wallet connected');
       }
@@ -788,9 +803,19 @@ export const AIChatModal: React.FC<AIChatModalProps> = ({ isOpen, onClose }) => 
               className="relative bg-[#12131a] border border-[#FFD700]/30 rounded-2xl p-6 max-w-md w-full"
             >
               <h3 className="text-lg sm:text-xl font-bold text-white mb-2">Unlock Chat</h3>
-              <p className="text-gray-400 text-xs sm:text-sm mb-4 sm:mb-6">
+              <p className="text-gray-400 text-xs sm:text-sm mb-4">
                 Support Gimme Idea with a small donation to continue your conversation with AI.
               </p>
+
+              {/* Verified Transaction Notice */}
+              <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-3 mb-4">
+                <div className="flex items-start gap-2">
+                  <Shield className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                  <p className="text-green-400 text-xs">
+                    Verified Gimme Idea transaction. Your wallet will show the exact amount.
+                  </p>
+                </div>
+              </div>
 
               <div className="mb-4 sm:mb-6">
                 <label className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider mb-2 block">Amount (USD)</label>

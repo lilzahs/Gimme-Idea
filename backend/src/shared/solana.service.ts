@@ -16,7 +16,8 @@ export class SolanaService implements OnModuleInit {
     const rpcUrl =
       this.configService.get<string>("SOLANA_RPC_URL") ||
       "https://api.mainnet-beta.solana.com";
-    this.network = this.configService.get<string>("SOLANA_NETWORK") || "mainnet-beta";
+    this.network =
+      this.configService.get<string>("SOLANA_NETWORK") || "mainnet-beta";
     this.connection = new Connection(rpcUrl, "confirmed");
   }
 

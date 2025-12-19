@@ -2,15 +2,18 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Send, Twitter, Copy, Check, ExternalLink, Sparkles, Coffee, Zap, Wallet } from 'lucide-react';
+import { Heart, Send, Twitter, Copy, Check, ExternalLink, Sparkles, Coffee, Zap, Wallet, Shield } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAppStore } from '../lib/store';
 import { apiClient } from '../lib/api-client';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { usePasskeyWallet } from '@/contexts/LazorkitContext';
-import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL } from '@solana/web3.js';
+import { PublicKey, Transaction, SystemProgram, LAMPORTS_PER_SOL, TransactionInstruction } from '@solana/web3.js';
 import { useAuth } from '../contexts/AuthContext';
 import { WalletRequiredModal } from './WalletRequiredModal';
+
+// Memo Program ID for adding transaction context
+const MEMO_PROGRAM_ID = new PublicKey('MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr');
 
 export const Donate = () => {
     const { openConnectReminder } = useAppStore();
@@ -31,6 +34,7 @@ export const Donate = () => {
     // Check if any wallet is connected
     const isWalletConnected = (connected && publicKey) || (isPasskeyConnected && passkeyWalletAddress);
     const isUsingPasskey = isPasskeyConnected && passkeyWalletAddress && !publicKey;
+    const activeWalletAddress = publicKey?.toBase58() || passkeyWalletAddress;
     
     const [copied, setCopied] = useState(false);
     const [amount, setAmount] = useState('0.5');
@@ -40,8 +44,23 @@ export const Donate = () => {
     const [showWalletModal, setShowWalletModal] = useState(false);
     const [walletModalMode, setWalletModalMode] = useState<'reconnect' | 'connect'>('connect');
     const [contributorName, setContributorName] = useState('');
+    const [showPreview, setShowPreview] = useState(false);
 
     const walletAddress = "FzcnaZMYcoAYpLgr7Wym2b8hrKYk3VXsRxWSLuvZKLJm";
+
+    // Helper function to create memo instruction
+    const createMemoInstruction = (message: string, signer: PublicKey): TransactionInstruction => {
+        return new TransactionInstruction({
+            keys: [{ pubkey: signer, isSigner: true, isWritable: false }],
+            programId: MEMO_PROGRAM_ID,
+            data: Buffer.from(message, 'utf-8'),
+        });
+    };
+
+    // Shorten wallet address for display
+    const shortenAddress = (address: string) => {
+        return `${address.slice(0, 4)}...${address.slice(-4)}`;
+    };
 
     const handleCopy = () => {
         navigator.clipboard.writeText(walletAddress);
@@ -50,7 +69,8 @@ export const Donate = () => {
         setTimeout(() => setCopied(false), 2000);
     };
 
-    const handleDonate = async () => {
+    // Initiate donation - show preview first
+    const initiateDonate = () => {
         if (!user) {
             openConnectReminder();
             return;
@@ -72,11 +92,21 @@ export const Donate = () => {
             return;
         }
 
+        setShowPreview(true);
+    };
+
+    const handleDonate = async () => {
+        setShowPreview(false);
+        const amountNum = Number(amount);
+        
         setIsProcessing(true);
 
         try {
             const recipientPubKey = new PublicKey(walletAddress);
-            const lamports = amountNum * LAMPORTS_PER_SOL;
+            const lamports = Math.floor(amountNum * LAMPORTS_PER_SOL);
+            
+            // Create memo for transaction context
+            const memoText = `Gimme Idea: Donation to Treasury`;
 
             let signature: string;
 
@@ -88,12 +118,22 @@ export const Donate = () => {
                     lamports,
                 });
 
+                const memoInstruction = createMemoInstruction(memoText, smartWalletPubkey);
+
                 signature = await signAndSendPasskeyTransaction({
-                    instructions: [transferInstruction],
+                    instructions: [memoInstruction, transferInstruction],
                 });
             } else if (publicKey) {
-                // Use standard Solana wallet adapter
-                const transaction = new Transaction().add(
+                // Use standard Solana wallet adapter with proper setup
+                const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash('confirmed');
+                
+                const transaction = new Transaction();
+                
+                // Add memo instruction first (explains the transaction purpose)
+                transaction.add(createMemoInstruction(memoText, publicKey));
+                
+                // Add transfer instruction
+                transaction.add(
                     SystemProgram.transfer({
                         fromPubkey: publicKey,
                         toPubkey: recipientPubKey,
@@ -101,14 +141,17 @@ export const Donate = () => {
                     })
                 );
 
+                // Set transaction metadata explicitly
+                transaction.recentBlockhash = blockhash;
+                transaction.feePayer = publicKey;
+
                 signature = await sendTransaction(transaction, connection);
 
-                const latestBlockhash = await connection.getLatestBlockhash();
                 await connection.confirmTransaction({
                     signature,
-                    blockhash: latestBlockhash.blockhash,
-                    lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
-                });
+                    blockhash,
+                    lastValidBlockHeight,
+                }, 'confirmed');
             } else {
                 throw new Error('No wallet connected');
             }
@@ -214,6 +257,81 @@ export const Donate = () => {
                                             View on Solscan <ExternalLink className="w-3 h-3" />
                                         </a>
                                     </motion.div>
+                                ) : showPreview ? (
+                                    /* Transaction Preview Step */
+                                    <motion.div
+                                        key="preview"
+                                        initial={{ opacity: 0, scale: 0.95 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        exit={{ opacity: 0, scale: 0.95 }}
+                                        className="py-4"
+                                    >
+                                        <div className="flex items-center gap-2 mb-4">
+                                            <Shield className="w-5 h-5 text-green-400" />
+                                            <h3 className="font-bold text-lg">Confirm Transaction</h3>
+                                        </div>
+                                        
+                                        <div className="bg-black/30 border border-white/10 rounded-xl p-4 mb-4">
+                                            <div className="space-y-3">
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-gray-400 text-sm">Action</span>
+                                                    <span className="text-white font-medium">Donation</span>
+                                                </div>
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-gray-400 text-sm">Amount</span>
+                                                    <span className="text-white font-bold text-lg">{amount} SOL</span>
+                                                </div>
+                                                <div className="h-px bg-white/10" />
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-gray-400 text-sm">From</span>
+                                                    <span className="text-white font-mono text-sm">
+                                                        {activeWalletAddress ? shortenAddress(activeWalletAddress) : 'Your Wallet'}
+                                                    </span>
+                                                </div>
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-gray-400 text-sm">To</span>
+                                                    <div className="text-right">
+                                                        <span className="text-white font-medium block">Gimme Idea Treasury</span>
+                                                        <span className="text-gray-500 font-mono text-xs">
+                                                            {shortenAddress(walletAddress)}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-3 mb-4">
+                                            <div className="flex items-start gap-2">
+                                                <Shield className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                                                <p className="text-green-400 text-xs">
+                                                    This is a verified Gimme Idea transaction. Your wallet will show the exact amount being sent.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex gap-3">
+                                            <button 
+                                                onClick={() => setShowPreview(false)}
+                                                className="flex-1 py-3 bg-white/10 text-white font-medium rounded-xl hover:bg-white/20 transition-colors text-sm"
+                                            >
+                                                Back
+                                            </button>
+                                            <button 
+                                                onClick={handleDonate}
+                                                disabled={isProcessing}
+                                                className="flex-1 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold rounded-xl hover:opacity-90 transition-colors text-sm disabled:opacity-50"
+                                            >
+                                                {isProcessing ? (
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                        Sending...
+                                                    </div>
+                                                ) : (
+                                                    'Confirm & Send'
+                                                )}
+                                            </button>
+                                        </div>
+                                    </motion.div>
                                 ) : (
                                     <motion.div
                                         key="form"
@@ -281,7 +399,7 @@ export const Donate = () => {
                                         {/* Buttons */}
                                         <div className="space-y-3">
                                             <button
-                                                onClick={handleDonate}
+                                                onClick={initiateDonate}
                                                 disabled={isProcessing}
                                                 className="w-full py-3.5 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl font-bold text-white hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-blue-500/20"
                                             >
@@ -292,7 +410,7 @@ export const Donate = () => {
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <Send className="w-4 h-4" /> Send {amount} SOL
+                                                        <Send className="w-4 h-4" /> Continue with {amount} SOL
                                                     </>
                                                 )}
                                             </button>
