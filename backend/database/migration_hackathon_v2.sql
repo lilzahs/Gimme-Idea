@@ -249,7 +249,64 @@ BEGIN
     WHERE table_name = 'hackathons' AND column_name = 'total_rounds') THEN
     ALTER TABLE hackathons ADD COLUMN total_rounds INTEGER DEFAULT 3;
   END IF;
+  
+  -- Add cover image (1x3 banner)
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'hackathons' AND column_name = 'cover_image') THEN
+    ALTER TABLE hackathons ADD COLUMN cover_image TEXT;
+  END IF;
+  
+  -- Add mode (online/offline/hybrid)
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'hackathons' AND column_name = 'mode') THEN
+    ALTER TABLE hackathons ADD COLUMN mode VARCHAR(20) DEFAULT 'online' CHECK (mode IN ('online', 'offline', 'hybrid'));
+  END IF;
+  
+  -- Add currency (VND/USD)
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'hackathons' AND column_name = 'currency') THEN
+    ALTER TABLE hackathons ADD COLUMN currency VARCHAR(3) DEFAULT 'VND';
+  END IF;
+  
+  -- Add judging criteria JSON
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'hackathons' AND column_name = 'judging_criteria') THEN
+    ALTER TABLE hackathons ADD COLUMN judging_criteria JSONB DEFAULT '[{"name": "Innovation", "weight": 30}, {"name": "Feasibility", "weight": 25}, {"name": "Impact", "weight": 25}, {"name": "Presentation", "weight": 20}]'::jsonb;
+  END IF;
 END $$;
+
+-- =============================================
+-- HACKATHON SCHEDULE/EVENTS TABLE
+-- =============================================
+CREATE TABLE IF NOT EXISTS hackathon_schedule (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  hackathon_id UUID NOT NULL REFERENCES hackathons(id) ON DELETE CASCADE,
+  
+  title VARCHAR(200) NOT NULL,
+  description TEXT,
+  event_type VARCHAR(20) DEFAULT 'workshop' CHECK (event_type IN ('workshop', 'mentoring', 'ceremony', 'other')),
+  event_date TIMESTAMP WITH TIME ZONE NOT NULL,
+  link TEXT, -- Luma/Meet/Zoom link
+  
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_hackathon_schedule_hackathon ON hackathon_schedule(hackathon_id);
+
+-- =============================================
+-- PARTNER HACKATHONS TABLE
+-- =============================================
+CREATE TABLE IF NOT EXISTS hackathon_partners (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  hackathon_id UUID NOT NULL REFERENCES hackathons(id) ON DELETE CASCADE,
+  
+  partner_name VARCHAR(200) NOT NULL,
+  partner_link TEXT NOT NULL,
+  
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_hackathon_partners_hackathon ON hackathon_partners(hackathon_id);
 
 -- =============================================
 -- RLS POLICIES
@@ -259,6 +316,8 @@ ALTER TABLE hackathon_prizes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE hackathon_ideas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE hackathon_feedback ENABLE ROW LEVEL SECURITY;
 ALTER TABLE hackathon_round_results ENABLE ROW LEVEL SECURITY;
+ALTER TABLE hackathon_schedule ENABLE ROW LEVEL SECURITY;
+ALTER TABLE hackathon_partners ENABLE ROW LEVEL SECURITY;
 
 -- Everyone can view
 CREATE POLICY "hackathon_rounds_view" ON hackathon_rounds FOR SELECT USING (true);
@@ -266,6 +325,8 @@ CREATE POLICY "hackathon_prizes_view" ON hackathon_prizes FOR SELECT USING (true
 CREATE POLICY "hackathon_ideas_view" ON hackathon_ideas FOR SELECT USING (true);
 CREATE POLICY "hackathon_feedback_view" ON hackathon_feedback FOR SELECT USING (true);
 CREATE POLICY "hackathon_round_results_view" ON hackathon_round_results FOR SELECT USING (true);
+CREATE POLICY "hackathon_schedule_view" ON hackathon_schedule FOR SELECT USING (true);
+CREATE POLICY "hackathon_partners_view" ON hackathon_partners FOR SELECT USING (true);
 
 -- Team members can insert their own ideas
 CREATE POLICY "hackathon_ideas_insert" ON hackathon_ideas FOR INSERT WITH CHECK (

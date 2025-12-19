@@ -169,7 +169,11 @@ export class AdminController {
     @CurrentUser("userId") userId: string,
     @Body() body: { rounds: any[] }
   ) {
-    return this.adminService.updateHackathonRounds(userId, hackathonId, body.rounds);
+    return this.adminService.updateHackathonRounds(
+      userId,
+      hackathonId,
+      body.rounds
+    );
   }
 
   /**
