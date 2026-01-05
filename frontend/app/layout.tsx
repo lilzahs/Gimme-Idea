@@ -1,3 +1,5 @@
+export const runtime = "nodejs";
+
 import './globals.css';
 import { Metadata } from 'next';
 import ClientLayout from './ClientLayout';
