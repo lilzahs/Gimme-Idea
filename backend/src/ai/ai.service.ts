@@ -154,9 +154,8 @@ Consider: Problem validity, blockchain necessity, technical feasibility, competi
 - Solution: ${ideaContext.solution}
 ${ideaContext.opportunity ? `- Opportunity: ${ideaContext.opportunity}` : ""}
 
-${
-  previousAIComment ? `**YOUR PREVIOUS FEEDBACK:**\n${previousAIComment}\n` : ""
-}
+${previousAIComment ? `**YOUR PREVIOUS FEEDBACK:**\n${previousAIComment}\n` : ""
+      }
 
 **HOW TO RESPOND:**
 - Talk naturally like you're chatting with the founder, not writing a report
@@ -403,15 +402,15 @@ Their strengths: ${strengths}
 
 Here are the available ideas:
 ${ideas
-  .map(
-    (idea, idx) => `
+          .map(
+            (idea, idx) => `
 ${idx + 1}. ${idea.title} (${idea.category})
    Problem: ${idea.problem}
    Solution: ${idea.solution}
    Votes: ${idea.votes || 0}
 `
-  )
-  .join("\n")}
+          )
+          .join("\n")}
 
 Pick the 3 best matches for this person. Think about what would actually be a good fit for their skills and what they want to work on.
 
@@ -457,10 +456,10 @@ Return valid JSON:
         author: idea.is_anonymous
           ? null
           : {
-              username: idea.author?.username,
-              wallet: idea.author?.wallet,
-              avatar: idea.author?.avatar,
-            },
+            username: idea.author?.username,
+            wallet: idea.author?.wallet,
+            avatar: idea.author?.avatar,
+          },
         isAnonymous: idea.is_anonymous,
       }));
 
@@ -518,16 +517,16 @@ Guidelines:
       role: "system" | "user" | "assistant";
       content: string;
     }> = [
-      {
-        role: "system",
-        content: systemPrompt,
-      },
-      ...validHistory,
-      {
-        role: "user",
-        content: message,
-      },
-    ];
+        {
+          role: "system",
+          content: systemPrompt,
+        },
+        ...validHistory,
+        {
+          role: "user",
+          content: message,
+        },
+      ];
 
     try {
       const completion = await this.openai.chat.completions.create({
@@ -1008,4 +1007,363 @@ Respond with JSON only:
       throw error;
     }
   }
+
+  // =============================================
+  // RELATED PROJECTS DETECTION (Tavily API)
+  // =============================================
+
+  /**
+   * Search for related projects on the internet using Tavily API
+   * Called during idea submission
+   */
+  async searchRelatedProjects(
+    ideaId: string,
+    ideaTitle: string,
+    ideaProblem: string,
+    ideaSolution: string,
+    userId: string
+  ): Promise<{
+    success: boolean;
+    results?: RelatedProjectResult[];
+    error?: string;
+    quotaInfo?: { remaining: number; used: number; max: number };
+  }> {
+    this.logger.log(`Searching related projects for idea: ${ideaTitle}`);
+
+    const supabase = this.supabaseService.getAdminClient();
+    const tavilyApiKey = process.env.TAVILY_API_KEY;
+
+    if (!tavilyApiKey) {
+      this.logger.warn("TAVILY_API_KEY not configured");
+      return { success: false, error: "Search service not configured" };
+    }
+
+    try {
+      // Check user's daily quota
+      const { data: quotaData, error: quotaError } = await supabase.rpc(
+        "can_user_search_projects",
+        { p_user_id: userId }
+      );
+
+      if (quotaError) {
+        this.logger.error("Failed to check quota:", quotaError);
+        throw new Error("Failed to check search quota");
+      }
+
+      const quota = {
+        canSearch: quotaData?.canSearch ?? quotaData?.cansearch ?? false,
+        remaining: quotaData?.remaining ?? 0,
+        used: quotaData?.used ?? 0,
+        max: quotaData?.max ?? 5,
+      };
+
+      if (!quota.canSearch) {
+        return {
+          success: false,
+          error: "Daily search limit reached (5 ideas per day)",
+          quotaInfo: {
+            remaining: quota.remaining,
+            used: quota.used,
+            max: quota.max,
+          },
+        };
+      }
+
+      // Build search query from idea content
+      const searchQuery = this.buildSearchQuery(
+        ideaTitle,
+        ideaProblem,
+        ideaSolution
+      );
+
+      this.logger.log(`Tavily search query: ${searchQuery}`);
+
+      // Call Tavily API (basic mode, max 8 results)
+      const tavilyResponse = await fetch("https://api.tavily.com/search", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          api_key: tavilyApiKey,
+          query: searchQuery,
+          search_depth: "basic",
+          max_results: 8,
+          include_domains: [],
+          exclude_domains: [],
+        }),
+      });
+
+      if (!tavilyResponse.ok) {
+        const errorText = await tavilyResponse.text();
+        this.logger.error(`Tavily API error: ${errorText}`);
+        throw new Error("Search API request failed");
+      }
+
+      const tavilyData = await tavilyResponse.json();
+
+      if (!tavilyData.results || tavilyData.results.length === 0) {
+        // No results found, but still count as a search
+        await supabase.rpc("increment_search_usage", { p_user_id: userId });
+        return {
+          success: true,
+          results: [],
+          quotaInfo: {
+            remaining: quota.remaining - 1,
+            used: quota.used + 1,
+            max: quota.max,
+          },
+        };
+      }
+
+      // Transform and store results
+      const results: RelatedProjectResult[] = tavilyData.results.map(
+        (result: any) => ({
+          title: result.title || "Untitled",
+          url: result.url,
+          snippet: result.content?.substring(0, 500) || "",
+          source: this.extractDomain(result.url),
+          score: result.score || 0,
+        })
+      );
+
+      // Store results in database
+      const insertData = results.map((r) => ({
+        idea_id: ideaId,
+        title: r.title,
+        url: r.url,
+        snippet: r.snippet,
+        source: r.source,
+        score: r.score,
+        search_query: searchQuery,
+      }));
+
+      const { error: insertError } = await supabase
+        .from("related_projects")
+        .insert(insertData);
+
+      if (insertError) {
+        this.logger.error("Failed to store search results:", insertError);
+        // Don't throw - still return results even if storage fails
+      }
+
+      // Increment search usage
+      await supabase.rpc("increment_search_usage", { p_user_id: userId });
+
+      this.logger.log(
+        `Found ${results.length} related projects for idea ${ideaId}`
+      );
+
+      return {
+        success: true,
+        results,
+        quotaInfo: {
+          remaining: quota.remaining - 1,
+          used: quota.used + 1,
+          max: quota.max,
+        },
+      };
+    } catch (error: any) {
+      this.logger.error("Failed to search related projects:", error);
+      return { success: false, error: error.message || "Search failed" };
+    }
+  }
+
+  /**
+   * Build an optimized search query from idea content
+   */
+  private buildSearchQuery(
+    title: string,
+    problem: string,
+    solution: string
+  ): string {
+    // Combine title with key phrases from problem/solution
+    // Keep it concise for better search results
+    const titleWords = title.slice(0, 60);
+    const problemWords = problem.slice(0, 100);
+
+    // Create a focused query
+    return `${titleWords} ${problemWords} startup project similar`;
+  }
+
+  /**
+   * Extract domain name from URL
+   */
+  private extractDomain(url: string): string {
+    try {
+      const urlObj = new URL(url);
+      return urlObj.hostname.replace("www.", "");
+    } catch {
+      return "unknown";
+    }
+  }
+
+  /**
+   * Get related projects for an idea
+   */
+  async getRelatedProjects(ideaId: string): Promise<{
+    success: boolean;
+    data?: {
+      aiDetected: RelatedProjectResult[];
+      userPinned: UserPinnedProject[];
+    };
+    error?: string;
+  }> {
+    const supabase = this.supabaseService.getAdminClient();
+
+    try {
+      const { data, error } = await supabase.rpc("get_related_projects", {
+        p_idea_id: ideaId,
+      });
+
+      if (error) {
+        this.logger.error("Failed to get related projects:", error);
+        throw error;
+      }
+
+      return {
+        success: true,
+        data: {
+          aiDetected: data?.aiDetected || data?.aidetected || [],
+          userPinned: data?.userPinned || data?.userpinned || [],
+        },
+      };
+    } catch (error: any) {
+      this.logger.error("Failed to get related projects:", error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Pin user's own project to an idea
+   */
+  async pinUserProject(
+    ideaId: string,
+    userId: string,
+    projectTitle: string,
+    projectUrl: string,
+    projectDescription?: string
+  ): Promise<{ success: boolean; error?: string }> {
+    const supabase = this.supabaseService.getAdminClient();
+
+    try {
+      // Validate URL
+      try {
+        new URL(projectUrl);
+      } catch {
+        return { success: false, error: "Invalid project URL" };
+      }
+
+      const { error } = await supabase.from("user_pinned_projects").upsert(
+        {
+          idea_id: ideaId,
+          pinned_by: userId,
+          project_title: projectTitle,
+          project_url: projectUrl,
+          project_description: projectDescription || null,
+        },
+        {
+          onConflict: "idea_id,pinned_by",
+        }
+      );
+
+      if (error) {
+        this.logger.error("Failed to pin user project:", error);
+        throw error;
+      }
+
+      this.logger.log(`User ${userId} pinned project to idea ${ideaId}`);
+      return { success: true };
+    } catch (error: any) {
+      this.logger.error("Failed to pin user project:", error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Remove user's pinned project from an idea
+   */
+  async unpinUserProject(
+    ideaId: string,
+    userId: string
+  ): Promise<{ success: boolean; error?: string }> {
+    const supabase = this.supabaseService.getAdminClient();
+
+    try {
+      const { error } = await supabase
+        .from("user_pinned_projects")
+        .delete()
+        .eq("idea_id", ideaId)
+        .eq("pinned_by", userId);
+
+      if (error) {
+        this.logger.error("Failed to unpin user project:", error);
+        throw error;
+      }
+
+      return { success: true };
+    } catch (error: any) {
+      this.logger.error("Failed to unpin user project:", error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Get user's search quota
+   */
+  async getUserSearchQuota(userId: string): Promise<{
+    canSearch: boolean;
+    remaining: number;
+    used: number;
+    max: number;
+  }> {
+    const supabase = this.supabaseService.getAdminClient();
+
+    try {
+      const { data, error } = await supabase.rpc("can_user_search_projects", {
+        p_user_id: userId,
+      });
+
+      if (error) throw error;
+
+      return {
+        canSearch: data?.canSearch ?? data?.cansearch ?? false,
+        remaining: data?.remaining ?? 0,
+        used: data?.used ?? 0,
+        max: data?.max ?? 5,
+      };
+    } catch (error) {
+      this.logger.error("Failed to get search quota:", error);
+      return { canSearch: false, remaining: 0, used: 0, max: 5 };
+    }
+  }
+}
+
+// =============================================
+// INTERFACES
+// =============================================
+
+export interface RelatedProjectResult {
+  id?: string;
+  title: string;
+  url: string;
+  snippet: string;
+  source: string;
+  score: number;
+  isPinned?: boolean;
+  pinnedBy?: string;
+  createdAt?: string;
+}
+
+export interface UserPinnedProject {
+  id: string;
+  title: string;
+  url: string;
+  description?: string;
+  pinnedBy: string;
+  createdAt: string;
+  user?: {
+    username: string;
+    avatar?: string;
+  };
 }

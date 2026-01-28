@@ -986,4 +986,91 @@ export const apiClient = {
     apiFetch<void>(`/users/announcements/${announcementId}/dismiss`, {
       method: "PATCH",
     }),
+
+  // =============================================
+  // RELATED PROJECTS DETECTION API
+  // =============================================
+
+  // Search for related projects on the internet (Tavily API)
+  // Called during idea submission
+  searchRelatedProjects: (data: {
+    ideaId: string;
+    title: string;
+    problem: string;
+    solution: string;
+  }) =>
+    apiFetch<{
+      results: Array<{
+        id?: string;
+        title: string;
+        url: string;
+        snippet: string;
+        source: string;
+        score: number;
+      }>;
+      quotaInfo: {
+        remaining: number;
+        used: number;
+        max: number;
+      };
+    }>("/ai/search-related-projects", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  // Get all related projects for an idea
+  getRelatedProjects: (ideaId: string) =>
+    apiFetch<{
+      aiDetected: Array<{
+        id: string;
+        title: string;
+        url: string;
+        snippet: string;
+        source: string;
+        score: number;
+        isPinned: boolean;
+        createdAt: string;
+      }>;
+      userPinned: Array<{
+        id: string;
+        title: string;
+        url: string;
+        description?: string;
+        pinnedBy: string;
+        createdAt: string;
+        user?: {
+          username: string;
+          avatar?: string;
+        };
+      }>;
+    }>(`/ai/related-projects/${ideaId}`),
+
+  // Pin user's own project to an idea
+  pinProject: (data: {
+    ideaId: string;
+    projectTitle: string;
+    projectUrl: string;
+    projectDescription?: string;
+  }) =>
+    apiFetch<void>("/ai/pin-project", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  // Unpin user's project from an idea
+  unpinProject: (ideaId: string) =>
+    apiFetch<void>("/ai/unpin-project", {
+      method: "POST",
+      body: JSON.stringify({ ideaId }),
+    }),
+
+  // Get user's search quota for related projects
+  getSearchQuota: () =>
+    apiFetch<{
+      canSearch: boolean;
+      remaining: number;
+      used: number;
+      max: number;
+    }>("/ai/search-quota"),
 };
+

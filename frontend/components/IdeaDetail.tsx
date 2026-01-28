@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../lib/store';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ThumbsUp, ThumbsDown, MessageCircle, Send, EyeOff, User, DollarSign, Share2, Pencil, Trash2, X, Check, Loader2, Bookmark, ChevronDown } from 'lucide-react';
+import { ArrowLeft, ThumbsUp, ThumbsDown, MessageCircle, Send, EyeOff, User, DollarSign, Share2, Pencil, Trash2, X, Check, Loader2, Bookmark, ChevronDown, Sparkles } from 'lucide-react';
 import { BookmarkModal } from './BookmarkModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -20,6 +20,7 @@ import { sanitizeText, hasDangerousContent } from '../lib/sanitize';
 import { createUniqueSlug } from '../lib/slug-utils';
 import AdminDeleteButton from './AdminDeleteButton';
 import AdminBadge, { GimmeSenseiBadge } from './AdminBadge';
+import { RelatedProjectsModal } from './RelatedProjectsModal';
 
 // AI Bot display name
 const AI_BOT_NAME = 'Gimme Sensei';
@@ -79,7 +80,7 @@ const CommentFormBox: React.FC<CommentFormProps> = ({
                         <ChevronDown className="w-3 h-3 text-gray-400" />
                     </button>
                 </div>
-                
+
                 {/* Dropdown menu */}
                 <AnimatePresence>
                     {showAnonDropdown && (
@@ -124,7 +125,7 @@ const CommentFormBox: React.FC<CommentFormProps> = ({
             {/* Input area */}
             <div className="flex-grow">
                 <div className="relative">
-                    <textarea 
+                    <textarea
                         value={text}
                         onChange={e => setText(e.target.value)}
                         className="w-full bg-[#12131a] border border-white/10 rounded-2xl px-4 py-3 outline-none text-white text-sm min-h-[80px] focus:border-[#FFD700]/40 transition-all resize-none placeholder:text-gray-600"
@@ -132,7 +133,7 @@ const CommentFormBox: React.FC<CommentFormProps> = ({
                         disabled={isSubmitting}
                     />
                 </div>
-                
+
                 {/* Bottom bar */}
                 <div className="flex items-center justify-between mt-2">
                     <div className="flex items-center gap-2 text-gray-500">
@@ -221,7 +222,7 @@ const ReplyForm: React.FC<ReplyFormProps> = ({
                         <ChevronDown className="w-2.5 h-2.5 text-gray-400" />
                     </button>
                 </div>
-                
+
                 {/* Dropdown menu */}
                 <AnimatePresence>
                     {showAnonDropdown && (
@@ -271,8 +272,8 @@ const ReplyForm: React.FC<ReplyFormProps> = ({
                     <span className={`font-semibold ${isReplyingToAI ? 'text-purple-400' : 'text-[#FFD700]'}`}>
                         @{replyingTo}
                     </span>
-                    <button 
-                        type="button" 
+                    <button
+                        type="button"
                         onClick={onCancel}
                         className="ml-auto p-1 text-gray-500 hover:text-white hover:bg-white/10 rounded-full transition-all"
                         title="Cancel reply"
@@ -280,8 +281,8 @@ const ReplyForm: React.FC<ReplyFormProps> = ({
                         <X className="w-3 h-3" />
                     </button>
                 </div>
-                
-                <textarea 
+
+                <textarea
                     value={replyText}
                     onChange={(e) => setReplyText(e.target.value)}
                     className="w-full bg-[#12131a] border border-white/10 rounded-xl px-3 py-2.5 text-white text-sm focus:border-[#FFD700]/40 outline-none resize-none transition-all placeholder:text-gray-600"
@@ -289,7 +290,7 @@ const ReplyForm: React.FC<ReplyFormProps> = ({
                     rows={2}
                     disabled={isSubmittingReply}
                 />
-                
+
                 <div className="flex items-center justify-between mt-2">
                     <div className="flex items-center gap-2">
                         {isAnonReply && (
@@ -299,7 +300,7 @@ const ReplyForm: React.FC<ReplyFormProps> = ({
                         )}
                     </div>
                     <div className="flex gap-2">
-                        <button 
+                        <button
                             type="button"
                             onClick={onCancel}
                             className="text-xs text-gray-400 hover:text-white px-3 py-1.5 rounded-full transition-colors"
@@ -307,8 +308,8 @@ const ReplyForm: React.FC<ReplyFormProps> = ({
                         >
                             Cancel
                         </button>
-                        <button 
-                            type="submit" 
+                        <button
+                            type="submit"
                             className="text-xs bg-[#FFD700] text-black px-4 py-1.5 rounded-full font-semibold hover:bg-[#FFD700]/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
                             disabled={isSubmittingReply || !replyText.trim()}
                         >
@@ -415,19 +416,19 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, projectId, isReply =
 
     const handleLike = async () => {
         if (!hasLiked) {
-             // Optimistic update - immediate feedback
-             setHasLiked(true);
-             setLocalLikes(prev => prev + 1);
-             setShowBurst(true);
-             setTimeout(() => setShowBurst(false), 800);
-             
-             try {
-                 await likeComment(projectId, comment.id);
-             } catch (error) {
-                 // Revert on error
-                 setHasLiked(false);
-                 setLocalLikes(prev => prev - 1);
-             }
+            // Optimistic update - immediate feedback
+            setHasLiked(true);
+            setLocalLikes(prev => prev + 1);
+            setShowBurst(true);
+            setTimeout(() => setShowBurst(false), 800);
+
+            try {
+                await likeComment(projectId, comment.id);
+            } catch (error) {
+                // Revert on error
+                setHasLiked(false);
+                setLocalLikes(prev => prev - 1);
+            }
         }
     };
 
@@ -445,7 +446,7 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, projectId, isReply =
             toast.error("Reply cannot be empty");
             return;
         }
-        
+
         setIsSubmittingReply(true);
         try {
             await replyComment(projectId, comment.id, replyText, isAnonReply);
@@ -453,7 +454,7 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, projectId, isReply =
             setReplyText('');
             setActiveReplyId(null); // Close reply form
             toast.success('Reply posted!');
-            
+
             // If replying to an AI comment, trigger AI auto-reply
             if (comment.is_ai_generated && ideaContext) {
                 setIsAIThinking(true);
@@ -465,7 +466,7 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, projectId, isReply =
                         previousAIComment: comment.content,
                         ideaContext,
                     });
-                    
+
                     if (response.success && response.data) {
                         // Check if AI skipped the reply (not a question/challenge)
                         if (response.data.skipped) {
@@ -505,12 +506,12 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, projectId, isReply =
 
     return (
         <div className={`flex gap-3 sm:gap-4 mb-4 sm:mb-6 animate-in fade-in slide-in-from-bottom-2 duration-300 ${isReply ? 'ml-6 sm:ml-10 mt-3 pl-3 border-l-2 border-white/10' : ''}`}>
-                    <AuthorAvatar
-                        username={comment.author?.username || 'Anonymous'}
-                        avatar={comment.author?.avatar}
-                        isAnonymous={comment.isAnonymous}
-                        size={isReply ? "md" : "lg"}
-                    />
+            <AuthorAvatar
+                username={comment.author?.username || 'Anonymous'}
+                avatar={comment.author?.avatar}
+                isAnonymous={comment.isAnonymous}
+                size={isReply ? "md" : "lg"}
+            />
             <div className="flex-grow">
                 <div className="flex items-center gap-2 mb-1 flex-wrap">
                     <AuthorLink
@@ -520,12 +521,12 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, projectId, isReply =
                         showAvatar={false}
                         className="font-bold text-sm"
                     />
-                    {!comment.isAnonymous && comment.author?.username && ideaOwnerUsername && 
-                     comment.author.username === ideaOwnerUsername && (
-                        <span className="text-[10px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full border border-amber-500/30 font-medium">
-                            Idea Owner
-                        </span>
-                    )}
+                    {!comment.isAnonymous && comment.author?.username && ideaOwnerUsername &&
+                        comment.author.username === ideaOwnerUsername && (
+                            <span className="text-[10px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full border border-amber-500/30 font-medium">
+                                Idea Owner
+                            </span>
+                        )}
                     {/* Gimme Sensei AI Badge */}
                     {comment.is_ai_generated && (
                         <GimmeSenseiBadge />
@@ -537,7 +538,7 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, projectId, isReply =
                         </span>
                     )}
                 </div>
-                
+
                 {/* Comment Content - Edit or View mode */}
                 {isEditing ? (
                     <div className="mb-3">
@@ -579,10 +580,10 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, projectId, isReply =
                         <MarkdownContent content={comment.content} />
                     </div>
                 )}
-                
+
                 {/* Actions */}
                 <div className="flex items-center gap-4 text-xs text-gray-500">
-                    <motion.button 
+                    <motion.button
                         onClick={handleLike}
                         whileTap={{ scale: 0.85 }}
                         className={`flex items-center gap-1.5 transition-all relative ${hasLiked ? 'text-[#FFD700]' : 'hover:text-white'}`}
@@ -594,18 +595,18 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, projectId, isReply =
                             <ThumbsUp className={`w-3.5 h-3.5 ${hasLiked ? 'fill-current' : ''}`} />
                         </motion.div>
                         <AnimatePresence mode="wait">
-                             <motion.span 
-                                key={localLikes} 
+                            <motion.span
+                                key={localLikes}
                                 initial={{ y: -8, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
                                 exit={{ y: 8, opacity: 0 }}
                                 transition={{ duration: 0.15 }}
                                 className="min-w-[12px]"
-                             >
+                            >
                                 {localLikes}
-                             </motion.span>
+                            </motion.span>
                         </AnimatePresence>
-                        
+
                         {/* Burst Animation */}
                         {showBurst && (
                             <>
@@ -615,7 +616,7 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, projectId, isReply =
                                         className="absolute top-1/2 left-0 w-1 h-1 rounded-full pointer-events-none"
                                         style={{ backgroundColor: i % 2 === 0 ? '#FFD700' : '#FFF' }}
                                         initial={{ scale: 0, x: 0, y: 0 }}
-                                        animate={{ 
+                                        animate={{
                                             scale: [1, 0],
                                             x: Math.cos(i * 45 * (Math.PI / 180)) * 24,
                                             y: Math.sin(i * 45 * (Math.PI / 180)) * 24 - 10,
@@ -633,8 +634,8 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, projectId, isReply =
                         </button>
                     )}
 
-                    <button 
-                        onClick={handleToggleReply} 
+                    <button
+                        onClick={handleToggleReply}
                         className={`flex items-center gap-1 hover:text-white ${isReplyFormOpen ? 'text-white' : ''}`}
                     >
                         <MessageCircle className="w-3 h-3" /> {isReplyFormOpen ? 'Cancel' : 'Reply'}
@@ -702,24 +703,24 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, projectId, isReply =
                     let replyToAuthor: string;
                     if (index === 0) {
                         // First reply in thread - tag the parent comment author
-                        replyToAuthor = comment.is_ai_generated 
-                            ? AI_BOT_NAME 
+                        replyToAuthor = comment.is_ai_generated
+                            ? AI_BOT_NAME
                             : (comment.isAnonymous ? 'Anonymous' : (comment.author?.username || 'Anonymous'));
                     } else {
                         // Find the previous reply to determine who this reply is to
                         const prevReply = allReplies[index - 1];
-                        replyToAuthor = prevReply.is_ai_generated 
-                            ? AI_BOT_NAME 
+                        replyToAuthor = prevReply.is_ai_generated
+                            ? AI_BOT_NAME
                             : (prevReply.isAnonymous ? 'Anonymous' : (prevReply.author?.username || 'Anonymous'));
                     }
-                    
+
                     return (
-                        <CommentItem 
-                            key={reply.id} 
-                            comment={reply} 
-                            projectId={projectId} 
-                            isReply={true} 
-                            onTip={onTip} 
+                        <CommentItem
+                            key={reply.id}
+                            comment={reply}
+                            projectId={projectId}
+                            isReply={true}
+                            onTip={onTip}
                             ideaOwnerUsername={ideaOwnerUsername}
                             ideaContext={ideaContext}
                             parentAIComment={comment.is_ai_generated ? comment.content : parentAIComment}
@@ -736,319 +737,337 @@ const CommentItem: React.FC<CommentItemProps> = ({ comment, projectId, isReply =
 };
 
 export const IdeaDetail = () => {
-  const {
-    selectedProject,
-    voteProject,
-    addComment,
-    user,
-    openConnectReminder,
-    tipComment,
-    handleRealtimeNewComment,
-    handleRealtimeUpdateComment,
-    handleRealtimeDeleteComment,
-  } = useAppStore();
-  const { isAdmin } = useAuth();
-  const router = useRouter();
-  const [commentText, setCommentText] = useState('');
-  const [isAnonComment, setIsAnonComment] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [hasVoted, setHasVoted] = useState(false);
+    const {
+        selectedProject,
+        voteProject,
+        addComment,
+        user,
+        openConnectReminder,
+        tipComment,
+        handleRealtimeNewComment,
+        handleRealtimeUpdateComment,
+        handleRealtimeDeleteComment,
+    } = useAppStore();
+    const { isAdmin } = useAuth();
+    const router = useRouter();
+    const [commentText, setCommentText] = useState('');
+    const [isAnonComment, setIsAnonComment] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [hasVoted, setHasVoted] = useState(false);
 
-  // Reply form state - only one reply form can be open at a time
-  const [activeReplyId, setActiveReplyId] = useState<string | null>(null);
+    // Reply form state - only one reply form can be open at a time
+    const [activeReplyId, setActiveReplyId] = useState<string | null>(null);
 
-  // Payment Modal State
-  const [showPayment, setShowPayment] = useState(false);
-  const [paymentRecipient, setPaymentRecipient] = useState('');
-  const [recipientWallet, setRecipientWallet] = useState('');
-  const [selectedCommentId, setSelectedCommentId] = useState<string | null>(null);
+    // Payment Modal State
+    const [showPayment, setShowPayment] = useState(false);
+    const [paymentRecipient, setPaymentRecipient] = useState('');
+    const [recipientWallet, setRecipientWallet] = useState('');
+    const [selectedCommentId, setSelectedCommentId] = useState<string | null>(null);
 
-  // Bookmark Modal State
-  const [showBookmarkModal, setShowBookmarkModal] = useState(false);
+    // Bookmark Modal State
+    const [showBookmarkModal, setShowBookmarkModal] = useState(false);
 
-  const project = selectedProject;
+    // Related Projects Modal State
+    const [showRelatedProjectsModal, setShowRelatedProjectsModal] = useState(false);
 
-  // Subscribe to realtime comment updates for this project
-  useRealtimeComments({
-    projectId: project?.id || '',
-    onNewComment: (comment) => {
-      if (project?.id) {
-        handleRealtimeNewComment(project.id, comment);
-      }
-    },
-    onUpdateComment: (comment) => {
-      if (project?.id) {
-        handleRealtimeUpdateComment(project.id, comment);
-      }
-    },
-    onDeleteComment: (commentId) => {
-      if (project?.id) {
-        handleRealtimeDeleteComment(project.id, commentId);
-      }
-    },
-  });
+    const project = selectedProject;
 
-  if (!project) return null;
+    // Subscribe to realtime comment updates for this project
+    useRealtimeComments({
+        projectId: project?.id || '',
+        onNewComment: (comment) => {
+            if (project?.id) {
+                handleRealtimeNewComment(project.id, comment);
+            }
+        },
+        onUpdateComment: (comment) => {
+            if (project?.id) {
+                handleRealtimeUpdateComment(project.id, comment);
+            }
+        },
+        onDeleteComment: (commentId) => {
+            if (project?.id) {
+                handleRealtimeDeleteComment(project.id, commentId);
+            }
+        },
+    });
 
-  const handleVote = async () => {
-      if (!user) {
-        openConnectReminder();
-        return;
-      }
-      if (hasVoted) return; // Prevent double vote
-      
-      // Optimistic update
-      setHasVoted(true);
-      
-      try {
-        await voteProject(project.id);
-        toast.success('Vote recorded!');
-      } catch (error) {
-        setHasVoted(false); // Revert on error
-        toast.error('Failed to record vote');
-      }
-  };
+    if (!project) return null;
 
-  const handleShareToX = () => {
-      // Create shareable URL with slug format
-      const slug = createUniqueSlug(project.title, project.id);
-      const ideaUrl = `${window.location.origin}/idea/${slug}`;
+    const handleVote = async () => {
+        if (!user) {
+            openConnectReminder();
+            return;
+        }
+        if (hasVoted) return; // Prevent double vote
 
-      // Create engaging tweet text
-      const tweetText = `💡 Found an interesting idea on @GimmeIdea!\n\n"${project.title}"\n\nWhat do you think? 👇`;
+        // Optimistic update
+        setHasVoted(true);
 
-      // Create Twitter intent URL
-      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(ideaUrl)}`;
+        try {
+            await voteProject(project.id);
+            toast.success('Vote recorded!');
+        } catch (error) {
+            setHasVoted(false); // Revert on error
+            toast.error('Failed to record vote');
+        }
+    };
 
-      // Open in new window
-      window.open(twitterUrl, '_blank', 'width=550,height=420');
-      toast.success('Opening Twitter...');
-  };
+    const handleShareToX = () => {
+        // Create shareable URL with slug format
+        const slug = createUniqueSlug(project.title, project.id);
+        const ideaUrl = `${window.location.origin}/idea/${slug}`;
 
-  const handleComment = async (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!user) {
-          openConnectReminder();
-          return;
-      }
-      
-      // Sanitize comment
-      const sanitizedComment = sanitizeText(commentText, 2000);
-      
-      if (isSubmitting || !sanitizedComment) return; // Prevent double submit
-      
-      // Check for dangerous content
-      if (hasDangerousContent(commentText)) {
-          toast.error('Invalid content detected. Please remove any HTML or scripts.');
-          return;
-      }
+        // Create engaging tweet text
+        const tweetText = `💡 Found an interesting idea on @GimmeIdea!\n\n"${project.title}"\n\nWhat do you think? 👇`;
 
-      setIsSubmitting(true);
-      try {
-        await addComment(project.id, sanitizedComment, isAnonComment);
-        setCommentText('');
-        toast.success('Comment added');
-      } catch (error) {
-        toast.error('Failed to add comment');
-      } finally {
-        setIsSubmitting(false);
-      }
-  };
+        // Create Twitter intent URL
+        const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(ideaUrl)}`;
 
-  const openCommentTip = (commentId: string, author: string, wallet: string) => {
-      if (!user) {
-          toast.error("Connect wallet to tip");
-          return;
-      }
-      setSelectedCommentId(commentId);
-      setPaymentRecipient(author);
-      setRecipientWallet(wallet);
-      setShowPayment(true);
-  };
+        // Open in new window
+        window.open(twitterUrl, '_blank', 'width=550,height=420');
+        toast.success('Opening Twitter...');
+    };
 
-  const handlePaymentConfirm = (amount: number) => {
-      if (selectedCommentId) {
-          tipComment(project.id, selectedCommentId, amount);
-          toast.success(`Tipped ${amount} SOL to ${paymentRecipient}`);
-      }
-  };
+    const handleComment = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!user) {
+            openConnectReminder();
+            return;
+        }
 
-  return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen pt-24 sm:pt-32 pb-20 px-4 sm:px-6">
-        <div className="max-w-4xl mx-auto">
-            {/* Nav */}
-            <button onClick={() => router.push('/idea')} className="flex items-center gap-2 text-gray-400 hover:text-white mb-6 sm:mb-8 text-sm">
-                <ArrowLeft className="w-4 h-4" /> Back to Ideas
-            </button>
+        // Sanitize comment
+        const sanitizedComment = sanitizeText(commentText, 2000);
 
-            {/* Header */}
-            <div className="mb-8 sm:mb-12">
-                <div className="flex flex-col gap-4 mb-6">
-                     <h1 className="text-2xl sm:text-4xl md:text-5xl font-display font-bold leading-tight">{project.title}</h1>
-                     <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                         {/* Like Button - First */}
-                         <motion.button
-                            onClick={handleVote}
-                            whileTap={{ scale: 0.9 }}
-                            className="bg-[#FFD700] text-black px-4 sm:px-6 py-2 rounded-full font-bold flex items-center gap-2 hover:scale-105 transition-transform shadow-[0_0_20px_rgba(255,215,0,0.3)] text-sm relative overflow-hidden"
-                         >
-                             <motion.div
-                                animate={{ rotate: hasVoted ? [0, -20, 20, 0] : 0 }}
-                                transition={{ duration: 0.3 }}
-                             >
-                                <ThumbsUp className={`w-4 h-4 ${hasVoted ? 'fill-current' : ''}`} />
-                             </motion.div>
-                             <AnimatePresence mode="wait">
-                                <motion.span
-                                    key={project.votes}
-                                    initial={{ y: 10, opacity: 0 }}
-                                    animate={{ y: 0, opacity: 1 }}
-                                    exit={{ y: -10, opacity: 0 }}
-                                    transition={{ duration: 0.2 }}
+        if (isSubmitting || !sanitizedComment) return; // Prevent double submit
+
+        // Check for dangerous content
+        if (hasDangerousContent(commentText)) {
+            toast.error('Invalid content detected. Please remove any HTML or scripts.');
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            await addComment(project.id, sanitizedComment, isAnonComment);
+            setCommentText('');
+            toast.success('Comment added');
+        } catch (error) {
+            toast.error('Failed to add comment');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const openCommentTip = (commentId: string, author: string, wallet: string) => {
+        if (!user) {
+            toast.error("Connect wallet to tip");
+            return;
+        }
+        setSelectedCommentId(commentId);
+        setPaymentRecipient(author);
+        setRecipientWallet(wallet);
+        setShowPayment(true);
+    };
+
+    const handlePaymentConfirm = (amount: number) => {
+        if (selectedCommentId) {
+            tipComment(project.id, selectedCommentId, amount);
+            toast.success(`Tipped ${amount} SOL to ${paymentRecipient}`);
+        }
+    };
+
+    return (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen pt-24 sm:pt-32 pb-20 px-4 sm:px-6">
+            <div className="max-w-4xl mx-auto">
+                {/* Nav */}
+                <button onClick={() => router.push('/idea')} className="flex items-center gap-2 text-gray-400 hover:text-white mb-6 sm:mb-8 text-sm">
+                    <ArrowLeft className="w-4 h-4" /> Back to Ideas
+                </button>
+
+                {/* Header */}
+                <div className="mb-8 sm:mb-12">
+                    <div className="flex flex-col gap-4 mb-6">
+                        <h1 className="text-2xl sm:text-4xl md:text-5xl font-display font-bold leading-tight">{project.title}</h1>
+                        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                            {/* Like Button - First */}
+                            <motion.button
+                                onClick={handleVote}
+                                whileTap={{ scale: 0.9 }}
+                                className="bg-[#FFD700] text-black px-4 sm:px-6 py-2 rounded-full font-bold flex items-center gap-2 hover:scale-105 transition-transform shadow-[0_0_20px_rgba(255,215,0,0.3)] text-sm relative overflow-hidden"
+                            >
+                                <motion.div
+                                    animate={{ rotate: hasVoted ? [0, -20, 20, 0] : 0 }}
+                                    transition={{ duration: 0.3 }}
                                 >
-                                    {project.votes}
-                                </motion.span>
-                             </AnimatePresence>
-                         </motion.button>
-                         
-                         {/* Share Button - Second */}
-                         <button
-                            onClick={handleShareToX}
-                            className="bg-[#1DA1F2] text-white px-4 sm:px-5 py-2 rounded-full font-bold flex items-center gap-2 hover:scale-105 transition-transform shadow-[0_0_20px_rgba(29,161,242,0.3)] text-sm"
-                         >
-                             <Share2 className="w-4 h-4" /> Share
-                         </button>
-                         
-                         {/* Save Button - Third */}
-                         <button
-                            onClick={() => {
-                              if (!user) {
-                                openConnectReminder();
-                                return;
-                              }
-                              setShowBookmarkModal(true);
-                            }}
-                            className="bg-purple-600 text-white px-4 sm:px-5 py-2 rounded-full font-bold flex items-center gap-2 hover:scale-105 transition-transform shadow-[0_0_20px_rgba(147,51,234,0.3)] text-sm"
-                         >
-                             <Bookmark className="w-4 h-4" /> Save
-                         </button>
-                         
-                         {/* Admin Delete Button */}
-                         {isAdmin && (
-                           <AdminDeleteButton
-                             projectId={project.id}
-                             projectTitle={project.title}
-                             onDeleted={() => router.push('/idea')}
-                             variant="button"
-                           />
-                         )}
-                     </div>
-                </div>
+                                    <ThumbsUp className={`w-4 h-4 ${hasVoted ? 'fill-current' : ''}`} />
+                                </motion.div>
+                                <AnimatePresence mode="wait">
+                                    <motion.span
+                                        key={project.votes}
+                                        initial={{ y: 10, opacity: 0 }}
+                                        animate={{ y: 0, opacity: 1 }}
+                                        exit={{ y: -10, opacity: 0 }}
+                                        transition={{ duration: 0.2 }}
+                                    >
+                                        {project.votes}
+                                    </motion.span>
+                                </AnimatePresence>
+                            </motion.button>
 
-                <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm text-gray-400 mb-6 sm:mb-8 border-b border-white/10 pb-6 sm:pb-8">
-                     <AuthorLink
-                         username={project.author?.username || 'Anonymous'}
-                         avatar={project.author?.avatar}
-                         isAnonymous={project.isAnonymous || !project.author}
-                         showAvatar={true}
-                         avatarSize="md"
-                     />
-                     <span>•</span>
-                     <span>{project.category}</span>
-                     <span>•</span>
-                     <span>{new Date(project.createdAt).toLocaleDateString()}</span>
-                </div>
+                            {/* Share Button - Second */}
+                            <button
+                                onClick={handleShareToX}
+                                className="bg-[#1DA1F2] text-white px-4 sm:px-5 py-2 rounded-full font-bold flex items-center gap-2 hover:scale-105 transition-transform shadow-[0_0_20px_rgba(29,161,242,0.3)] text-sm"
+                            >
+                                <Share2 className="w-4 h-4" /> Share
+                            </button>
 
-                {/* Content Blocks */}
-                <div className="space-y-12">
-                     <section>
-                         <h3 className="text-xl font-bold text-[#FFD700] mb-4 font-mono uppercase tracking-wider">The Problem</h3>
-                         <div className="text-lg text-gray-200 leading-relaxed">
-                             <MarkdownContent content={project.problem} />
-                         </div>
-                     </section>
-                     
-                     <section>
-                         <h3 className="text-xl font-bold text-[#FFD700] mb-4 font-mono uppercase tracking-wider">The Solution</h3>
-                         <div className="p-6 bg-white/5 border-l-4 border-[#FFD700] rounded-r-xl">
-                            <div className="text-lg text-white leading-relaxed">
-                                <MarkdownContent content={project.solution} />
+                            {/* Save Button - Third */}
+                            <button
+                                onClick={() => {
+                                    if (!user) {
+                                        openConnectReminder();
+                                        return;
+                                    }
+                                    setShowBookmarkModal(true);
+                                }}
+                                className="bg-purple-600 text-white px-4 sm:px-5 py-2 rounded-full font-bold flex items-center gap-2 hover:scale-105 transition-transform shadow-[0_0_20px_rgba(147,51,234,0.3)] text-sm"
+                            >
+                                <Bookmark className="w-4 h-4" /> Save
+                            </button>
+
+                            {/* Related Projects Button */}
+                            <button
+                                onClick={() => setShowRelatedProjectsModal(true)}
+                                className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 sm:px-5 py-2 rounded-full font-bold flex items-center gap-2 hover:scale-105 transition-transform shadow-[0_0_20px_rgba(147,51,234,0.3)] text-sm"
+                            >
+                                <Sparkles className="w-4 h-4" /> Related
+                            </button>
+
+                            {/* Admin Delete Button */}
+                            {isAdmin && (
+                                <AdminDeleteButton
+                                    projectId={project.id}
+                                    projectTitle={project.title}
+                                    onDeleted={() => router.push('/idea')}
+                                    variant="button"
+                                />
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs sm:text-sm text-gray-400 mb-6 sm:mb-8 border-b border-white/10 pb-6 sm:pb-8">
+                        <AuthorLink
+                            username={project.author?.username || 'Anonymous'}
+                            avatar={project.author?.avatar}
+                            isAnonymous={project.isAnonymous || !project.author}
+                            showAvatar={true}
+                            avatarSize="md"
+                        />
+                        <span>•</span>
+                        <span>{project.category}</span>
+                        <span>•</span>
+                        <span>{new Date(project.createdAt).toLocaleDateString()}</span>
+                    </div>
+
+                    {/* Content Blocks */}
+                    <div className="space-y-12">
+                        <section>
+                            <h3 className="text-xl font-bold text-[#FFD700] mb-4 font-mono uppercase tracking-wider">The Problem</h3>
+                            <div className="text-lg text-gray-200 leading-relaxed">
+                                <MarkdownContent content={project.problem} />
                             </div>
-                         </div>
-                     </section>
+                        </section>
 
-                     <section>
-                         <h3 className="text-sm font-bold text-gray-500 mb-2 font-mono uppercase">Opportunity</h3>
-                         <div className="text-gray-300">
-                             {project.opportunity ? <MarkdownContent content={project.opportunity} /> : "Not specified."}
-                         </div>
-                     </section>
+                        <section>
+                            <h3 className="text-xl font-bold text-[#FFD700] mb-4 font-mono uppercase tracking-wider">The Solution</h3>
+                            <div className="p-6 bg-white/5 border-l-4 border-[#FFD700] rounded-r-xl">
+                                <div className="text-lg text-white leading-relaxed">
+                                    <MarkdownContent content={project.solution} />
+                                </div>
+                            </div>
+                        </section>
+
+                        <section>
+                            <h3 className="text-sm font-bold text-gray-500 mb-2 font-mono uppercase">Opportunity</h3>
+                            <div className="text-gray-300">
+                                {project.opportunity ? <MarkdownContent content={project.opportunity} /> : "Not specified."}
+                            </div>
+                        </section>
+                    </div>
+                </div>
+
+                {/* Comments */}
+                <div className="border-t border-white/10 pt-12">
+                    <h3 className="text-2xl font-bold mb-8">Discussion ({project.comments?.length || 0})</h3>
+
+                    <div className="mb-10">
+                        {!user ? (
+                            <div className="text-center py-6 bg-white/[0.02] border border-white/10 rounded-2xl">
+                                <p className="text-gray-400 mb-3">Sign in to join the discussion</p>
+                                <button onClick={() => openConnectReminder()} className="text-[#FFD700] font-semibold hover:underline">Sign in</button>
+                            </div>
+                        ) : (
+                            <CommentFormBox
+                                user={user}
+                                text={commentText}
+                                setText={setCommentText}
+                                isAnon={isAnonComment}
+                                setIsAnon={setIsAnonComment}
+                                isSubmitting={isSubmitting}
+                                onSubmit={handleComment}
+                                placeholder="Share your thoughts, questions, or feedback..."
+                                submitLabel="Post"
+                                showMarkdownGuide={true}
+                            />
+                        )}
+                    </div>
+
+                    <div>
+                        {project.comments?.map(comment => (
+                            <CommentItem
+                                key={comment.id}
+                                comment={comment}
+                                projectId={project.id}
+                                onTip={openCommentTip}
+                                ideaOwnerUsername={project.author.username}
+                                ideaContext={{
+                                    title: project.title,
+                                    problem: project.problem || '',
+                                    solution: project.solution || '',
+                                    opportunity: project.opportunity,
+                                }}
+                                activeReplyId={activeReplyId}
+                                setActiveReplyId={setActiveReplyId}
+                            />
+                        ))}
+                    </div>
                 </div>
             </div>
 
-            {/* Comments */}
-            <div className="border-t border-white/10 pt-12">
-                <h3 className="text-2xl font-bold mb-8">Discussion ({project.comments?.length || 0})</h3>
-                
-                <div className="mb-10">
-                    {!user ? (
-                         <div className="text-center py-6 bg-white/[0.02] border border-white/10 rounded-2xl">
-                             <p className="text-gray-400 mb-3">Sign in to join the discussion</p>
-                             <button onClick={() => openConnectReminder()} className="text-[#FFD700] font-semibold hover:underline">Sign in</button>
-                         </div>
-                    ) : (
-                        <CommentFormBox
-                            user={user}
-                            text={commentText}
-                            setText={setCommentText}
-                            isAnon={isAnonComment}
-                            setIsAnon={setIsAnonComment}
-                            isSubmitting={isSubmitting}
-                            onSubmit={handleComment}
-                            placeholder="Share your thoughts, questions, or feedback..."
-                            submitLabel="Post"
-                            showMarkdownGuide={true}
-                        />
-                    )}
-                </div>
+            <PaymentModal
+                isOpen={showPayment}
+                onClose={() => setShowPayment(false)}
+                recipientName={paymentRecipient}
+                recipientWallet={recipientWallet}
+                context={'comment'}
+                onConfirm={handlePaymentConfirm}
+            />
 
-                <div>
-                    {project.comments?.map(comment => (
-                        <CommentItem 
-                            key={comment.id} 
-                            comment={comment} 
-                            projectId={project.id} 
-                            onTip={openCommentTip}
-                            ideaOwnerUsername={project.author.username}
-                            ideaContext={{
-                                title: project.title,
-                                problem: project.problem || '',
-                                solution: project.solution || '',
-                                opportunity: project.opportunity,
-                            }}
-                            activeReplyId={activeReplyId}
-                            setActiveReplyId={setActiveReplyId}
-                        />
-                    ))}
-                </div>
-            </div>
-        </div>
+            <BookmarkModal
+                isOpen={showBookmarkModal}
+                onClose={() => setShowBookmarkModal(false)}
+                projectId={project.id}
+                projectTitle={project.title}
+            />
 
-        <PaymentModal
-            isOpen={showPayment}
-            onClose={() => setShowPayment(false)}
-            recipientName={paymentRecipient}
-            recipientWallet={recipientWallet}
-            context={'comment'}
-            onConfirm={handlePaymentConfirm}
-        />
-
-        <BookmarkModal
-            isOpen={showBookmarkModal}
-            onClose={() => setShowBookmarkModal(false)}
-            projectId={project.id}
-            projectTitle={project.title}
-        />
-    </motion.div>
-  );
+            <RelatedProjectsModal
+                isOpen={showRelatedProjectsModal}
+                onClose={() => setShowRelatedProjectsModal(false)}
+                ideaId={project.id}
+                ideaTitle={project.title}
+            />
+        </motion.div>
+    );
 };

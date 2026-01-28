@@ -52,7 +52,7 @@ export interface ChatDto {
 
 @Controller("ai")
 export class AIController {
-  constructor(private aiService: AIService) {}
+  constructor(private aiService: AIService) { }
 
   /**
    * POST /api/ai/feedback
@@ -356,4 +356,189 @@ export class AIController {
       };
     }
   }
+
+  // =============================================
+  // RELATED PROJECTS ENDPOINTS
+  // =============================================
+
+  /**
+   * POST /api/ai/search-related-projects
+   * Search for related projects on the internet using Tavily API
+   * Called during idea submission (synchronous)
+   */
+  @Post("search-related-projects")
+  @UseGuards(AuthGuard)
+  async searchRelatedProjects(
+    @CurrentUser("userId") userId: string,
+    @Body()
+    dto: {
+      ideaId: string;
+      title: string;
+      problem: string;
+      solution: string;
+    }
+  ): Promise<ApiResponse<any>> {
+    try {
+      const result = await this.aiService.searchRelatedProjects(
+        dto.ideaId,
+        dto.title,
+        dto.problem,
+        dto.solution,
+        userId
+      );
+
+      if (!result.success) {
+        return {
+          success: false,
+          error: result.error,
+          data: { quotaInfo: result.quotaInfo },
+        };
+      }
+
+      return {
+        success: true,
+        data: {
+          results: result.results,
+          quotaInfo: result.quotaInfo,
+        },
+        message: `Found ${result.results?.length || 0} related projects`,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || "Failed to search related projects",
+      };
+    }
+  }
+
+  /**
+   * GET /api/ai/related-projects/:ideaId
+   * Get all related projects for an idea
+   */
+  @Get("related-projects/:ideaId")
+  async getRelatedProjects(
+    @Param("ideaId") ideaId: string
+  ): Promise<ApiResponse<any>> {
+    try {
+      const result = await this.aiService.getRelatedProjects(ideaId);
+
+      if (!result.success) {
+        return {
+          success: false,
+          error: result.error,
+        };
+      }
+
+      return {
+        success: true,
+        data: result.data,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || "Failed to get related projects",
+      };
+    }
+  }
+
+  /**
+   * POST /api/ai/pin-project
+   * Pin user's own project to an idea
+   */
+  @Post("pin-project")
+  @UseGuards(AuthGuard)
+  async pinUserProject(
+    @CurrentUser("userId") userId: string,
+    @Body()
+    dto: {
+      ideaId: string;
+      projectTitle: string;
+      projectUrl: string;
+      projectDescription?: string;
+    }
+  ): Promise<ApiResponse<any>> {
+    try {
+      const result = await this.aiService.pinUserProject(
+        dto.ideaId,
+        userId,
+        dto.projectTitle,
+        dto.projectUrl,
+        dto.projectDescription
+      );
+
+      if (!result.success) {
+        return {
+          success: false,
+          error: result.error,
+        };
+      }
+
+      return {
+        success: true,
+        message: "Project pinned successfully",
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || "Failed to pin project",
+      };
+    }
+  }
+
+  /**
+   * POST /api/ai/unpin-project
+   * Remove user's pinned project from an idea
+   */
+  @Post("unpin-project")
+  @UseGuards(AuthGuard)
+  async unpinUserProject(
+    @CurrentUser("userId") userId: string,
+    @Body() dto: { ideaId: string }
+  ): Promise<ApiResponse<any>> {
+    try {
+      const result = await this.aiService.unpinUserProject(dto.ideaId, userId);
+
+      if (!result.success) {
+        return {
+          success: false,
+          error: result.error,
+        };
+      }
+
+      return {
+        success: true,
+        message: "Project unpinned successfully",
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || "Failed to unpin project",
+      };
+    }
+  }
+
+  /**
+   * GET /api/ai/search-quota
+   * Get user's daily search quota for related projects
+   */
+  @Get("search-quota")
+  @UseGuards(AuthGuard)
+  async getSearchQuota(
+    @CurrentUser("userId") userId: string
+  ): Promise<ApiResponse<any>> {
+    try {
+      const quota = await this.aiService.getUserSearchQuota(userId);
+
+      return {
+        success: true,
+        data: quota,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error: error.message || "Failed to get search quota",
+      };
+    }
+  }
 }
+
