@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../lib/store';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ThumbsUp, ThumbsDown, MessageCircle, Send, EyeOff, User, DollarSign, Share2, Pencil, Trash2, X, Check, Loader2, Bookmark, ChevronDown, Sparkles } from 'lucide-react';
+import { ArrowLeft, ThumbsUp, ThumbsDown, MessageCircle, Send, EyeOff, User, DollarSign, Share2, Pencil, Trash2, X, Check, Loader2, Bookmark, ChevronDown, Archive } from 'lucide-react';
 import { BookmarkModal } from './BookmarkModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -964,7 +964,7 @@ export const IdeaDetail = () => {
                                 onClick={() => setShowRelatedProjectsModal(true)}
                                 className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 sm:px-5 py-2 rounded-full font-bold flex items-center gap-2 hover:scale-105 transition-transform shadow-[0_0_20px_rgba(147,51,234,0.3)] text-sm relative"
                             >
-                                <Sparkles className="w-4 h-4" /> Projects
+                                <Archive className="w-4 h-4" /> Projects
                                 {relatedProjectsCount > 0 && (
                                     <span className="absolute -top-1 -right-1 bg-[#FFD700] text-black text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-lg">
                                         {relatedProjectsCount}

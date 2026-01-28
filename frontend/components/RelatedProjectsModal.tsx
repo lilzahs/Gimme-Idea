@@ -63,6 +63,7 @@ export const RelatedProjectsModal: React.FC<RelatedProjectsModalProps> = ({
 }) => {
     const { user } = useAuth();
     const [isLoading, setIsLoading] = useState(true);
+    const [isSearching, setIsSearching] = useState(false);
     const [aiDetected, setAiDetected] = useState<RelatedProject[]>([]);
     const [userPinned, setUserPinned] = useState<UserPinnedProject[]>([]);
     const [showPinForm, setShowPinForm] = useState(false);
@@ -106,8 +107,15 @@ export const RelatedProjectsModal: React.FC<RelatedProjectsModalProps> = ({
     };
 
     const searchForRelatedProjects = async () => {
+        console.log('=== STARTING SEARCH FOR RELATED PROJECTS ===');
+        console.log('Idea ID:', ideaId);
+        console.log('Title:', ideaTitle);
+        console.log('Problem:', ideaProblem?.substring(0, 100) + '...');
+        console.log('Solution:', ideaSolution?.substring(0, 100) + '...');
+
+        setIsSearching(true);
         try {
-            console.log('Searching for related projects...');
+            console.log('Calling API client searchRelatedProjects...');
             const searchResponse = await apiClient.searchRelatedProjects({
                 ideaId,
                 title: ideaTitle,
@@ -115,25 +123,37 @@ export const RelatedProjectsModal: React.FC<RelatedProjectsModalProps> = ({
                 solution: ideaSolution,
             });
 
+            console.log('API Response:', searchResponse);
+
             if (searchResponse.success && searchResponse.data) {
-                console.log(`Found ${searchResponse.data.results?.length || 0} results`);
-                setAiDetected(searchResponse.data.results || []);
+                const results = searchResponse.data.results || [];
+                console.log(`✅ Found ${results.length} results`);
+                console.log('Results:', results);
+                setAiDetected(results);
 
                 if (searchResponse.data.quotaInfo) {
                     const { remaining, used, max } = searchResponse.data.quotaInfo;
-                    console.log(`Search quota: ${used}/${max} used, ${remaining} remaining`);
+                    console.log(`📊 Search quota: ${used}/${max} used, ${remaining} remaining`);
+                    toast.success(`Found ${results.length} related projects!`);
+                } else {
+                    toast.success(`Found ${results.length} related projects!`);
                 }
             } else {
-                console.error('Search failed:', searchResponse.error);
+                console.error('❌ Search failed:', searchResponse.error);
                 if (searchResponse.error?.includes('Daily search limit')) {
                     toast.error('Daily search limit reached (5 searches per day)');
+                } else if (searchResponse.error?.includes('quota')) {
+                    toast.error('Search quota exceeded. Try again tomorrow.');
                 } else {
                     toast.error(searchResponse.error || 'Failed to search for related projects');
                 }
             }
         } catch (error) {
-            console.error('Failed to search related projects:', error);
+            console.error('💥 Exception during search:', error);
             toast.error('Failed to search for related projects');
+        } finally {
+            setIsSearching(false);
+            console.log('=== SEARCH COMPLETED ===');
         }
     };
 
@@ -252,7 +272,15 @@ export const RelatedProjectsModal: React.FC<RelatedProjectsModalProps> = ({
                                         </h3>
                                     </div>
 
-                                    {aiDetected.length === 0 ? (
+                                    {isSearching ? (
+                                        <div className="flex flex-col items-center justify-center py-8 bg-purple-500/5 rounded-xl border border-purple-500/20">
+                                            <Loader2 className="w-8 h-8 text-purple-400 animate-spin mb-3" />
+                                            <p className="text-purple-300 font-semibold">Searching the internet...</p>
+                                            <p className="text-xs text-gray-500 mt-1">
+                                                Using AI to find similar projects
+                                            </p>
+                                        </div>
+                                    ) : aiDetected.length === 0 ? (
                                         <div className="text-center py-8 bg-white/5 rounded-xl border border-white/5">
                                             <Globe className="w-8 h-8 text-gray-600 mx-auto mb-2" />
                                             <p className="text-gray-500">No related projects found</p>
