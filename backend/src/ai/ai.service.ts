@@ -1186,39 +1186,38 @@ Respond with JSON only:
 
   /**
    * Build an optimized search query from idea content
+   * Creates a natural language query to find real-world projects/products
    */
   private buildSearchQuery(
     title: string,
     problem: string,
     solution: string
   ): string {
-    // Combine title with key phrases from problem/solution
-    // Keep it concise for better search results
-    const titleWords = title.slice(0, 60);
-    const problemWords = problem.slice(0, 100);
-
-    // Create a focused query that finds actual products/tools
-    // Extract key technical terms and product names
+    // Extract key concepts from the idea
     const extractKeyTerms = (text: string): string[] => {
       // Remove common filler words
-      const stopWords = ['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'from', 'that', 'this', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'should', 'could', 'may', 'might', 'can'];
+      const stopWords = ['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'from', 'that', 'this', 'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'should', 'could', 'may', 'might', 'can', 'using', 'uses', 'use'];
 
       const words = text.toLowerCase()
         .replace(/[^\w\s]/g, ' ')
         .split(/\s+/)
         .filter(word => word.length > 3 && !stopWords.includes(word));
 
-      return words.slice(0, 5); // Top 5 keywords
+      return words.slice(0, 6); // Top 6 keywords
     };
 
     const titleKeywords = extractKeyTerms(title);
-    const problemKeywords = extractKeyTerms(problem).slice(0, 3);
+    const problemKeywords = extractKeyTerms(problem).slice(0, 4);
+    const solutionKeywords = extractKeyTerms(solution).slice(0, 2);
 
-    // Build query with product-finding intent
-    const keywords = [...new Set([...titleKeywords, ...problemKeywords])].join(' ');
+    // Combine unique keywords
+    const allKeywords = [...new Set([...titleKeywords, ...problemKeywords, ...solutionKeywords])];
+    const primaryKeywords = allKeywords.slice(0, 5).join(' ');
 
-    // Add modifiers to find actual products/tools, not blog posts
-    return `${keywords} site:github.com OR site:producthunt.com OR platform tool app software -blog -"how to" -tutorial -guide`;
+    // Create a natural language query that finds actual implementations
+    // Tavily handles domain filtering through include_domains/exclude_domains, 
+    // so we use clean natural language here
+    return `projects using ${primaryKeywords} real-world implementation product platform`;
   }
 
   /**
